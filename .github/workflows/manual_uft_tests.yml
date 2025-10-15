@@ -1,0 +1,86 @@
+name: MANUAL - UFT tests
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI or API.
+on:
+  workflow_dispatch:
+
+env:
+  PROPS_TXT: PropsMultiTests.txt
+  RES_XML: UFT-test-results.xml
+  LAUNCHER_EXE: FTToolsLauncher.exe
+  LAUNCHER_URL: https://github.com/MicroFocus/ADM-FT-ToolsLauncher/releases/download/v24.2.0/FTToolsLauncher_net48.exe
+defaults:
+  run:
+    shell: powershell
+    working-directory: .\
+
+jobs:
+  run-tests:
+    runs-on: [ self-hosted, mada_runner_uft ]
+    steps:
+    - name: Display the working directory
+      run: echo "$pwd"
+      
+    - name: Checkout current repo
+      uses: actions/checkout@v4
+      with:
+        ref: ${{github.ref_name}}
+        clean: false
+        
+    - name: Create properties file (UTF-8)
+      run: |
+        $content = @"
+        runType=FileSystem
+        resultsFilename=$($env:RES_XML)
+        Test1=$($pwd.Path.Replace('\', '\\'))
+        resultTestNameOnly=true
+        resultUnifiedTestClassname=true
+        "@
+
+        # Save file with UTF-8 encoding
+        $content | Out-File -FilePath $env:PROPS_TXT -Encoding utf8
+  
+    - name: Check properties file
+      run: |
+        if (Test-Path $env:PROPS_TXT) {
+          Write-Host "Properties file created successfully!"
+          Get-Content $env:PROPS_TXT  # Optional: Print file content for debugging
+        } else {
+          Write-Error "Properties file was not created!"
+          exit 1
+        }
+
+    - name: GET FTToolsLauncher.exe
+      run:  if (TEST-PATH $env:LAUNCHER_EXE) {
+              echo "FTToolsLauncher.exe already exists"
+            } else {
+              Invoke-WebRequest -Uri $env:LAUNCHER_URL -OutFile $env:LAUNCHER_EXE
+            }
+
+    - name: Run FT tool
+      id: run-tests
+      shell: powershell
+      run: |
+        $process = Start-Process -FilePath "$env:LAUNCHER_EXE" `
+          -ArgumentList "-paramfile $env:PROPS_TXT" `
+          -NoNewWindow -PassThru *>&1
+
+        # Wait for the process to complete
+        $process | Wait-Process
+
+        # Capture Exit Code
+        "X=$($process.ExitCode)" >> $env:GITHUB_OUTPUT
+  
+    - if: ${{ steps.run-tests.outputs.X != 0 }}
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.setFailed('The job runUftTestsFromFileSystem failed with status ${{ steps.run-tests.outputs.X }} !')
+      continue-on-error: true
+          
+    - name: Archive UFT Test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: junit-test-report
+        path: ${{ env.RES_XML }}
+      continue-on-error: true

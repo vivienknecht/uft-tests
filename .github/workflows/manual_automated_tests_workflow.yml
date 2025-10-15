@@ -1,0 +1,124 @@
+name: MANUAL - Automated Runs Workflow
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI or API.
+on:
+  workflow_dispatch:
+    inputs:
+      testsToRun:
+        description: 'Tests to run (Octane)'
+        required: true
+        default: 'v1:FTToolsLauncher|All-Tests.Test group|C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests\\GUITest1|runId=6313006;FTToolsLauncher|All-Tests.Test group|C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests\\AddedTest\\ocatne\\GUITest5|runId=6313007;FTToolsLauncher|All-Tests.C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests|C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests\\ForIdan\\GUITest162|runId=6313008;FTToolsLauncher|All-Tests.C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests|C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests\\GUITests\\f1\\GUITest07|runId=6313009;FTToolsLauncher|All-Tests.C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests|C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests\\ApiTests\\APITest2|runId=6313010;FTToolsLauncher|All-Tests.C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests|C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests\\ForIdan\\For idan\\FlightApp_Recovery_And_Function\\Flight_RecoveryAnd_Function|runId=6313011;FTToolsLauncher|All-Tests.C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests|C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests\\ForIdan\\FUNCTION-TEST1|runId=6313012;FTToolsLauncher|All-Tests.C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests|C:\\dev\\actions-runner\\_work\\alm-octane-github-actions-tests\\alm-octane-github-actions-tests\\GUITests\\f1\\GUITest02-2|runId=6313013'
+      suiteRunId:
+        description: 'Suite Run Id (Octane)'
+        required: true
+        default: '0'
+      executionId:
+        description: 'Execution Id (Octane)'
+        required: true
+        default: '0'
+      suiteId:
+        description: 'Suite Id (Octane)'
+        required: true
+        default: '0'
+
+env:
+  TESTS_TO_RUN_MTBX: testsToRun.mtbx
+  PROPS_TXT: PropsMultiTests.txt
+  RES_XML: UFT-test-results.xml
+  LAUNCHER_EXE: FTToolsLauncher.exe
+  LAUNCHER_URL: https://github.com/MicroFocus/ADM-FT-ToolsLauncher/releases/download/v24.2.0/FTToolsLauncher_net48.exe
+defaults:
+  run:
+    working-directory: .\
+
+jobs:
+  run-tests:
+    runs-on: self-hosted
+    steps:
+    - name: Log workflow inputs for Octane
+      run: |
+        $inputs = ConvertFrom-Json -InputObject '${{ toJson(github.event.inputs) }}'
+        Write-Host "execution_parameter:: $($inputs | ConvertTo-Json -Compress)"
+      
+    - name: Checkout current repo
+      uses: actions/checkout@v4
+      with:
+        ref: ${{github.ref_name}}
+        clean: false
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+      
+    - name: Convert testsToRun parameter
+      id: convert_tests
+      run: |
+        # Run the node command and capture its output
+        $output = npx @opentext/sdp-sdm-tests-to-run-conversion --framework="uft" --testsToRun="${{ github.event.inputs.testsToRun }}" --logLevel=0
+
+        Write-Host "Node output: $output"
+        $output | Out-File -FilePath $env:TESTS_TO_RUN_MTBX -Encoding utf8
+        # Write the output to the GITHUB_ENV file
+        # echo "converted_tests=$output" >> $env:GITHUB_ENV
+        
+    - name: Create properties file (UTF-8)
+      shell: powershell
+      run: |
+        $content = @"
+        runType=FileSystem
+        resultsFilename=$($env:RES_XML)
+        Test1=$($pwd.Path.Replace('\', '\\') + '\\' + $env:TESTS_TO_RUN_MTBX)
+        resultTestNameOnly=true
+        resultUnifiedTestClassname=true
+        "@
+
+        # Save file with UTF-8 encoding
+        $content | Out-File -FilePath $env:PROPS_TXT -Encoding utf8
+  
+    - name: Check properties file
+      shell: powershell
+      run: |
+        if (Test-Path $env:PROPS_TXT) {
+          Write-Host "Properties file created successfully!"
+          Get-Content $env:PROPS_TXT
+        } else {
+          Write-Error "Properties file was not created!"
+          exit 1
+        }
+
+    - name: Download Functional Testing tool
+      shell: powershell
+      run:  if (TEST-PATH $env:LAUNCHER_EXE) {
+              echo "FTToolsLauncher.exe already exists"
+            } else {
+              Invoke-WebRequest -Uri $env:LAUNCHER_URL -OutFile $env:LAUNCHER_EXE
+            }
+
+    - name: Run Functional Testing tool
+      id: run-tests
+      shell: powershell
+      run: |
+        $process = Start-Process -FilePath "$env:LAUNCHER_EXE" `
+          -ArgumentList "-paramfile $env:PROPS_TXT" `
+          -NoNewWindow -PassThru *>&1
+
+        # Wait for the process to complete
+        $process | Wait-Process
+
+        # Capture Exit Code
+        "X=$($process.ExitCode)" >> $env:GITHUB_OUTPUT
+  
+    - if: ${{ steps.run-tests.outputs.X != 0 }}
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.setFailed('The job runUftTestsFromFileSystem failed with status ${{ steps.run-tests.outputs.X }} !')
+      continue-on-error: true
+          
+    - name: Archive UFT Test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: junit-test-report
+        path: ${{ env.RES_XML }}
+      continue-on-error: true
