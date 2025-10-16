@@ -18,7 +18,7 @@ stages:
            WorkspaceList: '4002'
            CreatePipelineCheckbox: true
 
-    - job: Build
+    - job: BuildAndTest
       pool: uft-one-agent-pool
       steps:
       - script: 
@@ -34,10 +34,7 @@ stages:
          Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
          Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
          Get-Content -Path ./build/Props.txt
-
-    - job: Test
-      pool: uft-one-agent-pool
-      steps:
+      
       - script: 
          echo "Testing..."
          echo $PWD
@@ -45,7 +42,7 @@ stages:
          Get-Content -Path ./build/Props.txt
          $p = Start-Process -FilePath "./FTToolsLauncher_net48.exe" -ArgumentList "-paramfile $PWD/build/Props.txt" -NoNewWindow -PassThru
          $p | Wait-Process
-         echo "Please check the [$PWD\build\Results.xml] file."  
+         echo "Please check the [$PWD\build\Results.xml] file."
          
     - job: End
       pool: Default
