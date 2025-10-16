@@ -6,7 +6,7 @@
 trigger:
 - main
 
-pool: Default
+pool: uft-one-agent-pool
 
 steps:
 - task: octane-start-task@25
@@ -15,13 +15,43 @@ steps:
     WorkspaceList: '4002'
     CreatePipelineCheckbox: true
 
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- script: 
+    echo "Building..."
+    mkdir build
+    $ESCAPED_DIR = $CI_PROJECT_DIR.Replace('\', '\\')
+    echo $testsToRun
+    $TESTS_TO_RUN_XML = $testsToRun -replace ('\\?FTToolsLauncher\\', '')
+    Set-Content -Path ./build/testsToRun.mtbx -Value "$TESTS_TO_RUN_XML"
+    Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
+    Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
+    Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\browsers" 
+    Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
+    Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
+    Get-Content -Path ./build/Props.txt
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: "build"
+    artifact: "drop"
+
+- script: 
+    echo "Testing..."
+    echo $PWD
+    Test-Path "./build/Props.txt" -PathType leaf
+    Get-Content -Path ./build/Props.txt
+    $p = Start-Process -FilePath "./FTToolsLauncher_net48.exe" -ArgumentList "-paramfile $PWD/build/Props.txt" -NoNewWindow -PassThru
+    $p | Wait-Process
+    echo "Please check the [$PWD\build\Results.xml] file."
 
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    mkdir filtered
+    cp build/*.xml filtered/
+  displayName: "Collect XML files"
+
+- task: PublishPipelineArtifact@1
+  inputs: 
+    targetPath: filtered
+    artifact: 'xml-reports'
 
 - task: octane-end-task@25
   inputs:
