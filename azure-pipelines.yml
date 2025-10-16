@@ -41,7 +41,6 @@ stages:
          Test-Path "./build/Props.txt" -PathType leaf
          Get-Content -Path ./build/Props.txt
          start /wait "" "FTToolsLauncher_net48.exe" -paramfile "%CD%\build\Props.txt"
-         $p | Wait-Process
          echo "Please check the [$PWD\build\Results.xml] file."
          
     - job: End
