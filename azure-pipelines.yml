@@ -24,7 +24,7 @@ stages:
       - script: 
          echo "Building..."
          mkdir build
-         $ESCAPED_DIR = $CI_PROJECT_DIR.Replace('\', '\\')
+         $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
          echo $testsToRun
          $TESTS_TO_RUN_XML = $testsToRun -replace ('\\?FTToolsLauncher\\', '')
          Set-Content -Path ./build/testsToRun.mtbx -Value "$TESTS_TO_RUN_XML"
@@ -40,7 +40,7 @@ stages:
          echo $PWD
          Test-Path "./build/Props.txt" -PathType leaf
          Get-Content -Path ./build/Props.txt
-         start /wait "" "FTToolsLauncher_net48.exe" -paramfile "%CD%\build\Props.txt"
+         Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
          echo "Please check the [$PWD\build\Results.xml] file."
          
     - job: End
