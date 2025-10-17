@@ -22,7 +22,7 @@ stages:
       dependsOn: Start
       pool: uft-one-agent-pool
       steps:
-      - script: 
+      - powershell:  
          echo "Building..."
          mkdir build
          $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
@@ -36,7 +36,7 @@ stages:
          Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
          Get-Content -Path ./build/Props.txt
       
-      - script: 
+      - powershell: 
          echo "Testing..."
          echo $PWD
          Test-Path "./build/Props.txt" -PathType leaf
@@ -46,7 +46,7 @@ stages:
          
     - job: End
       dependsOn: BuildAndTest
-      pool: uft-one-agent-pool
+      pool: Default
       steps: 
       - task: octane-end-task@25
         inputs:
