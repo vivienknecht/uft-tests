@@ -10,7 +10,7 @@ stages:
 - stage: BulildAndtest
   jobs:
     - job: Start
-      pool: Default
+      pool: uft-one-agent-pool
       steps:
        - task: octane-start-task@25
          inputs:
@@ -43,18 +43,11 @@ stages:
          Get-Content -Path ./build/Props.txt
          Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
          echo "Please check the [$PWD\build\Results.xml] file."
-
-      - task: PublishPipelineArtifact@1
-        inputs:
-          targetPath: '$(System.DefaultWorkingDirectory)/build'
-          artifact: 'uft-results'   
          
     - job: End
       dependsOn: BuildAndTest
-      pool: Default
+      pool: uft-one-agent-pool
       steps: 
-      - download: current
-        artifact: uft-results
       - task: octane-end-task@25
         inputs:
           OctaneServiceConnection: 'octaneConnectionUft'
