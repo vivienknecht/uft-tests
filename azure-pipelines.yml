@@ -43,20 +43,22 @@ stages:
          Get-Content -Path ./build/Props.txt
          Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
          echo "Please check the [$PWD\build\Results.xml] file."
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: '$(System.DefaultWorkingDirectory)/build'
+          artifact: 'uft-results'   
          
     - job: End
       dependsOn: BuildAndTest
       pool: Default
       steps: 
-      - task: PublishPipelineArtifact@1
-        inputs:
-          targetPath: '$(System.DefaultWorkingDirectory)/build'
-          artifact: 'uft-results'
+      - download: current
+        artifact: uft-results
       - task: octane-end-task@25
         inputs:
           OctaneServiceConnection: 'octaneConnectionUft'
           WorkspaceList: '4002'
-      - download: current
-        artifact: uft-results
+     
           
  
