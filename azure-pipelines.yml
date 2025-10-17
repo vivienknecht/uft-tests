@@ -10,7 +10,7 @@ stages:
 - stage: BulildAndtest
   jobs:
     - job: Start
-      pool: uft-one-agent-pool
+      pool: Default
       steps:
        - task: octane-start-task@25
          inputs:
