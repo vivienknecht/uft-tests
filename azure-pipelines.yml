@@ -10,6 +10,7 @@ pool: Default
 
 steps: 
 - task: octane-start-task@25
+  name: Start
   inputs:
     OctaneServiceConnection: 'octaneConnectionUft'
     WorkspaceList: '4002'
@@ -21,6 +22,12 @@ steps:
    echo "Building..."
    mkdir build
    $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
+   $testsToRun = "$(Start.testsToRun)"
+    Write-Host "Raw testsToRun variable:"
+    Write-Host $testsToRun
+    if (-not $testsToRun) {
+      Write-Error "testsToRun variable is empty — check Octane Start configuration."
+    }
    echo $testsToRun
    $TESTS_TO_RUN_XML = $testsToRun -replace ('\\?FTToolsLauncher\\', '')
    Set-Content -Path ./build/testsToRun.mtbx -Value "$TESTS_TO_RUN_XML"
