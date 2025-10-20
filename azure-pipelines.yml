@@ -33,19 +33,8 @@ steps:
    mkdir build
    $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
    echo "These are the tests:"
+   echo @testsToRun
    echo "Testst"
-   $TESTS_TO_RUN_XML = $testsToRun -replace ('\\?FTToolsLauncher\\', '')
-   Set-Content -Path ./build/testsToRun.mtbx -Value "$TESTS_TO_RUN_XML"
-   Set-Content -Path ./build/testsToRun.mtbx -Value @'
-   <mtbx>
-   <test name="VerifyChromeBrowser" path="VerifyChromeBrowser">
-    <parameter name="runId" value="5031" type="string"/>
-   </test>
-   <test name="VerifyEdgeBrowser" path="VerifyEdgeBrowser">
-    <parameter name="runId" value="5030" type="string"/>
-   </test>
-   </mtbx>
-   '@
    Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
    Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
    Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\browsers" 
@@ -60,6 +49,12 @@ steps:
     Get-Content -Path ./build/Props.txt
     Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
     echo "Please check the [$PWD\build\Results.xml] file."
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/Results.xml'
+    failTaskOnFailedTests: false
 
 - task: octane-end-task@25
   inputs:
