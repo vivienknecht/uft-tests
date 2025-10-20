@@ -37,6 +37,7 @@ stages:
          Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
          Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
          Get-Content -Path ./build/Props.txt
+        workingDirectory:  $(Build.SourcesDirectory)
       
       - powershell: |
          echo "Testing..."
