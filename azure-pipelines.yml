@@ -24,7 +24,7 @@ steps:
    mkdir build
    $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
    echo "These are the tests:"
-   echo $(StartTests.testsToRun)
+   echo "$(StartTests.testsToRun)"
    echo "Testst"
    $TESTS_TO_RUN_XML = $testsToRun -replace ('\\?FTToolsLauncher\\', '')
    Set-Content -Path ./build/testsToRun.mtbx -Value "$TESTS_TO_RUN_XML"
