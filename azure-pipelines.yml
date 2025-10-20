@@ -20,7 +20,7 @@ stages:
 
     - job: BuildAndTest
       dependsOn: Start
-      pool: uft-one-agent-pool
+      pool: Default
       steps:
       - powershell: |
          echo "Building..."
