@@ -13,6 +13,7 @@ steps:
   inputs:
     OctaneServiceConnection: 'octaneConnectionUft'
     WorkspaceList: '4002'
+    GithubRepositoryConnection: 'githubConnection'
     CreatePipelineCheckbox: true
 
 - powershell: |
