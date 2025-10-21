@@ -9,13 +9,18 @@ trigger:
 pool: Default
 
 steps: 
-- task: octane-start-task@25
+- task: octane-start-task-private@1
   inputs:
-    OctaneServiceConnection: 'octaneConnectionUft'
-    WorkspaceList: '4002'
+    OctaneServiceConnection: 'privateOctaneConnection'
+    WorkspaceList: '5001'
     GithubRepositoryConnection: 'githubConnection'
     CreatePipelineCheckbox: true
 
+- task: octane-test-runner-start-task-private@1
+  inputs:
+    OctaneServiceConnection: 'privateOctaneConnection'
+    WorkspaceList: '5001'
+    Framework: 'uft'
 
 - powershell: |
     Write-Host 'Looking for testsToRun in environment...'
@@ -58,10 +63,11 @@ steps:
     testResultsFiles: '**/Results.xml'
     failTaskOnFailedTests: false
 
-- task: octane-end-task@25
+- task: octane-end-task-private@1
   inputs:
-    OctaneServiceConnection: 'octaneConnectionUft'
-    WorkspaceList: '4002'
+    OctaneServiceConnection: 'privateOctaneConnection'
+    WorkspaceList: '5001'
+    GithubRepositoryConnection: 'githubConnection'
          
 
 
