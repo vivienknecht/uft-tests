@@ -12,15 +12,10 @@ steps:
 - task: octane-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '4002'
+    WorkspaceList: '5001'
     GithubRepositoryConnection: 'githubConnection'
     CreatePipelineCheckbox: true
 
-- task: octane-test-runner-start-task-private@1
-  inputs:
-    OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '4002'
-    Framework: 'uft'
 
 - powershell: |
     Write-Host 'Looking for testsToRun in environment...'
@@ -66,7 +61,7 @@ steps:
 - task: octane-end-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '4002'
+    WorkspaceList: '5001'
     GithubRepositoryConnection: 'githubConnection'
          
 
