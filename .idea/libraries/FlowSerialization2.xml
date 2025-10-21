@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="FlowSerialization2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/UFTOneAutomationTests/APITestCreateOrder/FlowSerialization.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
