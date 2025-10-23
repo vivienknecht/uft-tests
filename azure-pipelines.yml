@@ -23,18 +23,9 @@ steps:
     Framework: 'uft'
 
 - powershell: |
-    $output = npx @opentext/sdp-sdm-tests-to-run-conversion --framework="uft" --testsToRun="$(testsToRun)" --logLevel=0
+    $testsToRun = npx @opentext/sdp-sdm-tests-to-run-conversion --framework="uft" --testsToRun="$(testsToRun)" --logLevel=0
     Write-Host "Conversion result:"
-    Write-Host $output
-
-- powershell: |
-    Write-Host 'Looking for testsToRun in environment...'
-    Write-Host "env:testsToRun = '$env:testsToRun'"
-    Write-Host "env:TESTSTORUN = '$env:TESTSTORUN'"
-    Write-Host 'Dumping any env vars that look related:'
-    Get-ChildItem env: | Where-Object Name -match 'TESTS|OCTANE|RUN' | Sort-Object Name | Format-Table -AutoSize
-  displayName: "Probe for testsToRun (env)"
-
+    Write-Host $testsToRun
 
 - powershell: | 
    Write-Host "Current Directory:"
