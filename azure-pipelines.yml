@@ -26,6 +26,7 @@ steps:
     $testsToRun = npx @opentext/sdp-sdm-tests-to-run-conversion --framework="uft" --testsToRun="$(testsToRun)" --logLevel=0
     Write-Host "Conversion result:"
     Write-Host $testsToRun
+    $testsToRun | Out-File "testsToRun.txt"
 
 - powershell: | 
    Write-Host "Current Directory:"
@@ -34,7 +35,7 @@ steps:
    mkdir build
    $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
    echo "These are the tests:"
-   echo @testsToRun
+   Get-Content "testsToRun.txt"
    echo "Testst"
    $TESTS_TO_RUN_XML = $testsToRun -replace ('\\?FTToolsLauncher\\', '')
    Set-Content -Path ./build/testsToRun.mtbx -Value "$TESTS_TO_RUN_XML"
