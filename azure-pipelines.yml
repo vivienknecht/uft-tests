@@ -23,7 +23,7 @@ steps:
     Framework: 'uft'
 
 - powershell: |
-    $output = npx @opentext/sdp-sdm-tests-to-run-conversion --framework="uft" --testsToRun="$(testsToRun)" --logLevel=0
+    $output = npx @opentext/sdp-sdm-tests-to-run-conversion --framework="junit" --testsToRun="$(testsToRun)" --logLevel=0
     Write-Host "Conversion result:"
     Write-Host $output
 
