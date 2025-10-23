@@ -16,11 +16,10 @@ steps:
     GithubRepositoryConnection: 'githubConnection'
     CreatePipelineCheckbox: true
 
-- task: octane-test-runner-start-task-private@1
-  inputs:
-    OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '5001'
-    Framework: 'uft'
+- powershell: |
+    output=$(npx @opentext/sdp-sdm-tests-to-run-conversion --framework="uft" --testsToRun="$(testsToRun) --logLevel=0)
+    Write-Host "Conversion result:"
+    Write-Host $output
 
 - powershell: |
     Write-Host 'Looking for testsToRun in environment...'
