@@ -12,14 +12,14 @@ steps:
 - task: octane-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '5001'
+    WorkspaceList: '2001'
     GithubRepositoryConnection: 'githubConnection'
     CreatePipelineCheckbox: true
 
 - task: octane-test-runner-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '5001'
+    WorkspaceList: '2001'
     Framework: 'uft'
 
 - powershell: |
@@ -57,7 +57,7 @@ steps:
 - task: octane-end-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '5001'
+    WorkspaceList: '2001'
     GithubRepositoryConnection: 'githubConnection'
          
 
