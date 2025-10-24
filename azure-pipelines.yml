@@ -22,12 +22,6 @@ steps:
     WorkspaceList: '2001'
     Framework: 'uft'
 
-- powershell: |
-    $testsToRun = npx @opentext/sdp-sdm-tests-to-run-conversion --framework="uft" --testsToRun="$(testsToRun)" --logLevel=0
-    Write-Host "Conversion result:"
-    Write-Host $testsToRun
-    $testsToRun | Out-File "testsToRun.txt"
-
 - powershell: | 
    Write-Host "Current Directory:"
    Get-Location
@@ -60,6 +54,10 @@ steps:
     testResultsFiles: '**/Results.xml'
     failTaskOnFailedTests: false
 
+- task: octane-end-task-private@1
+  inputs:
+    OctaneServiceConnection: 'privateOctaneConnection'
+    WorkspaceList: '2001'
 - task: octane-end-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
