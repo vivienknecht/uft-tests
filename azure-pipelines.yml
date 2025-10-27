@@ -6,6 +6,11 @@
 trigger:
 - main
 
+parameters:
+  - name: unitTestResultsGlobPattern
+    type: string
+    default: 'build/Results.xml'
+
 pool: Default
 
 steps: 
@@ -47,21 +52,14 @@ steps:
     Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
     echo "Please check the [$PWD\build\Results.xml] file."
 
-- task: PublishTestResults@2
-  inputs:
-    testResultsFormat: 'JUnit'
-    testResultsFiles: '**/Results.xml'
-    failTaskOnFailedTests: false
-
-- task: octane-end-task-private@1
-  inputs:
-    OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '2001'
 - task: octane-end-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
     WorkspaceList: '2001'
     GithubRepositoryConnection: 'githubConnection'
+  env: 
+    UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
+
          
 
 
