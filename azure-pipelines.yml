@@ -14,11 +14,10 @@ parameters:
 pool: Default
 
 steps: 
-- task: octane-start-task-private@1
+- task: octane-start-task@25
   inputs:
-    OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '2001'
-    GithubRepositoryConnection: 'githubConnection'
+    OctaneServiceConnection: 'octaneConnectionUft'
+    WorkspaceList: '2002'
     CreatePipelineCheckbox: true
 
 - task: octane-test-runner-start-task-private@1
@@ -52,10 +51,10 @@ steps:
     Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
     echo "Please check the [$PWD\build\Results.xml] file."
 
-- task: octane-end-task-private@1
+- task: octane-end-task@25
   inputs:
-    OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '2001'
+    OctaneServiceConnection: 'octaneConnectionUft'
+    WorkspaceList: '2002'
     GithubRepositoryConnection: 'githubConnection'
   env: 
     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
