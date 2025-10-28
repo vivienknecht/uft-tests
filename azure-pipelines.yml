@@ -17,14 +17,14 @@ steps:
 - task: octane-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '2003'
+    WorkspaceList: '2002'
     GithubRepositoryConnection: 'githubConnection'
     CreatePipelineCheckbox: true
 
 - task: octane-test-runner-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '2003'
+    WorkspaceList: '2002'
     Framework: 'uft'
 
 - powershell: | 
@@ -55,7 +55,7 @@ steps:
 - task: octane-end-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '2003'
+    WorkspaceList: '2002'
     GithubRepositoryConnection: 'githubConnection'
   env: 
     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
