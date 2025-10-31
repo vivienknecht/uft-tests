@@ -6,25 +6,26 @@
 trigger:
 - main
 
+parameters:
+  - name: unitTestResultsGlobPattern
+    type: string
+    default: 'build/Results.xml'
+
 pool: Default
 
 steps: 
-- task: octane-start-task@25
+- task: octane-start-task-private@1
   inputs:
-    OctaneServiceConnection: 'octaneConnectionUft'
-    WorkspaceList: '4002'
+    OctaneServiceConnection: 'privateOctaneConnection'
+    WorkspaceList: '2001'
     GithubRepositoryConnection: 'githubConnection'
     CreatePipelineCheckbox: true
 
-
-- powershell: |
-    Write-Host 'Looking for testsToRun in environment...'
-    Write-Host "env:testsToRun = '$env:testsToRun'"
-    Write-Host "env:TESTSTORUN = '$env:TESTSTORUN'"
-    Write-Host 'Dumping any env vars that look related:'
-    Get-ChildItem env: | Where-Object Name -match 'TESTS|OCTANE|RUN' | Sort-Object Name | Format-Table -AutoSize
-  displayName: "Probe for testsToRun (env)"
-
+- task: octane-test-runner-start-task-private@1
+  inputs:
+    OctaneServiceConnection: 'privateOctaneConnection'
+    WorkspaceList: '2001'
+    Framework: 'uft'
 
 - powershell: | 
    Write-Host "Current Directory:"
@@ -33,13 +34,12 @@ steps:
    mkdir build
    $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
    echo "These are the tests:"
-   echo @testsToRun
    echo "Testst"
    $TESTS_TO_RUN_XML = $testsToRun -replace ('\\?FTToolsLauncher\\', '')
    Set-Content -Path ./build/testsToRun.mtbx -Value "$TESTS_TO_RUN_XML"
    Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
    Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
-   Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\browsers" 
+   Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\Demo\\OctaneChromeWebLoginParamPasswordAutomationTests" 
    Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
    Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
    Get-Content -Path ./build/Props.txt
@@ -52,16 +52,14 @@ steps:
     Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
     echo "Please check the [$PWD\build\Results.xml] file."
 
-- task: PublishTestResults@2
+- task: octane-end-task-private@1
   inputs:
-    testResultsFormat: 'JUnit'
-    testResultsFiles: '**/Results.xml'
-    failTaskOnFailedTests: false
+    OctaneServiceConnection: 'privateOctaneConnection'
+    WorkspaceList: '2001'
+    GithubRepositoryConnection: 'githubConnection'
+  env: 
+    UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
 
-- task: octane-end-task@25
-  inputs:
-    OctaneServiceConnection: 'octaneConnectionUft'
-    WorkspaceList: '4002'
          
 
 
