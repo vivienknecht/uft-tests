@@ -1,7 +1,31 @@
-﻿' Get values from the Data Table
-username = DataTable("Username", dtGlobalSheet)
-password = DataTable("Password", dtGlobalSheet)
+﻿Dim totalRows, i
 
-' Print them to the output
-Reporter.ReportEvent micDone, "Login Data", "Username: " & username & " | Password: " & password
+totalRows = DataTable.GetRowCount
+
+For i = 1 To totalRows
+    DataTable.SetCurrentRow i
+
+    username = DataTable("Username", dtGlobalSheet)
+    password = DataTable("Password", dtGlobalSheet)
+    expectedResult = DataTable("ExpectedResult", dtGlobalSheet)
+
+    ' Simulate login
+    If username = "admin" And password = "pass123" Then
+        actualResult = "Success"
+    Else
+        actualResult = "Fail"
+    End If
+
+    ' Compare expected vs actual
+    If actualResult = expectedResult Then
+        Reporter.ReportEvent micPass, "Login verification", _
+            "Row " & i & " - Username: " & username & _
+            " logged in as expected (" & actualResult & ")"
+    Else
+        Reporter.ReportEvent micFail, "Login verification", _
+            "Row " & i & " - Username: " & username & _
+            " login failed. Expected: " & expectedResult & _
+            ", Got: " & actualResult
+    End If
+Next
 
