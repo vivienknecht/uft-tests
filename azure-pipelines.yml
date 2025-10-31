@@ -41,7 +41,7 @@ steps:
    Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
    Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\browsers" 
    Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
-   Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
+   Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=false"
    Get-Content -Path ./build/Props.txt
 
 - powershell: | 
