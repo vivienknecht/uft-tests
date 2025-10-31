@@ -17,14 +17,14 @@ steps:
 - task: octane-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '2002'
+    WorkspaceList: '2001'
     GithubRepositoryConnection: 'githubConnection'
     CreatePipelineCheckbox: true
 
 - task: octane-test-runner-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '2002'
+    WorkspaceList: '2001'
     Framework: 'uft'
 
 - powershell: | 
@@ -39,7 +39,7 @@ steps:
    Set-Content -Path ./build/testsToRun.mtbx -Value "$TESTS_TO_RUN_XML"
    Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
    Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
-   Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\browsers" 
+   Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\Demo\\OctaneChromeWebLoginParamPasswordAutomationTests" 
    Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
    Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
    Get-Content -Path ./build/Props.txt
@@ -55,7 +55,7 @@ steps:
 - task: octane-end-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '2002'
+    WorkspaceList: '2001'
     GithubRepositoryConnection: 'githubConnection'
   env: 
     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
