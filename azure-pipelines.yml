@@ -27,6 +27,9 @@ steps:
     WorkspaceList: '2001'
     Framework: 'uft'
 
+- powershell: |
+   echo "My client id ${CLIENT_ID}" ${env:CLIENT_ID}   
+
 - powershell: | 
    Write-Host "Current Directory:"
    Get-Location
