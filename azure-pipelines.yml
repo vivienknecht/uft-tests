@@ -11,7 +11,7 @@ parameters:
     type: string
     default: 'build/Results.xml'
 
-pool: Default
+# pool: Default
 
 steps: 
 - task: octane-start-task-private@1
