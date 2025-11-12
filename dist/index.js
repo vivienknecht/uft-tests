@@ -23287,7 +23287,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         loadArguments();
         (0, config_1.initConfig)(args);
-        LOGGER.info("Initializing arguments");
+        LOGGER.error("Initializing arguments");
         const actionType = args.action;
         const path = args.path;
         const octaneUrl = args.octaneUrl;
@@ -23300,7 +23300,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         }
         else if (actionType === "discoverTests") {
             if (path) {
-                LOGGER.info("Starting UFT tests discovery...");
+                LOGGER.error("Starting UFT tests discovery...");
                 try {
                     LOGGER.error("The params are: " + path + ", " + octaneUrl + ", " + sharedSpace + ", " + workspace + ", " + clientId + ", " + clientSecret);
                     yield discoverTests(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
