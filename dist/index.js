@@ -23282,7 +23282,7 @@ const testsToRunParser_1 = __nccwpck_require__(4745);
 const Discovery_1 = __nccwpck_require__(6672);
 const LOGGER = new logger_1.default("main.ts");
 let args;
-const main = () => {
+const main = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         loadArguments();
         (0, config_1.initConfig)(args);
@@ -23299,8 +23299,8 @@ const main = () => {
         }
         else if (actionType === "discoverTests") {
             if (path) {
-                LOGGER.error("Starting UFT tests discovery...");
-                discoverTests(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret).catch(err => console.error("Discovery failed:", err));
+                LOGGER.info("Starting UFT tests discovery...");
+                yield discoverTests(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
             }
             else {
                 LOGGER.error("You need to specify a path to the repository to discover UFT tests from.");
@@ -23318,7 +23318,7 @@ const main = () => {
             throw error;
         }
     }
-};
+});
 const discoverTests = (path, octaneUrl, sharedSpace, workspace, clientId, clientSecret) => __awaiter(void 0, void 0, void 0, function* () {
     const discovery = new Discovery_1.default(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
     yield discovery.startDiscovery(path);
