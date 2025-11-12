@@ -23301,7 +23301,12 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         else if (actionType === "discoverTests") {
             if (path) {
                 LOGGER.info("Starting UFT tests discovery...");
-                yield discoverTests(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
+                try {
+                    yield discoverTests(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
+                }
+                catch (e) {
+                    LOGGER.error("An error occurred during UFT tests discovery: " + (e instanceof Error ? e.message : e));
+                }
             }
             else {
                 LOGGER.error("You need to specify a path to the repository to discover UFT tests from.");
