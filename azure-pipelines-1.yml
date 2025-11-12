@@ -18,9 +18,7 @@ steps:
   displayName: 'Use Node.js'
 
 - powershell: |
-    env:
-      CLIENTSECRET: $(CLIENTSECRET)
-    node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace="1001" --workspace="4001" --clientSecret="$env:CLIENTSECRET" --clientId="$env:CLIENTID" --logLevel=5
+    node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace="1001" --workspace="4001" --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=5
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
