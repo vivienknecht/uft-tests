@@ -23302,6 +23302,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             if (path) {
                 LOGGER.info("Starting UFT tests discovery...");
                 try {
+                    LOGGER.error("The params are: " + path + ", " + octaneUrl + ", " + sharedSpace + ", " + workspace + ", " + clientId + ", " + clientSecret);
                     yield discoverTests(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
                 }
                 catch (e) {
