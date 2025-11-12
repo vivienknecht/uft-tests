@@ -18,8 +18,7 @@ steps:
   displayName: 'Use Node.js'
 
 - powershell: |
-    node dist/index.js --action="discoverTests" --path=$Env:BUILD_SOURCESDIRECTORY --octaneUrl="http://localhost:8080/dev/ui/?admin" --sharedSpace="1001" --workspace="4001" --clientId=${env:CLIENTID} --clientSecret=${env:CLIENTSECRET} --logLevel=0
-    Write-Host "Conversion result:"
+    node dist/index.js --action="discoverTests" --path=$Env:BUILD_SOURCESDIRECTORY --octaneUrl="http://localhost:8080/dev/ui/?admin" --sharedSpace="1001" --workspace="4001" --clientId=$env:CLIENTID --clientSecret=$env:CLIENTSECRET --logLevel=0
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
