@@ -23181,7 +23181,7 @@ class Discovery {
     initializeOctaneConnection() {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
-            LOGGER.info("Initializing Octane connection...");
+            LOGGER.error("Initializing Octane connection...");
             const customWebContext = (_a = this._octaneUrl) === null || _a === void 0 ? void 0 : _a.split('/ui/')[0].substring(1);
             //for (const workspace of this._workspace) {
             // if (this._octaneSDKConnection[workspace]) {
@@ -23189,9 +23189,9 @@ class Discovery {
             // }
             const connection = octaneConnectionUtils_1.OctaneConnectionUtils.getNewOctaneConnection(new URL(this._octaneUrl), customWebContext, this._sharedSpace, this._workspace, this._clientId, this._clientSecret);
             yield connection._requestHandler.authenticate();
-            LOGGER.info("authenticated to octane successfully");
+            LOGGER.error("authenticated to octane successfully");
             this._octaneSDKConnection = connection;
-            LOGGER.info(`the octane connection ${connection}`);
+            LOGGER.error(`the octane connection ${connection}`);
             // }
         });
     }
@@ -23212,9 +23212,9 @@ class Discovery {
     }
     startDiscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
-            LOGGER.info("start initializing...");
+            LOGGER.error("start initializing...");
             yield this.initializeOctaneConnection();
-            LOGGER.info("starting discovery process...");
+            LOGGER.error("starting discovery process...");
             // const scanner = new ScanRepo(path);
             // const discoveredTests = await scanner.scanRepo(path);
             //
@@ -23327,19 +23327,19 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 const discoverTests = (path, octaneUrl, sharedSpace, workspace, clientId, clientSecret) => __awaiter(void 0, void 0, void 0, function* () {
-    LOGGER.info("discovery");
+    LOGGER.error("discovery");
     const discovery = new Discovery_1.default(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
     yield discovery.startDiscovery(path);
 });
 const convertTests = () => {
     const parsedTestsToRun = (0, testsToRunParser_1.default)(args.testsToRun);
     if (testsToRunParser_1.default.length === 0) {
-        LOGGER.info("No tests to run have been found.");
+        LOGGER.error("No tests to run have been found.");
         return;
     }
     const convertedTestsToRun = (0, testsToRunConverter_1.default)(parsedTestsToRun);
     console.log(convertedTestsToRun);
-    LOGGER.info("Successfully converted the tests to run.");
+    LOGGER.error("Successfully converted the tests to run.");
 };
 const loadArguments = () => {
     args = (0, yargs_1.default)((0, helpers_1.hideBin)(process.argv))
