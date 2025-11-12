@@ -23820,7 +23820,7 @@ class OctaneConnectionUtils {
     }
     static getNewOctaneConnection(octaneServerUrl, customWebContext, sharedSpace, workspace, clientId, clientSecret) {
         return new OctaneSDK({
-            server: OctaneConnectionUtils.getServerUrl(octaneServerUrl, customWebContext),
+            server: octaneServerUrl,
             sharedSpace: sharedSpace,
             workspace: workspace,
             user: clientId,
