@@ -30578,6 +30578,7 @@ class ScanRepo {
         return __awaiter(this, void 0, void 0, function* () {
             for (const p of paths) {
                 const ext = path.extname(p).toLowerCase();
+                LOGGER.error("Checking file extension: " + ext);
                 if (ext === UFT_GUI_TEST_EXTENSION) {
                     return UFT_GUI_TEST_TYPE;
                 }
