@@ -30752,7 +30752,7 @@ exports["default"] = ScanRepo;
 /***/ }),
 
 /***/ 1730:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
@@ -30784,6 +30784,15 @@ exports["default"] = ScanRepo;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const yargs_1 = __nccwpck_require__(5229);
 const helpers_1 = __nccwpck_require__(7763);
@@ -30794,10 +30803,11 @@ const testsToRunParser_1 = __nccwpck_require__(4745);
 const Discovery_1 = __nccwpck_require__(6672);
 const LOGGER = new logger_1.default("main.ts");
 let args;
-const main = () => {
+const main = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         loadArguments();
         (0, config_1.initConfig)(args);
+        LOGGER.info("Initializing arguments");
         const actionType = args.action;
         const path = args.path;
         const octaneUrl = args.octaneUrl;
@@ -30810,8 +30820,9 @@ const main = () => {
         }
         else if (actionType === "discoverTests") {
             if (path) {
+                LOGGER.error("Starting UFT tests discovery...");
                 const discovery = new Discovery_1.default(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
-                discovery.startDiscovery(path);
+                yield discovery.startDiscovery(path);
             }
             else {
                 LOGGER.error("You need to specify a path to the repository to discover UFT tests from.");
@@ -30829,7 +30840,7 @@ const main = () => {
             throw error;
         }
     }
-};
+});
 const convertTests = () => {
     const parsedTestsToRun = (0, testsToRunParser_1.default)(args.testsToRun);
     if (testsToRunParser_1.default.length === 0) {
