@@ -23188,7 +23188,7 @@ class Discovery {
             //     continue;
             // }
             LOGGER.error("The arguments are: " + this._octaneUrl + ", " + customWebContext + ", " + this._sharedSpace + ", " + this._workspace + ", " + this._clientId + ", " + this._clientSecret);
-            const connection = octaneConnectionUtils_1.OctaneConnectionUtils.getNewOctaneConnection(new URL(this._octaneUrl), customWebContext, this._sharedSpace, this._workspace, this._clientId, this._clientSecret);
+            const connection = octaneConnectionUtils_1.OctaneConnectionUtils.getNewOctaneConnection(this._octaneUrl, this._sharedSpace, this._workspace, this._clientId, this._clientSecret);
             yield connection._requestHandler.authenticate();
             LOGGER.error("authenticated to octane successfully");
             this._octaneSDKConnection = connection;
@@ -23818,7 +23818,7 @@ class OctaneConnectionUtils {
         }
         return url;
     }
-    static getNewOctaneConnection(octaneServerUrl, customWebContext, sharedSpace, workspace, clientId, clientSecret) {
+    static getNewOctaneConnection(octaneServerUrl, sharedSpace, workspace, clientId, clientSecret) {
         return new OctaneSDK({
             server: octaneServerUrl,
             sharedSpace: sharedSpace,
