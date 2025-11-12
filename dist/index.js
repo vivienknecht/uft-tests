@@ -30474,9 +30474,9 @@ class Discovery {
                 "subtype": "test_automated",
                 "name": name
             };
-            LOGGER.info("the body to send to octane " + JSON.stringify(body));
+            LOGGER.error("the body to send to octane " + JSON.stringify(body));
             yield octaneConnection.executeCustomRequest(octaneConnection.server, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
-            LOGGER.info("event sent to octane");
+            LOGGER.error("event sent to octane");
         });
     }
     startDiscovery(path) {
@@ -30550,8 +30550,10 @@ class ScanRepo {
         return __awaiter(this, void 0, void 0, function* () {
             const items = yield fs.promises.readdir(pathToRepo);
             const testType = yield this.getTestType(items);
+            LOGGER.error("The test type is: " + testType);
             let found_tests = [];
             if (testType === UFT_GUI_TEST_TYPE) {
+                LOGGER.error("GUI tests found. Creating automated tests...");
                 const automatedTests = yield this.createAutomatedTestsFromGUI(pathToRepo, testType);
                 this._tests.push(automatedTests);
             }
@@ -30620,6 +30622,7 @@ class ScanRepo {
                 actions: [],
                 status: "New"
             };
+            LOGGER.error("Created test: " + test.packageName + "\\" + test.name);
             return test;
         });
     }
@@ -31387,12 +31390,12 @@ const getGUITestDoc = (pathToTest) => __awaiter(void 0, void 0, void 0, function
     try {
         const tspTestFile = yield checkIfFileExists(pathToTest, UFT_GUI_TEST_FILE);
         if (!tspTestFile) {
-            LOGGER.warn(`The is no ${UFT_GUI_TEST_FILE} in the ${pathToTest}`);
+            LOGGER.error(`The is no ${UFT_GUI_TEST_FILE} in the ${pathToTest}`);
             return null;
         }
         const xmlFormat = yield convertToXml(tspTestFile);
         if (!xmlFormat) {
-            LOGGER.warn("No valid XML content could be extracted from the TSP file.");
+            LOGGER.error("No valid XML content could be extracted from the TSP file.");
             return null;
         }
         //const parser = new DOMParser(); - new DOMParser() without custom error handling
