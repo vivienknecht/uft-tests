@@ -23187,6 +23187,7 @@ class Discovery {
             // if (this._octaneSDKConnection[workspace]) {
             //     continue;
             // }
+            LOGGER.error("The arguments are: " + this._octaneUrl + ", " + customWebContext + ", " + this._sharedSpace + ", " + this._workspace + ", " + this._clientId + ", " + this._clientSecret);
             const connection = octaneConnectionUtils_1.OctaneConnectionUtils.getNewOctaneConnection(new URL(this._octaneUrl), customWebContext, this._sharedSpace, this._workspace, this._clientId, this._clientSecret);
             yield connection._requestHandler.authenticate();
             LOGGER.error("authenticated to octane successfully");
