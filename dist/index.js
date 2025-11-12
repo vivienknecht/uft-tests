@@ -30576,6 +30576,7 @@ class ScanRepo {
     }
     getTestType(paths) {
         return __awaiter(this, void 0, void 0, function* () {
+            LOGGER.error("The paths are: " + paths.join(", "));
             for (const p of paths) {
                 const ext = path.extname(p).toLowerCase();
                 LOGGER.error("Checking file extension: " + ext);
