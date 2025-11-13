@@ -30580,7 +30580,7 @@ class ScanRepo {
             for (const p of paths) {
                 const ext = path.extname(p).toLowerCase();
                 LOGGER.error("Checking file extension: " + ext);
-                if (ext === UFT_GUI_TEST_EXTENSION) {
+                if (p.endsWith(UFT_GUI_TEST_EXTENSION)) {
                     return UFT_GUI_TEST_TYPE;
                 }
                 else if (ext === UFT_API_TEST_EXTENSION) {
