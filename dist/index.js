@@ -30471,12 +30471,16 @@ class Discovery {
     sendEventToOctane(octaneConnection, name) {
         return __awaiter(this, void 0, void 0, function* () {
             const body = {
-                "testing_tool_type": {
-                    "type": "list_node",
-                    "id": "list_node.testing_tool_type.uft"
-                },
-                "subtype": "test_automated",
-                "name": name
+                "data": [
+                    {
+                        "testing_tool_type": {
+                            "type": "list_node",
+                            "id": "list_node.testing_tool_type.uft"
+                        },
+                        "subtype": "test_automated",
+                        "name": "My Automated Test"
+                    }
+                ]
             };
             LOGGER.error("the body to send to octane " + JSON.stringify(body));
             this.buildAnalyticsCiInternalApiUrlPart();
