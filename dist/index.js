@@ -30478,7 +30478,7 @@ class Discovery {
                             "id": "list_node.testing_tool_type.uft"
                         },
                         "subtype": "test_automated",
-                        "name": "My Automated Test"
+                        "name": name
                     }
                 ]
             };
