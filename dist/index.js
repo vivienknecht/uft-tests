@@ -30482,7 +30482,7 @@ class Discovery {
             this.buildAnalyticsCiInternalApiUrlPart();
             LOGGER.error("The custom api url part is: " + this.analyticsCiInternalApiUrlPart);
             const options = {
-                headers: { 'Content-Type': 'application/xml' },
+                headers: { 'Content-Type': 'application/json' },
                 json: false,
             };
             yield octaneConnection.executeCustomRequest(this.analyticsCiInternalApiUrlPart + '/events', alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body, options.headers);
