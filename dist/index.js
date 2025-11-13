@@ -30468,7 +30468,7 @@ class Discovery {
             // }
         });
     }
-    sendEventToOctane(octaneConnection, name) {
+    sendEventToOctane(octaneConnection, name, packageName) {
         return __awaiter(this, void 0, void 0, function* () {
             const body = {
                 "data": [
@@ -30478,7 +30478,8 @@ class Discovery {
                             "id": "list_node.testing_tool_type.uft"
                         },
                         "subtype": "test_automated",
-                        "name": name
+                        "name": name,
+                        "package": packageName
                     }
                 ]
             };
@@ -30489,7 +30490,7 @@ class Discovery {
                 headers: { 'Content-Type': 'application/json' },
                 json: false,
             };
-            yield octaneConnection.executeCustomRequest("/api/shared_spaces/1001/workspaces/5001/tests", alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+            yield octaneConnection.executeCustomRequest("/api/shared_spaces/1001/workspaces/5002/tests", alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
             LOGGER.error("event sent to octane");
         });
     }
@@ -30503,7 +30504,7 @@ class Discovery {
             //const tests= discoveredTests.getAllTests();
             LOGGER.error("The discovered tests are: " + JSON.stringify(discoveredTests));
             for (const test of discoveredTests) {
-                yield this.sendEventToOctane(this._octaneSDKConnection, test.name);
+                yield this.sendEventToOctane(this._octaneSDKConnection, test.name, test.packageName);
             }
         });
     }
