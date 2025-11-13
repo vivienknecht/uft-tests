@@ -30489,7 +30489,7 @@ class Discovery {
                 headers: { 'Content-Type': 'application/json' },
                 json: false,
             };
-            yield octaneConnection.executeCustomRequest("/api/shared_spaces/1001/workspaces/4001/tests", alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+            yield octaneConnection.executeCustomRequest("/api/shared_spaces/1001/workspaces/4001/tests", alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
             LOGGER.error("event sent to octane");
         });
     }
@@ -30625,15 +30625,15 @@ class ScanRepo {
         return __awaiter(this, void 0, void 0, function* () {
             const testName = path.basename(pathToTest);
             const relativePath = path.relative(this._workDirectory, pathToTest);
-            let packageName = "";
-            if (relativePath.length > testName.length) {
-                const parts = relativePath.split(path.sep);
-                packageName = parts.slice(0, -1).join(path.sep);
-            }
+            let packageName = relativePath;
+            // if (relativePath.length > testName.length) {
+            //     const parts = relativePath.split(path.sep);
+            //     packageName = parts.slice(0, -1).join(path.sep);
+            // }
             const test = {
                 name: testName,
                 description: "",
-                packageName: packageName,
+                packageName: relativePath,
                 uftOneTestType: testType,
                 executable: true,
                 actions: [],
