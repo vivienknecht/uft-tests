@@ -30633,7 +30633,7 @@ class ScanRepo {
             const test = {
                 name: testName,
                 description: "",
-                packageName: relativePath,
+                packageName: pathToTest,
                 uftOneTestType: testType,
                 executable: true,
                 actions: [],
