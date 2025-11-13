@@ -30489,7 +30489,7 @@ class Discovery {
                 headers: { 'Content-Type': 'application/json' },
                 json: false,
             };
-            yield octaneConnection.executeCustomRequest("/api/shared_spaces/1001/workspaces/4001/tests", alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+            yield octaneConnection.executeCustomRequest("/api/shared_spaces/1001/workspaces/5001/tests", alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
             LOGGER.error("event sent to octane");
         });
     }
