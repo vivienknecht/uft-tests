@@ -30586,10 +30586,8 @@ class ScanRepo {
                 else if (ext === UFT_API_TEST_EXTENSION) {
                     return UFT_API_TEST_TYPE;
                 }
-                else {
-                    return NOT_UFT_TEST_TYPE;
-                }
             }
+            return NOT_UFT_TEST_TYPE;
         });
     }
     createAutomatedTestsFromGUI(pathToTest, testType) {
