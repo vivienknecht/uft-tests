@@ -9,8 +9,11 @@ trigger:
 pool: Default
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- task: octane-test-runner-start-task-private@1
+  inputs:
+    OctaneServiceConnection: 'octaneConnectionForDiscovery'
+    WorkspaceList: '5001'
+    Framework: 'uft'
 
 - task: NodeTool@0
   inputs:
@@ -20,7 +23,3 @@ steps:
 - powershell: |
     node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=5002 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
