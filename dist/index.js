@@ -30445,6 +30445,10 @@ class Discovery {
         this._clientId = clientId;
         this._clientSecret = clientSecret;
         this._octaneSDKConnection = {};
+        this.analyticsCiInternalApiUrlPart = "";
+    }
+    buildAnalyticsCiInternalApiUrlPart() {
+        this.analyticsCiInternalApiUrlPart = '/internal-api/shared_spaces/' + this._sharedSpace + '/analytics/ci';
     }
     initializeOctaneConnection() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -30475,7 +30479,7 @@ class Discovery {
                 "name": name
             };
             LOGGER.error("the body to send to octane " + JSON.stringify(body));
-            yield octaneConnection.executeCustomRequest(octaneConnection.server, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+            yield octaneConnection.executeCustomRequest(this.analyticsCiInternalApiUrlPart + '/events', alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
             LOGGER.error("event sent to octane");
         });
     }
@@ -30487,7 +30491,7 @@ class Discovery {
             const scanner = new ScanRepo_1.default(path);
             const discoveredTests = yield scanner.scanRepo(path);
             //const tests= discoveredTests.getAllTests();
-            LOGGER.error("The discovered tests are: " + discoveredTests);
+            LOGGER.error("The discovered tests are: " + JSON.stringify(discoveredTests));
             for (const test of discoveredTests) {
                 yield this.sendEventToOctane(this._octaneSDKConnection, test.name);
             }
@@ -30570,6 +30574,7 @@ class ScanRepo {
                 }
             }
             found_tests = this._tests;
+            LOGGER.error("The found tests are: " + JSON.stringify(found_tests));
             return found_tests;
             // return new DiscoveryResults(this._tests);
         });
