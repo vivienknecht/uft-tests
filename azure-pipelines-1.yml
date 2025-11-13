@@ -14,7 +14,10 @@ parameters:
 pool: Default
 
 steps: 
-
+- task: DeleteFiles@1
+  inputs:
+    SourceFolder: '$(Pipeline.Workspace)'
+    Contents: '**/*'
 - task: octane-start-task-private@1
   inputs:
     OctaneServiceConnection: 'octaneConnectionForDiscovery'
