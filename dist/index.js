@@ -30479,7 +30479,7 @@ class Discovery {
                 "name": name
             };
             LOGGER.error("the body to send to octane " + JSON.stringify(body));
-            yield octaneConnection.executeCustomRequest(this.analyticsCiInternalApiUrlPart + '/events', alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+            yield octaneConnection.executeCustomRequest("/dev/ui/", alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
             LOGGER.error("event sent to octane");
         });
     }
