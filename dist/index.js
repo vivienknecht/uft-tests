@@ -30481,7 +30481,11 @@ class Discovery {
             LOGGER.error("the body to send to octane " + JSON.stringify(body));
             this.buildAnalyticsCiInternalApiUrlPart();
             LOGGER.error("The custom api url part is: " + this.analyticsCiInternalApiUrlPart);
-            yield octaneConnection.executeCustomRequest(this.analyticsCiInternalApiUrlPart + '/events', alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+            const options = {
+                headers: { 'Content-Type': 'application/xml' },
+                json: false,
+            };
+            yield octaneConnection.executeCustomRequest(this.analyticsCiInternalApiUrlPart + '/events', alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body, options.headers);
             LOGGER.error("event sent to octane");
         });
     }
