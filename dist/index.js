@@ -30600,7 +30600,9 @@ class ScanRepo {
             test.description = description || "";
             const actionsPathPrefix = this.getActionsPathPrefix(test, false);
             const actions = yield this.getActionsAndParameters(document, actionsPathPrefix, test.name, pathToTest);
+            LOGGER.error("The actions are: " + JSON.stringify(actions));
             test.actions = actions;
+            LOGGER.error("The test is: " + JSON.stringify(test));
             return test;
         });
     }
@@ -30629,6 +30631,7 @@ class ScanRepo {
     getActionsPathPrefix(test, originalPath) {
         const testPackage = originalPath ? test.oldPackageName : test.packageName;
         const testName = originalPath ? test.oldName : test.name;
+        LOGGER.error("Test package: " + testPackage + ", test name: " + testName);
         return `${testPackage}\\${testName}`;
     }
     getActionsAndParameters(document, actionsPathPrefix, testName, pathToTest) {
