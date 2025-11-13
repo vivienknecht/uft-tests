@@ -6,20 +6,59 @@
 trigger:
 - main
 
+parameters:
+  - name: unitTestResultsGlobPattern
+    type: string
+    default: 'build/Results.xml'
+
 pool: Default
 
-steps:
+steps: 
+
+- task: octane-start-task-private@1
+  inputs:
+    OctaneServiceConnection: 'octaneConnectionForDiscovery'
+    WorkspaceList: '5001'
+    GithubRepositoryConnection: 'githubConnection'
+    CreatePipelineCheckbox: true
+
 - task: octane-test-runner-start-task-private@1
   inputs:
     OctaneServiceConnection: 'octaneConnectionForDiscovery'
     WorkspaceList: '5001'
     Framework: 'uft'
 
-- task: NodeTool@0
-  inputs:
-    versionSpec: '22.x'  # or whatever Node version you need
-  displayName: 'Use Node.js'
-
 - powershell: |
-    node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=5002 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
+   echo "My client id ${CLIENT_ID}" ${env:CLIENT_ID}   
 
+- powershell: | 
+   Write-Host "Current Directory:"
+   Get-Location
+   echo "Building..."
+   mkdir build
+   $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
+   echo "These are the tests:"
+   echo "Testst"
+   $TESTS_TO_RUN_XML = $testsToRun -replace ('\\?FTToolsLauncher\\', '')
+   Set-Content -Path ./build/testsToRun.mtbx -Value "$TESTS_TO_RUN_XML"
+   Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
+   Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
+   Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\AI" 
+   Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
+   Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
+   Get-Content -Path ./build/Props.txt
+
+- powershell: | 
+    echo "Testing..."
+    echo $PWD
+    Test-Path "./build/Props.txt" -PathType leaf
+    Get-Content -Path ./build/Props.txt
+    Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
+    echo "Please check the [$PWD\build\Results.xml] file."
+- task: octane-end-task-private@1
+  inputs:
+    OctaneServiceConnection: 'octaneConnectionForDiscovery'
+    WorkspaceList: '5001'
+    GithubRepositoryConnection: 'githubConnection'
+  env: 
+    UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
