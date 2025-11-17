@@ -40254,8 +40254,7 @@ class RepoChangesDetection {
             var _a;
             const gitdir = path.join(repoPath, '.git');
             LOGGER.error("The gitDir is: " + gitdir + " and repoPath is: " + repoPath);
-            //const allowedExtensions = /\.(xls|xlsx|tp|st)$/i;
-            const allowedExtensions = /\.(tp|st)$/i;
+            const allowedExtensions = /\.(xls|xlsx|tp|st)$/i;
             const allowedFileNames = /^(ACTIONS\.XML)$/i;
             const results = (_a = yield git.walk({
                 fs,
