@@ -40244,6 +40244,7 @@ class RepoChangesDetection {
                 return affectedFiles;
             }
             catch (error) {
+                LOGGER.error("Error while getting SCM changes: " + (error instanceof Error ? error.message : String(error)));
                 throw new Error(`Failed to process SCM changes: ${error instanceof Error ? error.message : String(error)}`);
             }
         });
