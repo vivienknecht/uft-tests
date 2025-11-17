@@ -22,6 +22,6 @@ steps:
   displayName: "Set SYNCED_COMMIT_SHA to the last commit"  
 
 - powershell: |
-    node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=5002 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
+    node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=6001 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
   env:
     SYNCED_COMMIT_SHA: $(SYNCED_COMMIT_SHA) 
