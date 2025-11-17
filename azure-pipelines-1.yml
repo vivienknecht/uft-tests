@@ -6,8 +6,8 @@
 trigger:
 - main
 
-variables:
-  SYNCED_COMMIT_SHA: ''
+# variables:
+#   SYNCED_COMMIT_SHA: ''
 
 pool: Default
 
@@ -21,26 +21,26 @@ steps:
 #     Write-Host "##vso[task.setvariable variable=SYNCED_COMMIT_SHA]$(Build.SourceVersion)"
 #   displayName: "Set SYNCED_COMMIT_SHA to the last commit"  
 
-- task: Cache@2
-  inputs:
-    key: syncedCommit
-    restoreKeys: syncedCommit-
-    path: .sync
-  displayName: "Restore last synced commit"
+# - task: Cache@2
+#   inputs:
+#     key: syncedCommit
+#     restoreKeys: syncedCommit-
+#     path: .sync
+#   displayName: "Restore last synced commit"
 
 - powershell: |
     node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=6001 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
   env:
     SYNCED_COMMIT_SHA: $(SYNCED_COMMIT_SHA) 
 
-- powershell: |
-    mkdir .sync -Force | Out-Null
-    Set-Content -Path .sync/.synced_commit_sha -Value "$(Build.SourceVersion)" -NoNewline -Encoding utf8
-  displayName: "Save current commit SHA"
+# - powershell: |
+#     mkdir .sync -Force | Out-Null
+#     Set-Content -Path .sync/.synced_commit_sha -Value "$(Build.SourceVersion)" -NoNewline -Encoding utf8
+#   displayName: "Save current commit SHA"
 
-# Cache updated directory so next run can restore it
-- task: Cache@2
-  inputs:
-    key: syncedCommit
-    path: .sync
-  displayName: "Cache updated synced commit"   
+# # Cache updated directory so next run can restore it
+# - task: Cache@2
+#   inputs:
+#     key: syncedCommit
+#     path: .sync
+#   displayName: "Cache updated synced commit"   
