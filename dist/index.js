@@ -41463,6 +41463,7 @@ const getLastSyncedCommit = () => __awaiter(void 0, void 0, void 0, function* ()
         if (e.code === 'ENOENT') {
             return process.env.SYNCED_COMMIT_SHA || "";
         }
+        LOGGER.error("Failed to read last synced commit sha. " + (e instanceof Error ? e.message : String(e)));
         throw new Error("Failed to read last synced commit sha. " + (e instanceof Error ? e.message : String(e)));
     }
 });
