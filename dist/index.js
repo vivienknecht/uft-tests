@@ -40253,7 +40253,7 @@ class RepoChangesDetection {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             const gitdir = path.join(repoPath, '.git');
-            LOGGER.error("The gitDir is: " + gitdir + "and repoPath is: " + repoPath);
+            LOGGER.error("The gitDir is: " + gitdir + " and repoPath is: " + repoPath);
             const allowedExtensions = /\.(xls|xlsx|tp|st)$/i;
             const allowedFileNames = /^(ACTIONS\.XML)$/i;
             const results = (_a = yield git.walk({
@@ -40358,8 +40358,11 @@ class RepoChangesDetection {
             if (finalResults.length === 0) {
                 LOGGER.error("No relevant differences found between the commits after filtering.");
             }
-            LOGGER.error("The differences found are: " + JSON.stringify(deletes) + " for deletes, " + JSON.stringify(adds) + " for adds, " + JSON.stringify(modifies) + " for modifies.");
+            LOGGER.error("The differences found are: " + JSON.stringify(deletes) + " for deletes, ");
+            LOGGER.error("For adds:" + JSON.stringify(adds));
+            LOGGER.error("For updates:" + JSON.stringify(modifies));
             LOGGER.error("Final differences: " + JSON.stringify(finalResults, null, 2));
+            LOGGER.error("Total differences found: " + finalResults.length);
             return finalResults;
         });
     }
@@ -40414,6 +40417,7 @@ const ARG_DIRECTION = "ArgDirection";
 class ScanRepo {
     constructor(workDirectory) {
         this._tests = [];
+        this._scmResourceFiles = [];
         this._workDirectory = workDirectory;
     }
     scanRepo(pathToRepo) {
@@ -40628,8 +40632,12 @@ class ScanRepo {
             for (const file of affectedFiles) {
                 const affectedFileFullPath = path.join(pathToRepo, file.newPath);
                 LOGGER.error("The affected file full path is: " + affectedFileFullPath);
+                LOGGER.error("The number paths is: " + affectedFiles.length);
                 if ((0, utils_1.isMainTestFile)(affectedFileFullPath)) {
                     foundTestsAfterRescan = yield this.handleTestChanges(file, affectedFileFullPath);
+                }
+                else if ((0, utils_1.isDataTableFile)(file.newPath)) {
+                    yield this.handleDataTableChanges(file, affectedFileFullPath);
                 }
             }
             return foundTestsAfterRescan;
@@ -40676,6 +40684,34 @@ class ScanRepo {
             return test.name !== test.oldName || test.packageName !== test.oldPackageName;
         }
         return false;
+    }
+    handleDataTableChanges(affectedFile, affectedFileFullPath) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            const scmResourceFile = this.createScmResourceFile(affectedFileFullPath);
+            const fileExists = fs.existsSync(affectedFileFullPath);
+            if (affectedFile.changeType === "ADD") {
+                const testDirectoryPath = (0, utils_1.getParentFolderPath)(affectedFileFullPath);
+                const items = (_a = yield fs.promises.readdir(testDirectoryPath)) !== null && _a !== void 0 ? _a : [];
+                const testType = yield this.getTestType(items);
+                if (testType === NOT_UFT_TEST_TYPE) {
+                    fileExists && this._scmResourceFiles.push(scmResourceFile);
+                }
+            }
+            else if (affectedFile.changeType === "DELETE") {
+                if (!fileExists) {
+                    this._scmResourceFiles.push(scmResourceFile);
+                }
+            }
+            LOGGER.error("The scm resource files are: " + JSON.stringify(this._scmResourceFiles));
+        });
+    }
+    createScmResourceFile(filePath) {
+        const resourceFile = {
+            name: filePath,
+            relativePath: path.relative(this._workDirectory, filePath),
+        };
+        return resourceFile;
     }
     createAutomatedReportsFromAPI(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -41307,7 +41343,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isBlank = exports.getTestType = exports.getParentFolderPath = exports.isMainTestFile = exports.getHeadCommitSha = exports.getLastSyncedCommit = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.setActionPath = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
+exports.isDataTableFile = exports.isBlank = exports.getTestType = exports.getParentFolderPath = exports.isMainTestFile = exports.getHeadCommitSha = exports.getLastSyncedCommit = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.setActionPath = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
 const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(1943);
 const logger_1 = __nccwpck_require__(7893);
@@ -41501,6 +41537,12 @@ const isBlank = (str) => {
     return str === null || str === undefined || str.trim().length === 0;
 };
 exports.isBlank = isBlank;
+const isDataTableFile = (file) => {
+    const ext = path.extname(file).toLowerCase();
+    const fileName = path.basename(file).toLowerCase();
+    return ext === '.xlsx' || ext === '.xls';
+};
+exports.isDataTableFile = isDataTableFile;
 
 
 /***/ }),
