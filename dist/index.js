@@ -40130,7 +40130,7 @@ class Discovery {
                 headers: { 'Content-Type': 'application/json' },
                 json: false,
             };
-            yield octaneConnection.executeCustomRequest("/api/shared_spaces/1001/workspaces/5002/tests", alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
             LOGGER.error("event sent to octane");
         });
     }
@@ -41462,7 +41462,7 @@ const getLastSyncedCommit = () => __awaiter(void 0, void 0, void 0, function* ()
     catch (e) {
         /// If file does not exist, fall back on the SYNCED_COMMIT_SHA env variable
         if (e.code === 'ENOENT') {
-            LOGGER.error("SYNCED_COMMIT_SHA file not found. Falling back to SYNCED_COMMIT_SHA environment variable.");
+            LOGGER.error("SYNCED_COMMIT_SHA file not found. Falling back to SYNCED_COMMIT_SHA environment variable." + process.env.SYNCED_COMMIT_SHA);
             return process.env.SYNCED_COMMIT_SHA || "";
         }
         LOGGER.error("Failed to read last synced commit sha. " + (e instanceof Error ? e.message : String(e)));
