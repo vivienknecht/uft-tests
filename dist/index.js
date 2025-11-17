@@ -41454,7 +41454,8 @@ const setActionPath = (action, actionsPathPrefix) => {
 exports.setActionPath = setActionPath;
 const getLastSyncedCommit = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const data = yield fs.readFile(SYNCED_COMMIT_SHA, 'utf-8');
+        LOGGER.error("Reading last synced commit sha from file: " + SYNCED_COMMIT_SHA);
+        const data = yield fs.readFile(SYNCED_COMMIT_SHA, 'utf8');
         LOGGER.error("Last synced commit sha: " + data.trim() + "from file " + SYNCED_COMMIT_SHA);
         return data.trim();
     }
