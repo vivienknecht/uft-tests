@@ -40133,10 +40133,21 @@ class Discovery {
             LOGGER.error("event sent to octane");
         });
     }
-    getExisitngTestsFromOctane(octaneConnection) {
+    getExistingTestsFromOctane(octaneConnection) {
         return __awaiter(this, void 0, void 0, function* () {
             const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests?query=\"(subtype=^test_automated^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             LOGGER.error("the existing tests in octane are: " + JSON.stringify(response));
+            let existingTests = [];
+            for (const testData of response.data) {
+                const test = {
+                    id: testData.id,
+                    name: testData.name,
+                    packageName: testData.package,
+                };
+                existingTests.push(test);
+            }
+            LOGGER.error("the existing tests array is: " + JSON.stringify(existingTests));
+            return existingTests;
         });
     }
     startDiscoveryOrRediscovery(path) {
@@ -40168,12 +40179,59 @@ class Discovery {
             LOGGER.error("starting discovery process...");
             const scanner = new ScanRepo_1.default(path);
             const discoveredTests = yield scanner.scanRepo(path);
-            yield this.getExisitngTestsFromOctane(this._octaneSDKConnection);
+            const existingTests = yield this.getExistingTestsFromOctane(this._octaneSDKConnection);
+            const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests);
+            LOGGER.error("The modified tests are: " + JSON.stringify(modifiedTests));
             //const tests= discoveredTests.getAllTests();
             LOGGER.error("The discovered tests are: " + JSON.stringify(discoveredTests));
             for (const test of discoveredTests) {
                 yield this.sendEventToOctane(this._octaneSDKConnection, test.name, test.packageName);
             }
+        });
+    }
+    getModifiedTests(discoveredTests, existingTests) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const changedTests = [];
+            const existingByName = new Map(existingTests.map(test => [test.name, test]));
+            const existingByPackage = new Map(existingTests.map(test => [test.packageName, test]));
+            const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
+            const currentByPackage = new Map(discoveredTests.map(test => [test.packageName, test]));
+            const renamedTests = [];
+            const movedPairs = [];
+            for (const test of discoveredTests) {
+                const existingTestFullPath = test.packageName + '/' + test.name;
+                const exactMatch = existingByPackage.get(existingTestFullPath);
+                if (exactMatch) {
+                    continue; // No changes
+                }
+                const possibleRename = existingTests.find(et => et.packageName === test.packageName && et.name !== test.name);
+                if (possibleRename && !currentByName.has(possibleRename.name)) {
+                    renamedTests.push({ old: possibleRename, new: test });
+                    continue;
+                }
+                const possibleMove = existingByName.get(test.name);
+                if (possibleMove && possibleMove.packageName !== test.packageName) {
+                    movedPairs.push({ old: possibleMove, new: test });
+                    continue;
+                }
+                changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'added' }));
+            }
+            for (const test of renamedTests) {
+                changedTests.push(Object.assign(Object.assign({}, test.new), { changeType: "renamed" }));
+            }
+            for (const pair of movedPairs) {
+                changedTests.push(Object.assign(Object.assign({}, pair.new), { changeType: "moved" }));
+            }
+            for (const test of existingTests) {
+                const currentTestFullPath = test.packageName + '/' + test.name;
+                const stillExists = currentByPackage.get(currentTestFullPath);
+                const wasRenamed = renamedTests.some(rt => rt.old === test);
+                const wasMoved = movedPairs.some(mp => mp.old === test);
+                if (!stillExists && !wasRenamed && !wasMoved) {
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'deleted' }));
+                }
+            }
+            return changedTests;
         });
     }
 }
