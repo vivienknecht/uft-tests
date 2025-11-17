@@ -40150,7 +40150,7 @@ class Discovery {
         return __awaiter(this, void 0, void 0, function* () {
             // await octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests/?query="(id=^${testId}^)`,
             //     Octane.operationTypes.delete);
-            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests/${testId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update);
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests/${testId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
             LOGGER.error("delete event sent to octane");
         });
     }
