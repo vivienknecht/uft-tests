@@ -17,11 +17,30 @@ steps:
     versionSpec: '22.x'  
   displayName: 'Use Node.js'
 
-- powershell: |
-    Write-Host "##vso[task.setvariable variable=SYNCED_COMMIT_SHA]$(Build.SourceVersion)"
-  displayName: "Set SYNCED_COMMIT_SHA to the last commit"  
+# - powershell: |
+#     Write-Host "##vso[task.setvariable variable=SYNCED_COMMIT_SHA]$(Build.SourceVersion)"
+#   displayName: "Set SYNCED_COMMIT_SHA to the last commit"  
+
+- task: Cache@2
+  inputs:
+    key: syncedCommit-$(Build.SourceVersion)
+    restoreKeys: syncedCommit-
+    path: .synced_commit_sha
+  displayName: "Restore last synced commit"
 
 - powershell: |
     node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=6001 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
   env:
     SYNCED_COMMIT_SHA: $(SYNCED_COMMIT_SHA) 
+
+# Save current commit as the next synced commit
+- powershell: |
+    echo "$(Build.SourceVersion)" > .synced_commit_sha
+  displayName: "Save current commit SHA"
+
+# Update the cache with the new SHA
+- task: Cache@2
+  inputs:
+    key: syncedCommit-$(Build.SourceVersion)
+    path: .synced_commit_sha
+  displayName: "Cache updated synced commit"    
