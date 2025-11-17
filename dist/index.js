@@ -40074,7 +40074,6 @@ const octaneConnectionUtils_1 = __nccwpck_require__(7268);
 const alm_octane_js_rest_sdk_1 = __nccwpck_require__(3967);
 const logger_1 = __nccwpck_require__(7893);
 const utils_1 = __nccwpck_require__(5268);
-const RepoChangesDetection_1 = __nccwpck_require__(5296);
 const LOGGER = new logger_1.default("Discovery.ts");
 class Discovery {
     constructor(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret) {
@@ -40134,6 +40133,12 @@ class Discovery {
             LOGGER.error("event sent to octane");
         });
     }
+    getExisitngTestsFromOctane(octaneConnection) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests?query=\"(subtype=^test_automated^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            LOGGER.error("the existing tests in octane are: " + JSON.stringify(response));
+        });
+    }
     startDiscoveryOrRediscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
             LOGGER.error("start initializing...");
@@ -40142,21 +40147,20 @@ class Discovery {
             const newCommit = yield (0, utils_1.getHeadCommitSha)(path);
             LOGGER.error("the last synced commit is: " + lastCommit);
             LOGGER.error("the head commit is: " + newCommit);
-            if (lastCommit) {
-                LOGGER.error("starting rediscovery process...");
-                const affectedFiles = yield RepoChangesDetection_1.default.getChanges(path, lastCommit, newCommit);
-                LOGGER.error("the affected files are: " + JSON.stringify(affectedFiles));
-                //await ReScanRepo.rescan(path, affectedFiles);
-                const scanner = new ScanRepo_1.default(path);
-                const discoveredTestsAfterRescan = yield scanner.rescan(path, affectedFiles);
-                LOGGER.error("The discovered tests after rescan are: " + JSON.stringify(discoveredTestsAfterRescan));
-                for (const test of discoveredTestsAfterRescan) {
-                    yield this.sendEventToOctane(this._octaneSDKConnection, test.name, test.packageName);
-                }
-            }
-            else {
-                yield this.startDiscovery(path);
-            }
+            // if (lastCommit) {
+            //     LOGGER.error("starting rediscovery process...");
+            //     const affectedFiles = await RepoChangesDetection.getChanges(path, lastCommit, newCommit);
+            //     LOGGER.error("the affected files are: " + JSON.stringify(affectedFiles));
+            //     //await ReScanRepo.rescan(path, affectedFiles);
+            //     const scanner = new ScanRepo(path);
+            //     const discoveredTestsAfterRescan = await scanner.rescan(path, affectedFiles);
+            //     LOGGER.error("The discovered tests after rescan are: " + JSON.stringify(discoveredTestsAfterRescan));
+            //     for (const test of discoveredTestsAfterRescan) {
+            //         await this.sendEventToOctane(this._octaneSDKConnection, test.name, test.packageName);
+            //     }
+            // } else {
+            yield this.startDiscovery(path);
+            //}
         });
     }
     startDiscovery(path) {
@@ -40164,6 +40168,7 @@ class Discovery {
             LOGGER.error("starting discovery process...");
             const scanner = new ScanRepo_1.default(path);
             const discoveredTests = yield scanner.scanRepo(path);
+            yield this.getExisitngTestsFromOctane(this._octaneSDKConnection);
             //const tests= discoveredTests.getAllTests();
             LOGGER.error("The discovered tests are: " + JSON.stringify(discoveredTests));
             for (const test of discoveredTests) {
@@ -40173,201 +40178,6 @@ class Discovery {
     }
 }
 exports["default"] = Discovery;
-
-
-/***/ }),
-
-/***/ 5296:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const path = __nccwpck_require__(6928);
-const fs = __nccwpck_require__(1943);
-const git = __nccwpck_require__(3667);
-const logger_1 = __nccwpck_require__(7893);
-const LOGGER = new logger_1.default("RepoChangesDetection.ts");
-class RepoChangesDetection {
-    static getChanges(dir, lastCommit, newCommit) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const affectedFiles = [];
-            try {
-                const differences = yield RepoChangesDetection.getDifferences(dir, lastCommit, newCommit);
-                for (const diff of differences) {
-                    if (diff.operation === "ADD") {
-                        affectedFiles.push({
-                            newPath: diff.toPath,
-                            oldPath: null,
-                            changeType: "ADD",
-                            oldId: "",
-                            newId: diff.toId
-                        });
-                    }
-                    else if (diff.operation === "DEL") {
-                        affectedFiles.push({
-                            newPath: diff.fromPath,
-                            oldPath: diff.fromPath,
-                            changeType: "DELETE",
-                            oldId: diff.fromId,
-                            newId: ""
-                        });
-                    }
-                    else if (diff.operation === "RENAME") {
-                        affectedFiles.push({
-                            newPath: diff.toPath,
-                            oldPath: diff.fromPath,
-                            changeType: "EDIT",
-                            oldId: (yield git.resolveRef({ fs, dir, ref: lastCommit })) || "",
-                            newId: (yield git.resolveRef({ fs, dir, ref: newCommit })) || ""
-                        });
-                    }
-                    else {
-                        affectedFiles.push({
-                            newPath: diff.toPath,
-                            oldPath: diff.fromPath,
-                            changeType: "EDIT",
-                            oldId: diff.toId,
-                            newId: diff.toId
-                        });
-                    }
-                }
-                return affectedFiles;
-            }
-            catch (error) {
-                LOGGER.error("Error while getting SCM changes: " + (error instanceof Error ? error.message : String(error)));
-                throw new Error(`Failed to process SCM changes: ${error instanceof Error ? error.message : String(error)}`);
-            }
-        });
-    }
-    static getDifferences(repoPath, lastCommit, newCommit) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            const gitdir = path.join(repoPath, '.git');
-            LOGGER.error("The gitDir is: " + gitdir + " and repoPath is: " + repoPath);
-            const allowedExtensions = /\.(xls|xlsx|tp|st)$/i;
-            const allowedFileNames = /^(ACTIONS\.XML)$/i;
-            const results = (_a = yield git.walk({
-                fs,
-                dir: repoPath,
-                gitdir,
-                trees: [
-                    git.TREE({ ref: lastCommit }), // walk through last commit tree
-                    git.TREE({ ref: newCommit }), // walk through new commit tree
-                ],
-                map: function (filePath_1, _a) {
-                    return __awaiter(this, arguments, void 0, function* (filePath, [oldEntry, newEntry]) {
-                        const fromPath = oldEntry ? filePath : "dev/null"; //dev/null if a file was added in the new commit
-                        const toPath = newEntry ? filePath : "dev/null"; //dev/null if a file was deleted in the new commit
-                        const fromId = oldEntry ? yield oldEntry.oid() : null; //SHA of file in last commit, it identifies if the content changed
-                        const toId = newEntry ? yield newEntry.oid() : null; //SHA of file in new commit
-                        if (fromId === toId && fromId !== null) {
-                            return null; // No changes in content
-                        }
-                        if (fromPath === "dev/null" && toPath === "dev/null") {
-                            return null; // Both paths are dev/null, this should not happen
-                        }
-                        return { fromPath, toPath, fromId, toId };
-                    });
-                },
-                reduce: function (parent, children) {
-                    return __awaiter(this, void 0, void 0, function* () {
-                        let diffs = [];
-                        const matchesFilter = (diff) => {
-                            // if the old path exists use it (delete or modify), else use the new path (add)
-                            const relevantPath = diff.fromPath !== "dev/null" ? diff.fromPath : diff.toPath;
-                            // ignore the root
-                            if (relevantPath === ".") {
-                                return true;
-                            }
-                            const fileName = path.basename(relevantPath);
-                            return allowedExtensions.test(fileName) || allowedFileNames.test(fileName);
-                        };
-                        if (parent && 'fromPath' in parent && parent.fromPath !== "." && parent.toPath !== ".") { //'fromPath' in parent is used to check if parent an entry
-                            if (matchesFilter(parent)) { /// only check parent if it's
-                                diffs.push(parent);
-                            }
-                        }
-                        for (const child of children) {
-                            if (child && 'fromPath' in child) {
-                                if (matchesFilter(child)) {
-                                    diffs.push(child);
-                                }
-                            }
-                            else if (Array.isArray(child)) {
-                                diffs = diffs.concat(child.filter((item) => item !== null && 'fromPath' in item && matchesFilter(item)));
-                            }
-                        }
-                        return diffs;
-                    });
-                }
-            })) !== null && _a !== void 0 ? _a : [];
-            if (!results.length) {
-                LOGGER.error("No differences found between the commits.");
-                return [];
-            }
-            const deletes = [];
-            const adds = [];
-            const modifies = [];
-            for (const entry of results) {
-                if (entry.fromPath !== "dev/null" && entry.toPath === "dev/null") {
-                    deletes.push(entry);
-                }
-                else if (entry.fromPath === "dev/null" && entry.toPath !== "dev/null") {
-                    adds.push(entry);
-                }
-                else {
-                    modifies.push(entry);
-                }
-            }
-            const finalResults = [];
-            const usedAdds = new Set();
-            for (const del of deletes) {
-                const rename = adds.find(add => add.toId === del.fromId && !usedAdds.has(add));
-                if (rename) { /// found a rename
-                    usedAdds.add(rename);
-                    finalResults.push({
-                        fromPath: del.fromPath,
-                        toPath: rename.toPath,
-                        operation: 'RENAME',
-                        fromId: del.fromId,
-                        toId: rename.toId
-                    });
-                }
-                else {
-                    finalResults.push(Object.assign(Object.assign({}, del), { operation: 'DEL' }));
-                }
-            }
-            for (const add of adds) {
-                if (!usedAdds.has(add)) {
-                    finalResults.push(Object.assign(Object.assign({}, add), { operation: 'ADD' }));
-                }
-            }
-            for (const mod of modifies) {
-                finalResults.push(Object.assign(Object.assign({}, mod), { operation: 'MODIFY' }));
-            }
-            if (finalResults.length === 0) {
-                LOGGER.error("No relevant differences found between the commits after filtering.");
-            }
-            LOGGER.error("The differences found are: " + JSON.stringify(deletes) + " for deletes, ");
-            LOGGER.error("For adds:" + JSON.stringify(adds));
-            LOGGER.error("For updates:" + JSON.stringify(modifies));
-            LOGGER.error("Final differences: " + JSON.stringify(finalResults, null, 2));
-            LOGGER.error("Total differences found: " + finalResults.length);
-            return finalResults;
-        });
-    }
-}
-exports["default"] = RepoChangesDetection;
 
 
 /***/ }),
