@@ -41461,6 +41461,7 @@ const getLastSyncedCommit = () => __awaiter(void 0, void 0, void 0, function* ()
     catch (e) {
         /// If file does not exist, fall back on the SYNCED_COMMIT_SHA env variable
         if (e.code === 'ENOENT') {
+            LOGGER.error("SYNCED_COMMIT_SHA file not found. Falling back to SYNCED_COMMIT_SHA environment variable.");
             return process.env.SYNCED_COMMIT_SHA || "";
         }
         LOGGER.error("Failed to read last synced commit sha. " + (e instanceof Error ? e.message : String(e)));
