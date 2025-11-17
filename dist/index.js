@@ -40179,11 +40179,11 @@ class Discovery {
             LOGGER.error("starting discovery process...");
             const scanner = new ScanRepo_1.default(path);
             const discoveredTests = yield scanner.scanRepo(path);
+            LOGGER.error("The discovered tests are: " + JSON.stringify(discoveredTests[1]));
             const existingTests = yield this.getExistingTestsFromOctane(this._octaneSDKConnection);
             const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests);
             LOGGER.error("The modified tests are: " + JSON.stringify(modifiedTests));
             //const tests= discoveredTests.getAllTests();
-            LOGGER.error("The discovered tests are: " + JSON.stringify(discoveredTests));
             for (const test of discoveredTests) {
                 yield this.sendEventToOctane(this._octaneSDKConnection, test.name, test.packageName);
             }
@@ -40196,6 +40196,10 @@ class Discovery {
             const existingByPackage = new Map(existingTests.map(test => [test.packageName, test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
             const currentByPackage = new Map(discoveredTests.map(test => [test.packageName, test]));
+            LOGGER.error("Existing by name: " + JSON.stringify(Array.from(existingByName.entries())));
+            LOGGER.error("Existing by package: " + JSON.stringify(Array.from(existingByPackage.entries())));
+            LOGGER.error("Current by name: " + JSON.stringify(Array.from(currentByName.entries())));
+            LOGGER.error("Current by package: " + JSON.stringify(Array.from(currentByPackage.entries())));
             const renamedTests = [];
             const movedPairs = [];
             for (const test of discoveredTests) {
@@ -40231,6 +40235,7 @@ class Discovery {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'deleted' }));
                 }
             }
+            LOGGER.error("The changed tests are: " + JSON.stringify(changedTests));
             return changedTests;
         });
     }
@@ -40322,7 +40327,7 @@ class ScanRepo {
             LOGGER.error("The paths are: " + paths.join(", "));
             for (const p of paths) {
                 const ext = path.extname(p).toLowerCase();
-                LOGGER.error("Checking file extension: " + ext);
+                //LOGGER.error("Checking file extension: " + ext);
                 if (p.endsWith(UFT_GUI_TEST_EXTENSION)) {
                     return UFT_GUI_TEST_TYPE;
                 }
@@ -40345,7 +40350,7 @@ class ScanRepo {
             const actions = yield this.getActionsAndParameters(document, actionsPathPrefix, test.name, pathToTest);
             LOGGER.error("The actions are: " + JSON.stringify(actions));
             test.actions = actions;
-            LOGGER.error("The test is: " + JSON.stringify(test));
+            //LOGGER.error("The test is: " + JSON.stringify(test));
             return test;
         });
     }
@@ -40374,7 +40379,7 @@ class ScanRepo {
     getActionsPathPrefix(test, originalPath) {
         const testPackage = originalPath ? test.oldPackageName : test.packageName;
         const testName = originalPath ? test.oldName : test.name;
-        LOGGER.error("Test package: " + testPackage + ", test name: " + testName);
+        //LOGGER.error("Test package: " + testPackage + ", test name: " + testName);
         return `${testPackage}\\${testName}`;
     }
     getActionsAndParameters(document, actionsPathPrefix, testName, pathToTest) {
