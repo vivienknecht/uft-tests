@@ -40086,9 +40086,9 @@ class Discovery {
         this._octaneSDKConnection = {};
         this.analyticsCiInternalApiUrlPart = "";
     }
-    buildAnalyticsCiInternalApiUrlPart() {
-        this.analyticsCiInternalApiUrlPart = '/internal-api/shared_spaces/' + this._sharedSpace + '/analytics/ci';
-    }
+    // private buildAnalyticsCiInternalApiUrlPart(): void {
+    //     this.analyticsCiInternalApiUrlPart = '/internal-api/shared_spaces/' + this._sharedSpace + '/analytics/ci';
+    // }
     initializeOctaneConnection() {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
@@ -40107,7 +40107,7 @@ class Discovery {
             // }
         });
     }
-    sendEventToOctane(octaneConnection, name, packageName) {
+    sendCreateEventToOctane(octaneConnection, name, packageName) {
         return __awaiter(this, void 0, void 0, function* () {
             const body = {
                 "data": [
@@ -40122,15 +40122,34 @@ class Discovery {
                     }
                 ]
             };
-            LOGGER.error("the body to send to octane " + JSON.stringify(body));
-            this.buildAnalyticsCiInternalApiUrlPart();
-            LOGGER.error("The custom api url part is: " + this.analyticsCiInternalApiUrlPart);
-            const options = {
-                headers: { 'Content-Type': 'application/json' },
-                json: false,
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+            LOGGER.error("event sent to octane");
+        });
+    }
+    sendUpdateEventToOctane(octaneConnection, testId, name, packageName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const body = {
+                "data": [
+                    {
+                        "testing_tool_type": {
+                            "type": "list_node",
+                            "id": "list_node.testing_tool_type.uft"
+                        },
+                        "subtype": "test_automated",
+                        "id": testId,
+                        "name": name,
+                        "package": packageName,
+                    }
+                ]
             };
             yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
-            LOGGER.error("event sent to octane");
+            LOGGER.error("update event sent to octane");
+        });
+    }
+    sendDeleteEventToOctane(octaneConnection, testId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests/?query="(id=^${testId}^)`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
+            LOGGER.error("delete event sent to octane");
         });
     }
     getExistingTestsFromOctane(octaneConnection) {
@@ -40184,8 +40203,20 @@ class Discovery {
             const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests);
             LOGGER.error("The modified tests are: " + JSON.stringify(modifiedTests));
             //const tests= discoveredTests.getAllTests();
-            for (const test of discoveredTests) {
-                yield this.sendEventToOctane(this._octaneSDKConnection, test.name, test.packageName);
+            for (const test of modifiedTests) {
+                if (test.changeType === 'deleted') {
+                    if (test.id) {
+                        yield this.sendDeleteEventToOctane(this._octaneSDKConnection, test.id);
+                    }
+                }
+                else if (test.changeType === 'renamed' || test.changeType === 'moved') {
+                    if (test.id) {
+                        yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName);
+                    }
+                }
+                else {
+                    yield this.sendCreateEventToOctane(this._octaneSDKConnection, test.name, test.packageName);
+                }
             }
         });
     }
