@@ -23,7 +23,7 @@ steps:
 
 - task: Cache@2
   inputs:
-    key: syncedCommit-$(Build.SourceVersion)
+    key: syncedCommit
     restoreKeys: syncedCommit-
     path: .sync
   displayName: "Restore last synced commit"
@@ -35,12 +35,12 @@ steps:
 
 - powershell: |
     mkdir .sync -Force | Out-Null
-    echo "$(Build.SourceVersion)" > .sync/.synced_commit_sha
+    Set-Content -Path .sync/.synced_commit_sha -Value "$(Build.SourceVersion)" -NoNewline -Encoding utf8
   displayName: "Save current commit SHA"
 
 # Cache updated directory so next run can restore it
 - task: Cache@2
   inputs:
-    key: syncedCommit-$(Build.SourceVersion)
+    key: syncedCommit
     path: .sync
   displayName: "Cache updated synced commit"   
