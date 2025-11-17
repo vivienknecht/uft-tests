@@ -40206,11 +40206,13 @@ class Discovery {
             for (const test of modifiedTests) {
                 LOGGER.error("the change type of test " + test.name + " is: " + test.changeType);
                 if (test.changeType === 'deleted') {
+                    LOGGER.error("the test to delete id is: " + test.id);
                     if (test.id) {
                         yield this.sendDeleteEventToOctane(this._octaneSDKConnection, test.id);
                     }
                 }
                 else if (test.changeType === 'renamed' || test.changeType === 'moved') {
+                    LOGGER.error("the test to update id is: " + test.id);
                     if (test.id) {
                         yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName);
                     }
@@ -40254,10 +40256,10 @@ class Discovery {
                 changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'added' }));
             }
             for (const test of renamedTests) {
-                changedTests.push(Object.assign(Object.assign({}, test.new), { changeType: "renamed" }));
+                changedTests.push(Object.assign(Object.assign({}, test.new), { changeType: "renamed", id: test.old.id }));
             }
             for (const pair of movedPairs) {
-                changedTests.push(Object.assign(Object.assign({}, pair.new), { changeType: "moved" }));
+                changedTests.push(Object.assign(Object.assign({}, pair.new), { changeType: "moved", id: pair.old.id }));
             }
             for (const test of existingTests) {
                 const currentTestFullPath = test.packageName;
@@ -40265,7 +40267,7 @@ class Discovery {
                 const wasRenamed = renamedTests.some(rt => rt.old === test);
                 const wasMoved = movedPairs.some(mp => mp.old === test);
                 if (!stillExists && !wasRenamed && !wasMoved) {
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'deleted' }));
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'deleted', id: test.id }));
                 }
             }
             LOGGER.error("The changed tests are: " + JSON.stringify(changedTests));
