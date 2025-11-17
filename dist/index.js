@@ -40206,6 +40206,7 @@ class Discovery {
                 const existingTestFullPath = test.packageName + '/' + test.name;
                 const exactMatch = existingByPackage.get(existingTestFullPath);
                 if (exactMatch) {
+                    LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
                 }
                 const possibleRename = existingTests.find(et => et.packageName === test.packageName && et.name !== test.name);
