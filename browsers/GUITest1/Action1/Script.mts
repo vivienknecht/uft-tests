@@ -11,9 +11,9 @@ For i = 1 To totalRows
 
     ' Simulate login
     If username = "admin" And password = "pass123" Then
-        actualResult = "Success"
-    Else
         actualResult = "Fail"
+    Else
+        actualResult = "Success"
     End If
 
     ' Compare expected vs actual
