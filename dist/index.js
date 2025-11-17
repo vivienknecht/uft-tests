@@ -40204,6 +40204,7 @@ class Discovery {
             LOGGER.error("The modified tests are: " + JSON.stringify(modifiedTests));
             //const tests= discoveredTests.getAllTests();
             for (const test of modifiedTests) {
+                LOGGER.error("the change type of test " + test.name + " is: " + test.changeType);
                 if (test.changeType === 'deleted') {
                     if (test.id) {
                         yield this.sendDeleteEventToOctane(this._octaneSDKConnection, test.id);
