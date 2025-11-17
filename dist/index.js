@@ -40203,7 +40203,7 @@ class Discovery {
             const renamedTests = [];
             const movedPairs = [];
             for (const test of discoveredTests) {
-                const existingTestFullPath = test.packageName + '/' + test.name;
+                const existingTestFullPath = test.packageName;
                 const exactMatch = existingByPackage.get(existingTestFullPath);
                 if (exactMatch) {
                     LOGGER.error("Exact match found for test: " + test.name);
@@ -40228,7 +40228,7 @@ class Discovery {
                 changedTests.push(Object.assign(Object.assign({}, pair.new), { changeType: "moved" }));
             }
             for (const test of existingTests) {
-                const currentTestFullPath = test.packageName + '/' + test.name;
+                const currentTestFullPath = test.packageName;
                 const stillExists = currentByPackage.get(currentTestFullPath);
                 const wasRenamed = renamedTests.some(rt => rt.old === test);
                 const wasMoved = movedPairs.some(mp => mp.old === test);
