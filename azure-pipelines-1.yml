@@ -7,12 +7,7 @@ trigger:
 - main
 
 variables:
-  SYNCED_COMMIT_SHA: '' #only if the agent is hosted on Microsoft
-
-parameters:
-  - name: unitTestResultsGlobPattern
-    type: string
-    default: 'build/Results.xml'
+  SYNCED_COMMIT_SHA: ''
 
 pool: Default
 
@@ -23,6 +18,10 @@ steps:
   displayName: 'Use Node.js'
 
 - powershell: |
+    Write-Host "##vso[task.setvariable variable=SYNCED_COMMIT_SHA]$(Build.SourceVersion)"
+  displayName: "Set SYNCED_COMMIT_SHA to the last commit"  
+
+- powershell: |
     node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=5002 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
   env:
-    SYNCED_COMMIT_SHA: $(SYNCED_COMMIT_SHA) #only if the agent is hosted on Microsoft
+    SYNCED_COMMIT_SHA: $(SYNCED_COMMIT_SHA) 
