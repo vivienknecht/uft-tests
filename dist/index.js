@@ -40344,7 +40344,8 @@ class ScanRepo {
                 this._tests.push(automatedTests);
             }
             else if (testType === UFT_API_TEST_TYPE) {
-                yield this.createAutomatedTestFromAPI(pathToRepo, testType);
+                const foundApiTests = yield this.createAutomatedTestFromAPI(pathToRepo, testType);
+                this._tests.push(foundApiTests);
             }
             else {
                 for (const item of items) {
