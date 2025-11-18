@@ -36,7 +36,7 @@ steps:
   inputs:
     targetType: inline
     script: |     
-      MODIFIED_FILES = git diff HEAD HEAD~ --name-status
+      $MODIFIED_FILES = git diff HEAD HEAD~ --name-status
       Write-Host "Modified files with status: $MODIFIED_FILES"
 
 
