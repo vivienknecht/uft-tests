@@ -41,6 +41,10 @@ steps:
       ##vso[task.setvariable variable=MODIFIED_FILES]$MODIFIED_FILES
 
 
+- script: |
+    echo "The modified files are: $(MODIFIED_FILES)"
+    displayName: "Print Modified Files
+
 
 - powershell: |
     node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=7001 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
