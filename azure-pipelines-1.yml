@@ -31,7 +31,7 @@ steps:
 - checkout: self
   fetchDepth: 2
 
-- task: Bash@3
+- task: PowerShell@2
   name: ModifiedFiles
   inputs:
     targetType: inline
