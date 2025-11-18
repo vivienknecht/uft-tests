@@ -28,6 +28,17 @@ steps:
 #     path: .sync
 #   displayName: "Restore last synced commit"
 
+- checkout: self
+  fetchDepth: 2
+
+- task: Bash@3
+  name: ModifiedFiles
+  inputs:
+    targetType: inline
+    script: |
+         MODIFIED_FILES=$(git diff HEAD HEAD~ --name-only)
+         echo $MODIFIED_FILES
+
 - powershell: |
     node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=7001 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
   env:
