@@ -37,14 +37,15 @@ steps:
     targetType: inline
     script: |     
       $MODIFIED_FILES = git diff HEAD HEAD~ --name-only
-      Write-Host "Modified files with status: $MODIFIED_FILES"
+      Write-Host "Modified files: $MODIFIED_FILES"
       ##vso[task.setvariable variable=MODIFIED_FILES]$MODIFIED_FILES
+
 
 
 - powershell: |
     node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=7001 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
   env:
-    MODIFIED_FILES: $(MODIFIED_FILES) 
+    MODIFIED_FILES: $(MODIFIED_FILES)
 
 # - powershell: |
 #     mkdir .sync -Force | Out-Null
