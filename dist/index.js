@@ -40247,7 +40247,7 @@ class Discovery {
                 }
                 const possibleRename = existingTests.find(et => {
                     LOGGER.error("Checking possible rename: existing test " + et.name + " with package " + et.packageName + " against current test " + test.name + " with package " + test.packageName);
-                    return et.packageName && et.name !== test.name;
+                    return (0, utils_1.stripLast)(et.packageName) === (0, utils_1.stripLast)(test.packageName) && et.name !== test.name;
                 });
                 LOGGER.error("Possible rename for test " + test.name + " is: " + JSON.stringify(possibleRename));
                 if (possibleRename && !currentByName.has(possibleRename.name)) {
