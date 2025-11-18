@@ -40228,6 +40228,8 @@ class Discovery {
     getModifiedTests(discoveredTests, existingTests) {
         return __awaiter(this, void 0, void 0, function* () {
             const changedTests = [];
+            const modifiedFiles = process.env.MODIFIED_FILES;
+            LOGGER.error("The modified files are: " + modifiedFiles);
             const existingByName = new Map(existingTests.map(test => [test.name, test]));
             const existingByPackage = new Map(existingTests.map(test => [test.packageName, test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
