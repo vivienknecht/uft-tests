@@ -40246,7 +40246,9 @@ class Discovery {
                     continue; // No changes
                 }
                 LOGGER.error("This is the package name " + (0, utils_1.stripLast)(test.packageName));
-                const possibleRename = existingTests.find(et => et.packageName && et.name !== test.name);
+                const renamedTest = existingByName.get(test.name);
+                LOGGER.error("Renamed test found for test: " + JSON.stringify(renamedTest));
+                const possibleRename = existingTests.find(et => et.packageName && !renamedTest);
                 if (possibleRename && !currentByName.has(possibleRename.name)) {
                     renamedTests.push({ old: possibleRename, new: test });
                     continue;
