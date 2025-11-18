@@ -40230,6 +40230,13 @@ class Discovery {
             const changedTests = [];
             const modifiedFiles = process.env.MODIFIED_FILES;
             LOGGER.error("The modified files are: " + modifiedFiles);
+            const modifiedFilesArray = modifiedFiles ? modifiedFiles.split((",")) : [];
+            for (const item of modifiedFilesArray) {
+                if (item.includes(".tsp") || item.includes(".st")) {
+                    const parent = (__nccwpck_require__(6928).basename)((__nccwpck_require__(6928).dirname)(item));
+                    LOGGER.error(`Parent folder before file: ${parent}`);
+                }
+            }
             const existingByName = new Map(existingTests.map(test => [test.name, test]));
             const existingByPackage = new Map(existingTests.map(test => [test.packageName, test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
