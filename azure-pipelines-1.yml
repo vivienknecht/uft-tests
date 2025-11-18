@@ -43,7 +43,6 @@ steps:
 
 - script: |
     echo "The modified files are: $(MODIFIED_FILES)"
-    displayName: "Print Modified Files
 
 
 - powershell: |
