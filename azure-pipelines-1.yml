@@ -32,23 +32,28 @@ steps:
   fetchDepth: 2
 
 - task: PowerShell@2
-  name: ModifiedFiles
+  name: GetFiles
   inputs:
     targetType: inline
     script: |     
-      $MODIFIED_FILES = git diff HEAD HEAD~ --name-only
-      Write-Host "Modified files: $MODIFIED_FILES"
-      ##vso[task.setvariable variable=MODIFIED_FILES]$MODIFIED_FILES
+      # $MODIFIED_FILES = git diff HEAD HEAD~ --name-only
+      # Write-Host "Modified files: $MODIFIED_FILES"
+      # ##vso[task.setvariable variable=MODIFIED_FILES]$MODIFIED_FILES
+      $files = git diff HEAD HEAD~ --name-only
+      $filesJoined = ($files | Where-Object { $_ -ne '' }) -join ','
+      Write-Host "Modified files: $filesJoined"
+      Write-Host "##vso[task.setvariable variable=MODIFIED_FILES;isOutput=true]$filesJoined"
+
 
 
 - powershell: |
-    echo "The modified files are: $MODIFIED_FILES"
+    Write-Host "The modified files are: $(GetFiles.MODIFIED_FILES)"
 
 
 - powershell: |
     node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=7001 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
   env:
-    MODIFIED_FILES: $(MODIFIED_FILES)
+    MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
 
 # - powershell: |
 #     mkdir .sync -Force | Out-Null
