@@ -40245,8 +40245,11 @@ class Discovery {
                     LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
                 }
-                LOGGER.error("This is the package name " + (0, utils_1.stripLast)(test.packageName));
-                const possibleRename = existingTests.find(et => et.packageName && et.packageName !== test.packageName && et.name !== test.name);
+                const possibleRename = existingTests.find(et => {
+                    LOGGER.error("Checking possible rename: existing test " + et.name + " with package " + et.packageName + " against current test " + test.name + " with package " + test.packageName);
+                    return et.packageName && et.name !== test.name;
+                });
+                LOGGER.error("Possible rename for test " + test.name + " is: " + JSON.stringify(possibleRename));
                 if (possibleRename && !currentByName.has(possibleRename.name)) {
                     LOGGER.error("If for rename");
                     renamedTests.push({ old: possibleRename, new: test });
