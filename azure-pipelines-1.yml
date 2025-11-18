@@ -35,9 +35,10 @@ steps:
   name: ModifiedFiles
   inputs:
     targetType: inline
-    script: |
-         MODIFIED_FILES=$(git diff HEAD HEAD~ --name-only)
-         echo $MODIFIED_FILES
+    script: |     
+      $MODIFIED_FILES = git diff HEAD HEAD~ --name-only
+      Write-Host "Modified files: $MODIFIED_FILES"
+
 
 - powershell: |
     node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=7001 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
