@@ -41455,7 +41455,7 @@ const isDataTableFile = (file) => {
     return ext === '.xlsx' || ext === '.xls';
 };
 exports.isDataTableFile = isDataTableFile;
-const stripLast = (pkg) => pkg.split("/").slice(0, -1).join("/");
+const stripLast = (pkg) => pkg.split("\\").slice(0, -1).join("\\");
 exports.stripLast = stripLast;
 
 
