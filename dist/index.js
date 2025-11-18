@@ -40239,6 +40239,7 @@ class Discovery {
                     LOGGER.error(`Parent folder before file: ${testName}`);
                 }
             }
+            LOGGER.error("The modified test names are: " + JSON.stringify(modifiedTestsNames));
             const existingByName = new Map(existingTests.map(test => [test.name, test]));
             const existingByPackage = new Map(existingTests.map(test => [test.packageName, test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
@@ -40258,7 +40259,7 @@ class Discovery {
                 }
                 if (modifiedTestsNames.includes(test.name)) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'modified' }));
-                    LOGGER.error("Test " + test.name + " marked as modified based on modified files.");
+                    LOGGER.error("Test modified" + test.name + " marked as modified based on modified files.");
                     continue;
                 }
                 // const possibleRename = existingTests.find(et =>
