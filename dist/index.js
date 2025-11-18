@@ -40245,7 +40245,12 @@ class Discovery {
                     LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
                 }
-                const possibleRename = existingTests.find(et => et.packageName === test.packageName && et.name !== test.name);
+                const possibleRename = existingTests.find(et => {
+                    const withoutLast = et.packageName.split("/").slice(0, -1).join("/");
+                    const testWithoutLast = test.packageName.split("/").slice(0, -1).join("/");
+                    LOGGER.error("Comparing package without last segment: " + withoutLast + " with " + testWithoutLast);
+                    withoutLast === testWithoutLast && et.name !== test.name;
+                });
                 if (possibleRename && !currentByName.has(possibleRename.name)) {
                     renamedTests.push({ old: possibleRename, new: test });
                     continue;
