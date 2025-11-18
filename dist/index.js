@@ -40245,12 +40245,8 @@ class Discovery {
                     LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
                 }
-                const possibleRename = existingTests.find(et => {
-                    const withoutLast = et.packageName.split("/").slice(0, -1).join("/");
-                    const testWithoutLast = test.packageName.split("/").slice(0, -1).join("/");
-                    LOGGER.error("Comparing package without last segment: " + withoutLast + " with " + testWithoutLast);
-                    withoutLast === testWithoutLast && et.name !== test.name;
-                });
+                const possibleRename = existingTests.find(et => (0, utils_1.stripLast)(et.packageName) === (0, utils_1.stripLast)(test.packageName) &&
+                    et.name !== test.name);
                 if (possibleRename && !currentByName.has(possibleRename.name)) {
                     renamedTests.push({ old: possibleRename, new: test });
                     continue;
@@ -41258,7 +41254,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isDataTableFile = exports.isBlank = exports.getTestType = exports.getParentFolderPath = exports.isMainTestFile = exports.getHeadCommitSha = exports.getLastSyncedCommit = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.setActionPath = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
+exports.stripLast = exports.isDataTableFile = exports.isBlank = exports.getTestType = exports.getParentFolderPath = exports.isMainTestFile = exports.getHeadCommitSha = exports.getLastSyncedCommit = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.setActionPath = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
 const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(1943);
 const logger_1 = __nccwpck_require__(7893);
@@ -41458,6 +41454,8 @@ const isDataTableFile = (file) => {
     return ext === '.xlsx' || ext === '.xls';
 };
 exports.isDataTableFile = isDataTableFile;
+const stripLast = (pkg) => pkg.split("/").slice(0, -1).join("/");
+exports.stripLast = stripLast;
 
 
 /***/ }),
