@@ -39,7 +39,7 @@ steps:
       # $MODIFIED_FILES = git diff HEAD HEAD~ --name-only
       # Write-Host "Modified files: $MODIFIED_FILES"
       # ##vso[task.setvariable variable=MODIFIED_FILES]$MODIFIED_FILES
-      $files = git diff HEAD HEAD~ --name-only
+      $files = git diff HEAD HEAD~ --name-status
       $filesJoined = ($files | Where-Object { $_ -ne '' }) -join ','
       Write-Host "Modified files: $filesJoined"
       Write-Host "##vso[task.setvariable variable=MODIFIED_FILES;isOutput=true]$filesJoined"
