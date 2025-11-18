@@ -40213,7 +40213,7 @@ class Discovery {
                         yield this.sendDeleteEventToOctane(this._octaneSDKConnection, test.id);
                     }
                 }
-                else if (test.changeType === 'renamed' || test.changeType === 'moved') {
+                else if (test.changeType === 'renamed' || test.changeType === 'moved' || test.changeType === 'modified') {
                     LOGGER.error("the test to update id is: " + test.id);
                     if (test.id) {
                         yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName);
@@ -40228,13 +40228,15 @@ class Discovery {
     getModifiedTests(discoveredTests, existingTests) {
         return __awaiter(this, void 0, void 0, function* () {
             const changedTests = [];
+            const modifiedTestsNames = [];
             const modifiedFiles = process.env.MODIFIED_FILES;
             LOGGER.error("The modified files are: " + modifiedFiles);
             const modifiedFilesArray = modifiedFiles ? modifiedFiles.split((",")) : [];
             for (const item of modifiedFilesArray) {
                 if (item.includes(".tsp") || item.includes(".st")) {
-                    const parent = (__nccwpck_require__(6928).basename)((__nccwpck_require__(6928).dirname)(item));
-                    LOGGER.error(`Parent folder before file: ${parent}`);
+                    const testName = (__nccwpck_require__(6928).basename)((__nccwpck_require__(6928).dirname)(item));
+                    modifiedTestsNames.push(testName);
+                    LOGGER.error(`Parent folder before file: ${testName}`);
                 }
             }
             const existingByName = new Map(existingTests.map(test => [test.name, test]));
@@ -40254,35 +40256,47 @@ class Discovery {
                     LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
                 }
-                const possibleRename = existingTests.find(et => {
-                    LOGGER.error("Checking possible rename: existing test " + et.name + " with package " + et.packageName + " against current test " + test.name + " with package " + test.packageName);
-                    return (0, utils_1.stripLast)(et.packageName) === (0, utils_1.stripLast)(test.packageName) && et.name !== test.name;
-                });
-                LOGGER.error("Possible rename for test " + test.name + " is: " + JSON.stringify(possibleRename));
-                if (possibleRename && !currentByName.has(possibleRename.name)) {
-                    LOGGER.error("If for rename");
-                    renamedTests.push({ old: possibleRename, new: test });
+                if (modifiedTestsNames.includes(test.name)) {
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'modified' }));
+                    LOGGER.error("Test " + test.name + " marked as modified based on modified files.");
                     continue;
                 }
-                const possibleMove = existingByName.get(test.name);
-                if (possibleMove && possibleMove.packageName !== test.packageName) {
-                    movedPairs.push({ old: possibleMove, new: test });
-                    continue;
-                }
+                // const possibleRename = existingTests.find(et =>
+                // {
+                //     LOGGER.error("Checking possible rename: existing test " + et.name + " with package " + et.packageName + " against current test " + test.name + " with package " + test.packageName);
+                //     return stripLast(et.packageName) === stripLast(test.packageName) &&  et.name !== test.name
+                // }
+                // );
+                //
+                // LOGGER.error("Possible rename for test " + test.name + " is: " + JSON.stringify(possibleRename));
+                //
+                // if (possibleRename && !currentByName.has(possibleRename.name)) {
+                //     LOGGER.error("If for rename");
+                //     renamedTests.push({old: possibleRename, new: test})
+                //     continue;
+                // }
+                //
+                // const possibleMove = existingByName.get(test.name);
+                // if (possibleMove && possibleMove.packageName !== test.packageName) {
+                //     movedPairs.push({ old: possibleMove, new: test });
+                //     continue;
+                // }
                 changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'added' }));
             }
-            for (const test of renamedTests) {
-                changedTests.push(Object.assign(Object.assign({}, test.new), { changeType: "renamed", id: test.old.id }));
-            }
-            for (const pair of movedPairs) {
-                changedTests.push(Object.assign(Object.assign({}, pair.new), { changeType: "moved", id: pair.old.id }));
-            }
+            // for (const test of renamedTests) {
+            //     changedTests.push({...test.new, changeType: "renamed", id: test.old.id});
+            // }
+            //
+            // for (const pair of movedPairs) {
+            //     changedTests.push({...pair.new, changeType: "moved", id: pair.old.id});
+            // }
             for (const test of existingTests) {
                 const currentTestFullPath = test.packageName;
                 const stillExists = currentByPackage.get(currentTestFullPath);
-                const wasRenamed = renamedTests.some(rt => rt.old === test);
-                const wasMoved = movedPairs.some(mp => mp.old === test);
-                if (!stillExists && !wasRenamed && !wasMoved) {
+                // const wasRenamed = renamedTests.some(rt => rt.old === test);
+                // const wasMoved = movedPairs.some(mp => mp.old === test);
+                // if (!stillExists && !wasRenamed && !wasMoved) {
+                if (!stillExists) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'deleted', id: test.id }));
                 }
             }
