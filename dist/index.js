@@ -40248,9 +40248,7 @@ class Discovery {
                 LOGGER.error("This is the package name " + (0, utils_1.stripLast)(test.packageName));
                 const possibleRename = existingTests.find(et => (0, utils_1.stripLast)(et.packageName) === (0, utils_1.stripLast)(test.packageName) &&
                     et.name !== test.name);
-                LOGGER.error("Possible rename for test " + test.name + ": " + JSON.stringify(possibleRename));
                 if (possibleRename && !currentByName.has(possibleRename.name)) {
-                    LOGGER.error("Rename detected: " + possibleRename.name + " to " + test.name);
                     renamedTests.push({ old: possibleRename, new: test });
                     continue;
                 }
@@ -40346,7 +40344,7 @@ class ScanRepo {
                 this._tests.push(automatedTests);
             }
             else if (testType === UFT_API_TEST_TYPE) {
-                yield this.createAutomatedReportsFromAPI(pathToRepo, testType);
+                yield this.createAutomatedTestFromAPI(pathToRepo, testType);
             }
             else {
                 for (const item of items) {
@@ -40627,8 +40625,15 @@ class ScanRepo {
         };
         return resourceFile;
     }
-    createAutomatedReportsFromAPI(pathToTest, testType) {
+    createAutomatedTestFromAPI(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
+            const test = yield this.createTest(pathToTest, testType);
+            const documentForApiTest = yield (0, utils_1.getAPITestDoc)(pathToTest);
+            let description = (0, utils_1.getDescriptionForAPITest)(documentForApiTest);
+            description = (0, utils_1.convertToHtml)(description);
+            test.description = description || "";
+            LOGGER.error("The api test is: " + JSON.stringify(test));
+            return test;
         });
     }
 }
@@ -41257,7 +41262,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.stripLast = exports.isDataTableFile = exports.isBlank = exports.getTestType = exports.getParentFolderPath = exports.isMainTestFile = exports.getHeadCommitSha = exports.getLastSyncedCommit = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.setActionPath = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
+exports.getDescriptionForAPITest = exports.getAPITestDoc = exports.stripLast = exports.isDataTableFile = exports.isBlank = exports.getTestType = exports.getParentFolderPath = exports.isMainTestFile = exports.getHeadCommitSha = exports.getLastSyncedCommit = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.setActionPath = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
 const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(1943);
 const logger_1 = __nccwpck_require__(7893);
@@ -41459,6 +41464,54 @@ const isDataTableFile = (file) => {
 exports.isDataTableFile = isDataTableFile;
 const stripLast = (pkg) => pkg.split("\\").slice(0, -1).join("\\");
 exports.stripLast = stripLast;
+const getAPITestDoc = (pathToTest) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const actionsXmlFile = yield checkIfFileExists(pathToTest, ACTIONS_XML);
+        if (!actionsXmlFile) {
+            return null;
+        }
+        const xmlContent = yield fs.readFile(actionsXmlFile, 'utf8');
+        const parser = customDOMParser();
+        const xml = xmlContent.replace(/^\uFEFF/, "");
+        const doc = parser.parseFromString(xml, TEXT_XML);
+        if (!doc.documentElement) {
+            LOGGER.error("No document element found in the parsed XML.");
+            throw new Error("No document element found in the parsed XML.");
+        }
+        return doc;
+    }
+    catch (e) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        LOGGER.error("Failed to get API test document. " + errorMessage);
+        throw new Error("Failed to get API test document. " + errorMessage);
+    }
+});
+exports.getAPITestDoc = getAPITestDoc;
+const getDescriptionForAPITest = (doc) => {
+    let description;
+    if (doc == null) {
+        return null;
+    }
+    const actions = doc.getElementsByTagName("Action");
+    for (let i = 0; i < actions.length; i++) {
+        const action = actions.item(i);
+        if (action) {
+            const attributes = action.attributes;
+            const internalNameAttr = attributes.getNamedItem("internalName");
+            if (internalNameAttr && internalNameAttr.nodeValue === "MainAction") {
+                const descriptionAttribute = attributes.getNamedItem("description");
+                if (descriptionAttribute) {
+                    description = descriptionAttribute.nodeValue;
+                    if (description != null) {
+                        return description.trim();
+                    }
+                }
+            }
+        }
+    }
+    return null;
+};
+exports.getDescriptionForAPITest = getDescriptionForAPITest;
 
 
 /***/ }),
