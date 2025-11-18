@@ -40247,7 +40247,7 @@ class Discovery {
                 }
                 const possibleRename = existingTests.find(et => {
                     LOGGER.error("Checking possible rename: existing test " + et.name + " with package " + et.packageName + " against current test " + test.name + " with package " + test.packageName);
-                    return (0, utils_1.stripLast)(et.packageName) === (0, utils_1.stripLast)(test.packageName) && et.name !== test.name;
+                    return et.packageName === test.packageName && et.name !== test.name;
                 });
                 LOGGER.error("Possible rename for test " + test.name + " is: " + JSON.stringify(possibleRename));
                 if (possibleRename && !currentByName.has(possibleRename.name)) {
@@ -40400,8 +40400,8 @@ class ScanRepo {
     createTest(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
             const testName = path.basename(pathToTest);
-            const relativePath = path.relative(this._workDirectory, pathToTest);
-            let packageName = relativePath;
+            // const relativePath = path.relative(this._workDirectory, pathToTest);
+            //let packageName = pathToTest.split("\\").slice(0, -1).join("\\");
             // if (relativePath.length > testName.length) {
             //     const parts = relativePath.split(path.sep);
             //     packageName = parts.slice(0, -1).join(path.sep);
@@ -40409,7 +40409,7 @@ class ScanRepo {
             const test = {
                 name: testName,
                 description: "",
-                packageName: pathToTest,
+                packageName: pathToTest.split("\\").slice(0, -1).join("\\"),
                 uftOneTestType: testType,
                 executable: true,
                 actions: [],
