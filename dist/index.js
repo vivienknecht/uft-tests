@@ -40400,8 +40400,8 @@ class ScanRepo {
     createTest(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
             const testName = path.basename(pathToTest);
-            // const relativePath = path.relative(this._workDirectory, pathToTest);
-            //let packageName = pathToTest.split("\\").slice(0, -1).join("\\");
+            const relativePath = path.relative(this._workDirectory, pathToTest);
+            let packageName = relativePath;
             // if (relativePath.length > testName.length) {
             //     const parts = relativePath.split(path.sep);
             //     packageName = parts.slice(0, -1).join(path.sep);
