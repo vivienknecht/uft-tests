@@ -40228,7 +40228,6 @@ class Discovery {
     }
     getModifiedTests(discoveredTests, existingTests) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             const changedTests = [];
             const modifiedTestsNames = [];
             const modifiedFiles = process.env.MODIFIED_FILES;
@@ -40268,22 +40267,25 @@ class Discovery {
             LOGGER.error("Current by package: " + JSON.stringify(Array.from(currentByPackage.entries())));
             const renamedTests = [];
             const movedPairs = [];
-            const modifiedPairs = [];
+            //const modifiedPairs = [];
+            for (const entry of modifiedTestsMap) {
+                LOGGER.error("The old value is: " + entry.oldValue + " and new value is: " + entry.newValue);
+                if (entry.oldValue !== entry.newValue) {
+                    if (currentByName.has(entry.newValue)) {
+                        const possibleRename = existingByName.get(entry.oldValue);
+                        LOGGER.error("The possible rename is: " + JSON.stringify(possibleRename));
+                        const newTestName = currentByName.get(entry.newValue);
+                        LOGGER.error("The new test name is: " + JSON.stringify(newTestName));
+                        //modifiedPairs.push({old: possibleRename, new: newTestName});
+                    }
+                }
+            }
             for (const test of discoveredTests) {
                 const existingTestFullPath = test.packageName;
                 const exactMatch = existingByPackage.get(existingTestFullPath);
                 if (exactMatch) {
                     LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
-                }
-                for (const entry of modifiedTestsMap) {
-                    if (entry.oldValue !== entry.newValue) {
-                        if (currentByName.has(entry.newValue)) {
-                            const possibleRename = existingByName.get(entry.oldValue);
-                            const newTestName = currentByName.get(entry.newValue);
-                            modifiedPairs.push({ old: possibleRename, new: test });
-                        }
-                    }
                 }
                 /// modified test contains the old name
                 // if (modifiedTestsNames.includes(test.name)) {
@@ -40321,17 +40323,17 @@ class Discovery {
             // for (const pair of movedPairs) {
             //     changedTests.push({...pair.new, changeType: "moved", id: pair.old.id});
             // }
-            for (const pair of modifiedPairs) {
-                changedTests.push(Object.assign(Object.assign({}, pair.new), { changeType: "modified", id: (_a = pair.old) === null || _a === void 0 ? void 0 : _a.id }));
-            }
+            // for (const pair of modifiedPairs) {
+            //     changedTests.push({...pair.new, changeType: "modified", id: pair.old?.id});
+            // }
             for (const test of existingTests) {
                 const currentTestFullPath = test.packageName;
                 const stillExists = currentByPackage.get(currentTestFullPath);
                 // const wasRenamed = renamedTests.some(rt => rt.old === test);
                 // const wasMoved = movedPairs.some(mp => mp.old === test);
-                const wasModified = modifiedPairs.some(mp => mp.old === test);
+                //const wasModified = modifiedPairs.some(mp => mp.old === test);
                 // if (!stillExists && !wasRenamed && !wasMoved) {
-                if (!stillExists && !wasModified) {
+                if (!stillExists) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'deleted', id: test.id }));
                 }
             }
