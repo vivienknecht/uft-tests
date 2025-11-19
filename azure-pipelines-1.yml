@@ -6,9 +6,6 @@
 trigger:
 - main
 
-# variables:
-#   MODIFIED_FILES: ''
-
 pool: Default
 
 steps: 
@@ -17,16 +14,11 @@ steps:
     versionSpec: '22.x'  
   displayName: 'Use Node.js'
 
-# - powershell: |
-#     Write-Host "##vso[task.setvariable variable=SYNCED_COMMIT_SHA]$(Build.SourceVersion)"
-#   displayName: "Set SYNCED_COMMIT_SHA to the last commit"  
-
-# - task: Cache@2
-#   inputs:
-#     key: syncedCommit
-#     restoreKeys: syncedCommit-
-#     path: .sync
-#   displayName: "Restore last synced commit"
+- task: octane-test-runner-start-task-private@1
+  inputs:
+    OctaneServiceConnection: 'octaneConnectionForDiscovery'
+    WorkspaceList: '7002'
+    Framework: 'uft'
 
 - checkout: self
   fetchDepth: 2
@@ -36,33 +28,12 @@ steps:
   inputs:
     targetType: inline
     script: |     
-      # $MODIFIED_FILES = git diff HEAD HEAD~ --name-only
-      # Write-Host "Modified files: $MODIFIED_FILES"
-      # ##vso[task.setvariable variable=MODIFIED_FILES]$MODIFIED_FILES
       $files = git diff --name-status -M  HEAD~1 HEAD
       $filesJoined = ($files | Where-Object { $_ -ne '' }) -join ','
       Write-Host "Modified files: $filesJoined"
       Write-Host "##vso[task.setvariable variable=MODIFIED_FILES;isOutput=true]$filesJoined"
 
-
-
-- powershell: |
-    Write-Host "The modified files are: $(GetFiles.MODIFIED_FILES)"
-
-
 - powershell: |
     node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=7002 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
   env:
     MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
-
-# - powershell: |
-#     mkdir .sync -Force | Out-Null
-#     Set-Content -Path .sync/.synced_commit_sha -Value "$(Build.SourceVersion)" -NoNewline -Encoding utf8
-#   displayName: "Save current commit SHA"
-
-# # Cache updated directory so next run can restore it
-# - task: Cache@2
-#   inputs:
-#     key: syncedCommit
-#     path: .sync
-#   displayName: "Cache updated synced commit"   
