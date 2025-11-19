@@ -40296,8 +40296,8 @@ class Discovery {
                     LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
                 }
-                const existsInModifiedOld = modifiedPairs.some(pair => { var _a, _b; return (((_a = pair.old) === null || _a === void 0 ? void 0 : _a.name) === test.name && ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.name) === test.name); });
-                if (!existsInModifiedOld) {
+                const existsInModifiedOld = modifiedPairs.some(pair => { var _a, _b; return (((_a = pair.old) === null || _a === void 0 ? void 0 : _a.name) !== test.name && ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.name) !== test.name); });
+                if (existsInModifiedOld) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                 }
                 /// modified test contains the old name
