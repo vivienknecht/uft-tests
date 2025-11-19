@@ -40681,7 +40681,9 @@ class ScanRepo {
         return __awaiter(this, void 0, void 0, function* () {
             let className = "";
             pathToTest = pathToTest.replace(/\\/g, "/");
-            const part = pathToTest.substring(0, -1);
+            const parts = pathToTest.split("/");
+            parts.pop();
+            const part = parts.join("/");
             className = "file:///" + part;
             LOGGER.error("The class name is: " + className);
             return className;
