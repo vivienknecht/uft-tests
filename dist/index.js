@@ -40257,7 +40257,7 @@ class Discovery {
                     }
                 }
             }
-            LOGGER.error("The modified test names are: " + modifiedTestsNames);
+            LOGGER.error("The modified test names are: " + modifiedTestsMap);
             const existingByName = new Map(existingTests.map(test => [test.name, test]));
             const existingByPackage = new Map(existingTests.map(test => [test.packageName, test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
