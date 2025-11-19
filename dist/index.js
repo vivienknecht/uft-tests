@@ -40108,7 +40108,7 @@ class Discovery {
             // }
         });
     }
-    sendCreateEventToOctane(octaneConnection, name, packageName) {
+    sendCreateEventToOctane(octaneConnection, name, packageName, className) {
         return __awaiter(this, void 0, void 0, function* () {
             const body = {
                 "data": [
@@ -40120,6 +40120,7 @@ class Discovery {
                         "subtype": "test_automated",
                         "name": name,
                         "package": packageName,
+                        "class_name": className
                     }
                 ]
             };
@@ -40165,6 +40166,7 @@ class Discovery {
                     id: testData.id,
                     name: testData.name,
                     packageName: testData.package,
+                    className: testData.class_name
                 };
                 existingTests.push(test);
             }
@@ -40221,16 +40223,15 @@ class Discovery {
                     }
                 }
                 else {
-                    yield this.sendCreateEventToOctane(this._octaneSDKConnection, test.name, test.packageName);
+                    yield this.sendCreateEventToOctane(this._octaneSDKConnection, test.name, test.packageName, test.className);
                 }
             }
         });
     }
     getModifiedTests(discoveredTests, existingTests) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c;
+            var _a, _b, _c, _d;
             const changedTests = [];
-            const modifiedTestsNames = [];
             const modifiedFiles = process.env.MODIFIED_FILES;
             LOGGER.error("The modified files are: " + modifiedFiles);
             const modifiedFilesArray = modifiedFiles ? modifiedFiles.split(",") : [];
@@ -40238,13 +40239,6 @@ class Discovery {
             const modifiedTestsMap = [];
             for (const item of modifiedFilesArray) {
                 const parts = item.trim().split(/\s+/);
-                // const filePaths = parts.filter(p => p.includes("/") && (p.endsWith(".st") || p.endsWith(".tsp")));
-                //
-                // for (const file of filePaths) {
-                //     const testName = path.basename(path.dirname(file));
-                //     modifiedTestsNames.push(testName);
-                //     LOGGER.error(`Parent folder for ${file}: ${testName}`);
-                // }
                 if (parts.length >= 3) {
                     const oldPath = parts[1];
                     const newPath = parts[2];
@@ -40266,8 +40260,6 @@ class Discovery {
             LOGGER.error("Existing by package: " + JSON.stringify(Array.from(existingByPackage.entries())));
             LOGGER.error("Current by name: " + JSON.stringify(Array.from(currentByName.entries())));
             LOGGER.error("Current by package: " + JSON.stringify(Array.from(currentByPackage.entries())));
-            const renamedTests = [];
-            const movedPairs = [];
             const modifiedPairs = [];
             for (const entry of modifiedTestsMap) {
                 LOGGER.error("The old value is: " + entry.oldValue + " and new value is: " + entry.newValue);
@@ -40300,27 +40292,6 @@ class Discovery {
                 if (!existsInModifiedOld) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                 }
-                /// modified test contains the old name
-                // if (modifiedTestsNames.includes(test.name)) {
-                //     modifiedPairs.push({old: existingByName.get(test.name), new: test});
-                //     LOGGER.error("Test modified" + test.name + " marked as modified based on modified files.");
-                //
-                //     continue;
-                // }
-                // const possibleRename = existingTests.find(et =>
-                // {
-                //     LOGGER.error("Checking possible rename: existing test " + et.name + " with package " + et.packageName + " against current test " + test.name + " with package " + test.packageName);
-                //     return stripLast(et.packageName) === stripLast(test.packageName) &&  et.name !== test.name
-                // }
-                // );
-                //
-                // LOGGER.error("Possible rename for test " + test.name + " is: " + JSON.stringify(possibleRename));
-                //
-                // if (possibleRename && !currentByName.has(possibleRename.name)) {
-                //     LOGGER.error("If for rename");
-                //     renamedTests.push({old: possibleRename, new: test})
-                //     continue;
-                // }
                 //
                 // const possibleMove = existingByName.get(test.name);
                 // if (possibleMove && possibleMove.packageName !== test.packageName) {
@@ -40329,15 +40300,8 @@ class Discovery {
                 // }
                 //changedTests.push({...test, changeType: 'added'});
             }
-            // for (const test of renamedTests) {
-            //     changedTests.push({...test.new, changeType: "renamed", id: test.old.id});
-            // }
-            //
-            // for (const pair of movedPairs) {
-            //     changedTests.push({...pair.new, changeType: "moved", id: pair.old.id});
-            // }
             for (const pair of modifiedPairs) {
-                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_a = pair.new) === null || _a === void 0 ? void 0 : _a.name) || "", packageName: ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.packageName) || "", changeType: "modified", id: (_c = pair.old) === null || _c === void 0 ? void 0 : _c.id }));
+                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_a = pair.new) === null || _a === void 0 ? void 0 : _a.name) || "", packageName: ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.packageName) || "", className: ((_c = pair.new) === null || _c === void 0 ? void 0 : _c.className) || "", changeType: "modified", id: (_d = pair.old) === null || _d === void 0 ? void 0 : _d.id }));
             }
             for (const test of existingTests) {
                 const currentTestFullPath = test.packageName;
@@ -40345,7 +40309,6 @@ class Discovery {
                 // const wasRenamed = renamedTests.some(rt => rt.old === test);
                 // const wasMoved = movedPairs.some(mp => mp.old === test);
                 const wasModified = modifiedPairs.some(mp => mp.old === test);
-                // if (!stillExists && !wasRenamed && !wasMoved) {
                 if (!stillExists && !wasModified) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'deleted', id: test.id }));
                 }
@@ -40473,8 +40436,8 @@ class ScanRepo {
     createTest(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
             const testName = path.basename(pathToTest);
-            const relativePath = path.relative(this._workDirectory, pathToTest);
-            let packageName = relativePath;
+            //const relativePath = path.relative(this._workDirectory, pathToTest);
+            let className = yield this.getTestClassName(pathToTest);
             // if (relativePath.length > testName.length) {
             //     const parts = relativePath.split(path.sep);
             //     packageName = parts.slice(0, -1).join(path.sep);
@@ -40483,6 +40446,7 @@ class ScanRepo {
                 name: testName,
                 description: "",
                 packageName: pathToTest,
+                className: className,
                 uftOneTestType: testType,
                 executable: true,
                 actions: [],
@@ -40711,6 +40675,16 @@ class ScanRepo {
             test.description = description || "";
             LOGGER.error("The api test is: " + JSON.stringify(test));
             return test;
+        });
+    }
+    getTestClassName(pathToTest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let className = "";
+            pathToTest = pathToTest.replace(/\\/g, "/");
+            const part = pathToTest.substring(0, -1);
+            className = "file:///" + part;
+            LOGGER.error("The class name is: " + className);
+            return className;
         });
     }
 }
