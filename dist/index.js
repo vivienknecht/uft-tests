@@ -40074,6 +40074,7 @@ const octaneConnectionUtils_1 = __nccwpck_require__(7268);
 const alm_octane_js_rest_sdk_1 = __nccwpck_require__(3967);
 const logger_1 = __nccwpck_require__(7893);
 const utils_1 = __nccwpck_require__(5268);
+const path = __nccwpck_require__(6928);
 const LOGGER = new logger_1.default("Discovery.ts");
 class Discovery {
     constructor(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret) {
@@ -40232,13 +40233,15 @@ class Discovery {
             const modifiedTestsNames = [];
             const modifiedFiles = process.env.MODIFIED_FILES;
             LOGGER.error("The modified files are: " + modifiedFiles);
-            const modifiedFilesArray = modifiedFiles ? modifiedFiles.split((",")) : [];
+            const modifiedFilesArray = modifiedFiles ? modifiedFiles.split(",") : [];
             LOGGER.error("The modified files array is: " + modifiedFilesArray);
             for (const item of modifiedFilesArray) {
-                if (item.includes(".tsp") || item.includes(".st")) {
-                    const testName = (__nccwpck_require__(6928).basename)((__nccwpck_require__(6928).dirname)(item));
+                const parts = item.trim().split(/\s+/);
+                const filePaths = parts.filter(p => p.includes("/") && (p.endsWith(".st") || p.endsWith(".tsp")));
+                for (const file of filePaths) {
+                    const testName = path.basename(path.dirname(file));
                     modifiedTestsNames.push(testName);
-                    LOGGER.error(`Parent folder before file: ${testName}`);
+                    LOGGER.error(`Parent folder for ${file}: ${testName}`);
                 }
             }
             LOGGER.error("The modified test names are: " + modifiedTestsNames);
