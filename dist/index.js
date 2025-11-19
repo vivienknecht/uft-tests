@@ -40276,12 +40276,22 @@ class Discovery {
                     LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
                 }
-                /// modified test contains the old name
-                if (modifiedTestsNames.includes(test.name)) {
-                    modifiedPairs.push({ old: existingByName.get(test.name), new: test });
-                    LOGGER.error("Test modified" + test.name + " marked as modified based on modified files.");
-                    continue;
+                for (const entry of modifiedTestsMap) {
+                    if (entry.oldValue !== entry.newValue) {
+                        if (currentByName.has(entry.newValue)) {
+                            const possibleRename = existingByName.get(entry.oldValue);
+                            const newTestName = currentByName.get(entry.newValue);
+                            modifiedPairs.push({ old: possibleRename, new: test });
+                        }
+                    }
                 }
+                /// modified test contains the old name
+                // if (modifiedTestsNames.includes(test.name)) {
+                //     modifiedPairs.push({old: existingByName.get(test.name), new: test});
+                //     LOGGER.error("Test modified" + test.name + " marked as modified based on modified files.");
+                //
+                //     continue;
+                // }
                 // const possibleRename = existingTests.find(et =>
                 // {
                 //     LOGGER.error("Checking possible rename: existing test " + et.name + " with package " + et.packageName + " against current test " + test.name + " with package " + test.packageName);
