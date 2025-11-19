@@ -40228,6 +40228,7 @@ class Discovery {
     }
     getModifiedTests(discoveredTests, existingTests) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c;
             const changedTests = [];
             const modifiedTestsNames = [];
             const modifiedFiles = process.env.MODIFIED_FILES;
@@ -40315,7 +40316,7 @@ class Discovery {
                 //     movedPairs.push({ old: possibleMove, new: test });
                 //     continue;
                 // }
-                changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'added' }));
+                //changedTests.push({...test, changeType: 'added'});
             }
             // for (const test of renamedTests) {
             //     changedTests.push({...test.new, changeType: "renamed", id: test.old.id});
@@ -40324,17 +40325,17 @@ class Discovery {
             // for (const pair of movedPairs) {
             //     changedTests.push({...pair.new, changeType: "moved", id: pair.old.id});
             // }
-            // for (const pair of modifiedPairs) {
-            //     changedTests.push({...pair.new, changeType: "modified", id: pair.old?.id});
-            // }
+            for (const pair of modifiedPairs) {
+                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_a = pair.new) === null || _a === void 0 ? void 0 : _a.name) || "", packageName: ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.packageName) || "", changeType: "modified", id: (_c = pair.old) === null || _c === void 0 ? void 0 : _c.id }));
+            }
             for (const test of existingTests) {
                 const currentTestFullPath = test.packageName;
                 const stillExists = currentByPackage.get(currentTestFullPath);
                 // const wasRenamed = renamedTests.some(rt => rt.old === test);
                 // const wasMoved = movedPairs.some(mp => mp.old === test);
-                //const wasModified = modifiedPairs.some(mp => mp.old === test);
+                const wasModified = modifiedPairs.some(mp => mp.old === test);
                 // if (!stillExists && !wasRenamed && !wasMoved) {
-                if (!stillExists) {
+                if (!stillExists && !wasModified) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'deleted', id: test.id }));
                 }
             }
