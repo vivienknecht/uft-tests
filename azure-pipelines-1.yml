@@ -19,6 +19,12 @@ steps:
     versionSpec: '22.x'  
   displayName: 'Use Node.js'
 
+- task: octane-start-task-private@1
+  inputs:
+    OctaneServiceConnection: 'octaneConnectionForDiscovery'
+    WorkspaceList: '7002'
+    CreatePipelineCheckbox: true
+
 - task: octane-test-runner-start-task-private@1
   inputs:
     OctaneServiceConnection: 'octaneConnectionForDiscovery'
@@ -67,3 +73,10 @@ steps:
     Get-Content -Path ./build/Props.txt
     Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
     echo "Please check the [$PWD\build\Results.xml] file."
+
+- task: octane-end-task-private@1
+  inputs:
+    OctaneServiceConnection: 'octaneConnectionForDiscovery'
+    WorkspaceList: '7002'
+  env:
+    UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
