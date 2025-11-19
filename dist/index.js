@@ -40296,8 +40296,8 @@ class Discovery {
                     LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
                 }
-                const isOld = modifiedPairs.some(pair => pair.old === test);
-                if (!isOld) {
+                const existsInModifiedOld = modifiedPairs.some(pair => { var _a; return ((_a = pair.old) === null || _a === void 0 ? void 0 : _a.name) === test.name; });
+                if (!existsInModifiedOld) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                 }
                 /// modified test contains the old name
