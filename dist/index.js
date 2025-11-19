@@ -40250,8 +40250,8 @@ class Discovery {
                     const newPath = parts[2];
                     if (oldPath.match(/\.(st|tsp)$/) || newPath.match(/\.(st|tsp)$/)) {
                         modifiedTestsMap.push({
-                            oldValue: path.basename(oldPath),
-                            newValue: path.basename(newPath)
+                            oldValue: path.basename(path.dirname(oldPath)),
+                            newValue: path.basename(path.dirname(newPath))
                         });
                         LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
                     }
