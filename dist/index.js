@@ -40280,6 +40280,13 @@ class Discovery {
                         modifiedPairs.push({ old: possibleRename, new: newTestName });
                     }
                 }
+                else if (entry.oldValue === entry.newValue) {
+                    const possibleModificationOld = existingByName.get(entry.oldValue);
+                    LOGGER.error("The possible modification old is: " + JSON.stringify(possibleModificationOld));
+                    const possibleModificationNew = currentByName.get(entry.newValue);
+                    LOGGER.error("The possible modification new is: " + JSON.stringify(possibleModificationNew));
+                    modifiedPairs.push({ old: possibleModificationOld, new: possibleModificationNew });
+                }
             }
             LOGGER.error("The modified pairs are: " + JSON.stringify(modifiedPairs));
             for (const test of discoveredTests) {
@@ -40288,6 +40295,10 @@ class Discovery {
                 if (exactMatch) {
                     LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
+                }
+                const isOld = modifiedPairs.some(pair => pair.old === test);
+                if (!isOld) {
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                 }
                 /// modified test contains the old name
                 // if (modifiedTestsNames.includes(test.name)) {
