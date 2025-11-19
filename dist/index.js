@@ -40233,6 +40233,7 @@ class Discovery {
             const modifiedFiles = process.env.MODIFIED_FILES;
             LOGGER.error("The modified files are: " + modifiedFiles);
             const modifiedFilesArray = modifiedFiles ? modifiedFiles.split((",")) : [];
+            LOGGER.error("The modified files array is: " + modifiedFilesArray);
             for (const item of modifiedFilesArray) {
                 if (item.includes(".tsp") || item.includes(".st")) {
                     const testName = (__nccwpck_require__(6928).basename)((__nccwpck_require__(6928).dirname)(item));
@@ -40259,6 +40260,7 @@ class Discovery {
                     LOGGER.error("Exact match found for test: " + test.name);
                     continue; // No changes
                 }
+                /// modified test contains the old name
                 if (modifiedTestsNames.includes(test.name)) {
                     modifiedPairs.push({ old: existingByName.get(test.name), new: test });
                     LOGGER.error("Test modified" + test.name + " marked as modified based on modified files.");
