@@ -40074,7 +40074,6 @@ const octaneConnectionUtils_1 = __nccwpck_require__(7268);
 const alm_octane_js_rest_sdk_1 = __nccwpck_require__(3967);
 const logger_1 = __nccwpck_require__(7893);
 const utils_1 = __nccwpck_require__(5268);
-const path = __nccwpck_require__(6928);
 const LOGGER = new logger_1.default("Discovery.ts");
 class Discovery {
     constructor(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret) {
@@ -40235,13 +40234,27 @@ class Discovery {
             LOGGER.error("The modified files are: " + modifiedFiles);
             const modifiedFilesArray = modifiedFiles ? modifiedFiles.split(",") : [];
             LOGGER.error("The modified files array is: " + modifiedFilesArray);
+            const modifiedTestsMap = [];
             for (const item of modifiedFilesArray) {
                 const parts = item.trim().split(/\s+/);
-                const filePaths = parts.filter(p => p.includes("/") && (p.endsWith(".st") || p.endsWith(".tsp")));
-                for (const file of filePaths) {
-                    const testName = path.basename(path.dirname(file));
-                    modifiedTestsNames.push(testName);
-                    LOGGER.error(`Parent folder for ${file}: ${testName}`);
+                // const filePaths = parts.filter(p => p.includes("/") && (p.endsWith(".st") || p.endsWith(".tsp")));
+                //
+                // for (const file of filePaths) {
+                //     const testName = path.basename(path.dirname(file));
+                //     modifiedTestsNames.push(testName);
+                //     LOGGER.error(`Parent folder for ${file}: ${testName}`);
+                // }
+                if (parts.length >= 3) {
+                    const oldPath = parts[1];
+                    const newPath = parts[2];
+                    if (oldPath.match(/\.(st|tsp)$/) ||
+                        newPath.match(/\.(st|tsp)$/)) {
+                        modifiedTestsMap.push({
+                            oldValue: oldPath,
+                            newValue: newPath
+                        });
+                        LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
+                    }
                 }
             }
             LOGGER.error("The modified test names are: " + modifiedTestsNames);
