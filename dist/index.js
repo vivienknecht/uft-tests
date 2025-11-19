@@ -40267,7 +40267,7 @@ class Discovery {
             LOGGER.error("Current by package: " + JSON.stringify(Array.from(currentByPackage.entries())));
             const renamedTests = [];
             const movedPairs = [];
-            //const modifiedPairs = [];
+            const modifiedPairs = [];
             for (const entry of modifiedTestsMap) {
                 LOGGER.error("The old value is: " + entry.oldValue + " and new value is: " + entry.newValue);
                 if (entry.oldValue !== entry.newValue) {
@@ -40276,10 +40276,11 @@ class Discovery {
                         LOGGER.error("The possible rename is: " + JSON.stringify(possibleRename));
                         const newTestName = currentByName.get(entry.newValue);
                         LOGGER.error("The new test name is: " + JSON.stringify(newTestName));
-                        //modifiedPairs.push({old: possibleRename, new: newTestName});
+                        modifiedPairs.push({ old: possibleRename, new: newTestName });
                     }
                 }
             }
+            LOGGER.error("The modified pairs are: " + JSON.stringify(modifiedPairs));
             for (const test of discoveredTests) {
                 const existingTestFullPath = test.packageName;
                 const exactMatch = existingByPackage.get(existingTestFullPath);
