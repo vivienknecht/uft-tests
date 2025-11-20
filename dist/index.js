@@ -40289,7 +40289,7 @@ class Discovery {
             }
             LOGGER.error("The modified pairs are: " + JSON.stringify(modifiedPairs));
             for (const test of discoveredTests) {
-                const existingTestFullPath = test.className;
+                const existingTestFullPath = test.packageName;
                 const exactMatch = existingByPackage.get(existingTestFullPath);
                 if (exactMatch) {
                     LOGGER.error("Exact match found for test: " + test.name);
@@ -40311,7 +40311,7 @@ class Discovery {
                 changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_a = pair.new) === null || _a === void 0 ? void 0 : _a.name) || "", packageName: ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.packageName) || "", className: ((_c = pair.new) === null || _c === void 0 ? void 0 : _c.className) || "", changeType: "modified", id: (_d = pair.old) === null || _d === void 0 ? void 0 : _d.id }));
             }
             for (const test of existingTests) {
-                const currentTestFullPath = test.className;
+                const currentTestFullPath = test.packageName;
                 const stillExists = currentByPackage.get(currentTestFullPath);
                 // const wasRenamed = renamedTests.some(rt => rt.old === test);
                 // const wasMoved = movedPairs.some(mp => mp.old === test);
