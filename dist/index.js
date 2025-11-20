@@ -40305,7 +40305,7 @@ class Discovery {
             }
             for (const test of existingTests) {
                 const currentTestFullPath = test.className;
-                const stillExists = currentByPackage.get(currentTestFullPath);
+                const stillExists = currentByName.get(currentTestFullPath);
                 // const wasRenamed = renamedTests.some(rt => rt.old === test);
                 // const wasMoved = movedPairs.some(mp => mp.old === test);
                 const wasModified = modifiedPairs.some(mp => mp.old === test);
