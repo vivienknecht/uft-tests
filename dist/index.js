@@ -40228,6 +40228,13 @@ class Discovery {
             }
         });
     }
+    createExistingTestPackageName(className, testName) {
+        className = className
+            .replace("file:///", "")
+            .replace(/\//g, "\\");
+        className = className.replace(/\\+$/, "");
+        return `${className}\\${testName}`;
+    }
     getModifiedTests(discoveredTests, existingTests) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c, _d;
@@ -40253,9 +40260,9 @@ class Discovery {
             }
             LOGGER.error("The modified test names are: " + JSON.stringify(modifiedTestsMap, null, 2));
             const existingByName = new Map(existingTests.map(test => [test.name, test]));
-            const existingByPackage = new Map(existingTests.map(test => [test.className, test]));
+            const existingByPackage = new Map(existingTests.map(test => [this.createExistingTestPackageName(test.className, test.name), test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
-            const currentByPackage = new Map(discoveredTests.map(test => [test.className, test]));
+            const currentByPackage = new Map(discoveredTests.map(test => [test.packageName, test]));
             LOGGER.error("Existing by name: " + JSON.stringify(Array.from(existingByName.entries())));
             LOGGER.error("Existing by package: " + JSON.stringify(Array.from(existingByPackage.entries())));
             LOGGER.error("Current by name: " + JSON.stringify(Array.from(currentByName.entries())));
@@ -40305,7 +40312,7 @@ class Discovery {
             }
             for (const test of existingTests) {
                 const currentTestFullPath = test.className;
-                const stillExists = currentByName.get(currentTestFullPath);
+                const stillExists = currentByPackage.get(currentTestFullPath);
                 // const wasRenamed = renamedTests.some(rt => rt.old === test);
                 // const wasMoved = movedPairs.some(mp => mp.old === test);
                 const wasModified = modifiedPairs.some(mp => mp.old === test);
