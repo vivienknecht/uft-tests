@@ -14,6 +14,10 @@ parameters:
 pool: Default
 
 steps: 
+- task: NodeTool@0
+  inputs:
+    versionSpec: '22.x'  
+  displayName: 'Use Node.js'
 
 - task: octane-start-task-private@1
   inputs:
