@@ -40119,7 +40119,7 @@ class Discovery {
                         },
                         "subtype": "test_automated",
                         "name": name,
-                        "package": packageName,
+                        //"package": packageName,
                         "class_name": className
                     }
                 ]
@@ -40140,7 +40140,7 @@ class Discovery {
                         "subtype": "test_automated",
                         "id": testId,
                         "name": name,
-                        "package": packageName,
+                        //"package": packageName,
                     }
                 ]
             };
