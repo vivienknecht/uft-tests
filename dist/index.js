@@ -40119,7 +40119,7 @@ class Discovery {
                         },
                         "subtype": "test_automated",
                         "name": name,
-                        //"package": packageName,
+                        "package": packageName,
                         "class_name": className
                     }
                 ]
@@ -40140,7 +40140,7 @@ class Discovery {
                         "subtype": "test_automated",
                         "id": testId,
                         "name": name,
-                        //"package": packageName,
+                        "package": packageName,
                     }
                 ]
             };
@@ -40228,13 +40228,6 @@ class Discovery {
             }
         });
     }
-    createExistingTestPackageName(className, testName) {
-        className = className
-            .replace("file:///", "")
-            .replace(/\//g, "\\");
-        className = className.replace(/\\+$/, "");
-        return `${className}\\${testName}`;
-    }
     getModifiedTests(discoveredTests, existingTests) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c, _d;
@@ -40259,8 +40252,8 @@ class Discovery {
                 }
             }
             LOGGER.error("The modified test names are: " + JSON.stringify(modifiedTestsMap, null, 2));
-            const existingByName = new Map(existingTests.map(test => [test.name, Object.assign(Object.assign({}, test), { packageName: this.createExistingTestPackageName(test.className, test.name) })]));
-            const existingByPackage = new Map(existingTests.map(test => [this.createExistingTestPackageName(test.className, test.name), Object.assign(Object.assign({}, test), { packageName: this.createExistingTestPackageName(test.className, test.name) })]));
+            const existingByName = new Map(existingTests.map(test => [test.name, test]));
+            const existingByPackage = new Map(existingTests.map(test => [test.packageName, test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
             const currentByPackage = new Map(discoveredTests.map(test => [test.packageName, test]));
             LOGGER.error("Existing by name: " + JSON.stringify(Array.from(existingByName.entries())));
