@@ -40259,8 +40259,8 @@ class Discovery {
                 }
             }
             LOGGER.error("The modified test names are: " + JSON.stringify(modifiedTestsMap, null, 2));
-            const existingByName = new Map(existingTests.map(test => [test.name, test]));
-            const existingByPackage = new Map(existingTests.map(test => [this.createExistingTestPackageName(test.className, test.name), test]));
+            const existingByName = new Map(existingTests.map(test => [test.name, Object.assign(Object.assign({}, test), { packageName: this.createExistingTestPackageName(test.className, test.name) })]));
+            const existingByPackage = new Map(existingTests.map(test => [this.createExistingTestPackageName(test.className, test.name), Object.assign(Object.assign({}, test), { packageName: this.createExistingTestPackageName(test.className, test.name) })]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
             const currentByPackage = new Map(discoveredTests.map(test => [test.packageName, test]));
             LOGGER.error("Existing by name: " + JSON.stringify(Array.from(existingByName.entries())));
