@@ -65,16 +65,12 @@ steps:
     name: GetFiles
     inputs:
       targetType: inline
-      # script: |
-      #   $files = git diff --name-status -M  HEAD~1 HEAD
-      #   $filesJoined = ($files | Where-Object { $_ -ne '' }) -join ','
-      #   Write-Host "Modified files: $filesJoined"
-      #   Write-Host "##vso[task.setvariable variable=MODIFIED_FILES;isOutput=true]$filesJoined"
       script: |
         git fetch --all
         Write-Host "Diff from $Env:LAST_SUCCESSFUL_COMMIT to HEAD"
         $files = git diff --name-status -M $Env:LAST_SUCCESSFUL_COMMIT HEAD
-        $filesJoined = ($files | Where-Object { $_ -ne '' }) -join ','
+        $filesArray = $files -split "`n" | Where-Object { $_ -ne '' }
+        $filesJoined = $filesArray -join ','
         Write-Host "Modified files: $filesJoined"
         Write-Host "##vso[task.setvariable variable=MODIFIED_FILES;isOutput=true]$filesJoined"
     displayName: "Get changed files since last successful run"
