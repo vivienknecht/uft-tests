@@ -69,8 +69,7 @@ steps:
         git fetch --all
         Write-Host "Diff from $Env:LAST_SUCCESSFUL_COMMIT to HEAD"
         $files = git diff --name-status -M $Env:LAST_SUCCESSFUL_COMMIT HEAD
-        $filesArray = $files -split "`n" | Where-Object { $_ -ne '' }
-        $filesJoined = $filesArray -join ','
+        $filesJoined = ($files | Where-Object { $_ -ne '' }) -join ','
         Write-Host "Modified files: $filesJoined"
         Write-Host "##vso[task.setvariable variable=MODIFIED_FILES;isOutput=true]$filesJoined"
     displayName: "Get changed files since last successful run"
