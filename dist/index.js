@@ -30564,6 +30564,7 @@ class Discovery {
             const testsToDelete = [];
             for (const item of modifiedFilesArray) {
                 const parts = item.split("\t");
+                LOGGER.error("The parts are: " + JSON.stringify(parts));
                 if (parts.length === 2) {
                     const operation = parts[0];
                     const deletedFile = parts[1];
@@ -30577,6 +30578,7 @@ class Discovery {
                     const oldPath = parts[1];
                     const newPath = parts[2];
                     if (operation.startsWith("R") && (oldPath.match(/\.(st|tsp)$/) || newPath.match(/\.(st|tsp)$/))) {
+                        LOGGER.error("Processing rename from " + oldPath + " to " + newPath);
                         modifiedTestsMap.push({
                             oldValue: path.basename(path.dirname(oldPath)),
                             newValue: path.basename(path.dirname(newPath))
