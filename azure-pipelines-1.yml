@@ -73,7 +73,7 @@ steps:
       script: |
         git fetch --all
         Write-Host "Diff from $Env:LAST_SUCCESSFUL_COMMIT to HEAD"
-        $files = git diff --name-status -M -z $Env:LAST_SUCCESSFUL_COMMIT HEAD
+        $files = git diff --name-status -M $Env:LAST_SUCCESSFUL_COMMIT HEAD
         $filesJoined = ($files | Where-Object { $_ -ne '' }) -join ','
         Write-Host "Modified files: $filesJoined"
         Write-Host "##vso[task.setvariable variable=MODIFIED_FILES;isOutput=true]$filesJoined"
