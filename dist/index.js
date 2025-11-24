@@ -30460,7 +30460,7 @@ class Discovery {
             LOGGER.error(`the octane connection ${connection}`);
         });
     }
-    sendCreateEventToOctane(octaneConnection, name, packageName, className) {
+    sendCreateEventToOctane(octaneConnection, name, packageName, className, description) {
         return __awaiter(this, void 0, void 0, function* () {
             const body = {
                 "data": [
@@ -30468,7 +30468,8 @@ class Discovery {
                         "subtype": "test_automated",
                         "name": name,
                         "package": packageName,
-                        "class_name": className
+                        "class_name": className,
+                        "description": description
                     }
                 ]
             };
@@ -30476,7 +30477,7 @@ class Discovery {
             LOGGER.error("event sent to octane");
         });
     }
-    sendUpdateEventToOctane(octaneConnection, testId, name, packageName) {
+    sendUpdateEventToOctane(octaneConnection, testId, name, packageName, description) {
         return __awaiter(this, void 0, void 0, function* () {
             const body = {
                 "data": [
@@ -30485,6 +30486,7 @@ class Discovery {
                         "id": testId,
                         "name": name,
                         "package": packageName,
+                        "description": description
                     }
                 ]
             };
@@ -30516,28 +30518,6 @@ class Discovery {
             return existingTests;
         });
     }
-    // public async startDiscoveryOrRediscovery(path: string): Promise<void> {
-    //     LOGGER.error("start initializing...");
-    //     await this.initializeOctaneConnection();
-    //     const lastCommit = await getLastSyncedCommit();
-    //     const newCommit = await getHeadCommitSha(path);
-    //     LOGGER.error("the last synced commit is: " + lastCommit);
-    //     LOGGER.error("the head commit is: " + newCommit);
-    //     // if (lastCommit) {
-    //     //     LOGGER.error("starting rediscovery process...");
-    //     //     const affectedFiles = await RepoChangesDetection.getChanges(path, lastCommit, newCommit);
-    //     //     LOGGER.error("the affected files are: " + JSON.stringify(affectedFiles));
-    //     //     //await ReScanRepo.rescan(path, affectedFiles);
-    //     //     const scanner = new ScanRepo(path);
-    //     //     const discoveredTestsAfterRescan = await scanner.rescan(path, affectedFiles);
-    //     //     LOGGER.error("The discovered tests after rescan are: " + JSON.stringify(discoveredTestsAfterRescan));
-    //     //     for (const test of discoveredTestsAfterRescan) {
-    //     //         await this.sendEventToOctane(this._octaneSDKConnection, test.name, test.packageName);
-    //     //     }
-    //     // } else {
-    //     await this.startDiscovery(path);
-    //     //}
-    // }
     startDiscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initializeOctaneConnection();
@@ -30559,11 +30539,11 @@ class Discovery {
                 else if (test.changeType === 'renamed' || test.changeType === 'moved' || test.changeType === 'modified') {
                     LOGGER.error("the test to update id is: " + test.id);
                     if (test.id) {
-                        yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName);
+                        yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName, test.description);
                     }
                 }
                 else {
-                    yield this.sendCreateEventToOctane(this._octaneSDKConnection, test.name, test.packageName, test.className);
+                    yield this.sendCreateEventToOctane(this._octaneSDKConnection, test.name, test.packageName, test.className, test.description);
                 }
             }
         });
@@ -30675,23 +30655,6 @@ const UFT_API_TEST_EXTENSION = ".st";
 const UFT_GUI_TEST_TYPE = "GUI";
 const UFT_API_TEST_TYPE = "API";
 const NOT_UFT_TEST_TYPE = "Unknown test type";
-const UFT_COMPONENT_NODE_NAME = "Component";
-const ACTION_0 = "action0";
-const UFT_DEPENDENCY_NODE_NAME = "Dependency";
-const UFT_ACTION_TYPE_ATTR = "Type";
-const UFT_ACTION_KIND_ATTR = "Kind";
-const UFT_ACTION_SCOPE_ATTR = "Scope";
-const UFT_ACTION_LOGICAL_ATTR = "Logical";
-const UFT_ACTION_TYPE_VALUE = "1";
-const UFT_ACTION_KIND_VALUE = "16";
-const UFT_ACTION_SCOPE_VALUE = "0";
-const RESOURCE_MTR = "resource.mtr";
-const TEXT_XML = "text/xml";
-const UFT_PARAM_ARGS_COLL_NODE_NAME = "ArgumentsCollection";
-const UFT_PARAM_ARG_NAME_NODE_NAME = "ArgName";
-const UFT_PARAM_ARG_DEFAULT_VALUE_NODE_NAME = "ArgDefaultValue";
-const UFT_ACTION_DESCRIPTION_NODE_NAME = "Description";
-const ARG_DIRECTION = "ArgDirection";
 class ScanRepo {
     constructor(workDirectory) {
         this._tests = [];
@@ -30731,7 +30694,7 @@ class ScanRepo {
             LOGGER.error("The paths are: " + paths.join(", "));
             for (const p of paths) {
                 const ext = path.extname(p).toLowerCase();
-                //LOGGER.error("Checking file extension: " + ext);
+                LOGGER.error("Checking file extension: " + ext);
                 if (p.endsWith(UFT_GUI_TEST_EXTENSION)) {
                     return UFT_GUI_TEST_TYPE;
                 }
@@ -30750,11 +30713,7 @@ class ScanRepo {
             description = (0, utils_1.getDescriptionForGUITest)(document);
             description = (0, utils_1.convertToHtml)(description);
             test.description = description || "";
-            const actionsPathPrefix = this.getActionsPathPrefix(test, false);
-            const actions = yield this.getActionsAndParameters(document, actionsPathPrefix, test.name, pathToTest);
-            LOGGER.error("The actions are: " + JSON.stringify(actions));
-            test.actions = actions;
-            //LOGGER.error("The test is: " + JSON.stringify(test));
+            LOGGER.error("The test is: " + JSON.stringify(test));
             return test;
         });
     }
@@ -30768,133 +30727,9 @@ class ScanRepo {
                 packageName: pathToTest,
                 className: className,
                 uftOneTestType: testType,
-                executable: true,
-                actions: [],
-                status: "New"
             };
             LOGGER.error("Created test: " + test.packageName + "\\" + test.name);
             return test;
-        });
-    }
-    getActionsPathPrefix(test, originalPath) {
-        const testPackage = originalPath ? test.oldPackageName : test.packageName;
-        const testName = originalPath ? test.oldName : test.name;
-        return `${testPackage}\\${testName}`;
-    }
-    getActionsAndParameters(document, actionsPathPrefix, testName, pathToTest) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const actions = [];
-            if (!document) {
-                LOGGER.warn("No document provided for extracting actions.");
-            }
-            else {
-                const actionsMap = this.getActionComponents(document, testName);
-                this.fillActionsParameters(document, actionsMap, actionsPathPrefix);
-                actions.push(...Array.from(actionsMap.values()));
-                try {
-                    yield this.readParameters(pathToTest, actionsMap);
-                }
-                catch (e) {
-                    LOGGER.error("Error reading action parameters: " + (e instanceof Error ? e.message : String(e)));
-                }
-            }
-            return actions;
-        });
-    }
-    getActionComponents(document, testName) {
-        const actions = new Map();
-        const componentInfoNodes = document.getElementsByTagName(UFT_COMPONENT_NODE_NAME);
-        for (let i = 0; i < componentInfoNodes.length; i++) {
-            const action = componentInfoNodes.item(i);
-            if (action) {
-                const actionName = action.textContent;
-                if (actionName && actionName.toLowerCase() !== ACTION_0) {
-                    const action = {
-                        name: actionName,
-                        testName: testName,
-                        octaneStatus: "New"
-                    };
-                    actions.set(actionName, action);
-                }
-            }
-        }
-        return actions;
-    }
-    fillActionsParameters(document, actionsMap, actionsPathPrefix) {
-        var _a, _b, _c, _d;
-        const dependencyNodes = document.getElementsByTagName(UFT_DEPENDENCY_NODE_NAME);
-        for (let i = 0; i < dependencyNodes.length; i++) {
-            const dependencyNode = dependencyNodes.item(i);
-            if (dependencyNode) {
-                const attributes = dependencyNode.attributes;
-                const typeAttr = (_a = attributes.getNamedItem(UFT_ACTION_TYPE_ATTR)) === null || _a === void 0 ? void 0 : _a.nodeValue;
-                const kindAttr = (_b = attributes.getNamedItem(UFT_ACTION_KIND_ATTR)) === null || _b === void 0 ? void 0 : _b.nodeValue;
-                const scopeAttr = (_c = attributes.getNamedItem(UFT_ACTION_SCOPE_ATTR)) === null || _c === void 0 ? void 0 : _c.nodeValue;
-                const logicalAttr = (_d = attributes.getNamedItem(UFT_ACTION_LOGICAL_ATTR)) === null || _d === void 0 ? void 0 : _d.nodeValue;
-                if (typeAttr === UFT_ACTION_TYPE_VALUE && kindAttr === UFT_ACTION_KIND_VALUE && scopeAttr === UFT_ACTION_SCOPE_VALUE && logicalAttr) {
-                    const dependencyNodeText = dependencyNode.textContent;
-                    const actionName = dependencyNodeText === null || dependencyNodeText === void 0 ? void 0 : dependencyNodeText.substring(0, dependencyNodeText === null || dependencyNodeText === void 0 ? void 0 : dependencyNodeText.indexOf("\\"));
-                    if (actionName && actionName.toLowerCase() !== ACTION_0) {
-                        const action = actionsMap.get(actionName);
-                        if (action) {
-                            action.logicalName = logicalAttr;
-                            (0, utils_1.setActionPath)(action, actionsPathPrefix);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    readParameters(pathToTest, actionsMap) {
-        return __awaiter(this, void 0, void 0, function* () {
-            for (const [actionName, action] of actionsMap.entries()) {
-                const actionFolder = `${pathToTest}/${actionName}`;
-                try {
-                    const resourceMtrFile = yield (0, utils_1.checkIfFileExists)(actionFolder, RESOURCE_MTR);
-                    if (resourceMtrFile) {
-                        yield this.parseActionMtrFile(resourceMtrFile, action);
-                    }
-                    else {
-                        LOGGER.error("Resource.mtr file not found for action: " + actionName);
-                    }
-                }
-                catch (error) {
-                    action.parameters = [];
-                    LOGGER.error("Error reading parameters for action: " + actionName + ". " + (error instanceof Error ? error.message : String(error)));
-                }
-            }
-        });
-    }
-    parseActionMtrFile(resourceMtrFile, action) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
-            const params = [];
-            const xml = yield (0, utils_1.convertToXml)(resourceMtrFile);
-            const parser = (0, utils_1.customDOMParser)();
-            const xmlContent = xml.replace(/^\uFEFF/, '');
-            const doc = parser.parseFromString(xmlContent, TEXT_XML);
-            const argCollectionElement = doc.getElementsByTagName(UFT_PARAM_ARGS_COLL_NODE_NAME);
-            if (argCollectionElement.length > 0) {
-                const argCollectionItem = argCollectionElement.item(0);
-                const childArgElements = argCollectionItem === null || argCollectionItem === void 0 ? void 0 : argCollectionItem.childNodes;
-                if (childArgElements) {
-                    for (let i = 0; i < childArgElements.length; i++) {
-                        const argElement = childArgElements.item(i);
-                        const parameters = {
-                            name: (_b = (_a = argElement.getElementsByTagName(UFT_PARAM_ARG_NAME_NODE_NAME).item(0)) === null || _a === void 0 ? void 0 : _a.textContent) !== null && _b !== void 0 ? _b : "",
-                            direction: parseInt(((_c = argElement.getElementsByTagName(ARG_DIRECTION).item(0)) === null || _c === void 0 ? void 0 : _c.textContent) || "0", 10),
-                            octaneStatus: "New"
-                        };
-                        const defaultValue = argElement.getElementsByTagName(UFT_PARAM_ARG_DEFAULT_VALUE_NODE_NAME).item(0);
-                        if (defaultValue) {
-                            parameters.defaultValue = defaultValue.textContent || "";
-                        }
-                        params.push(parameters);
-                    }
-                }
-            }
-            action.parameters = params;
-            action.description = ((_d = doc.getElementsByTagName(UFT_ACTION_DESCRIPTION_NODE_NAME).item(0)) === null || _d === void 0 ? void 0 : _d.textContent) || "";
         });
     }
     createAutomatedTestFromAPI(pathToTest, testType) {
@@ -31538,7 +31373,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getDescriptionForAPITest = exports.getAPITestDoc = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.setActionPath = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
+exports.getDescriptionForAPITest = exports.getAPITestDoc = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
 const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(1943);
 const logger_1 = __nccwpck_require__(7893);
@@ -31561,7 +31396,6 @@ const getGUITestDoc = (pathToTest) => __awaiter(void 0, void 0, void 0, function
             LOGGER.error("No valid XML content could be extracted from the TSP file.");
             return null;
         }
-        //const parser = new DOMParser(); - new DOMParser() without custom error handling
         const parser = customDOMParser();
         const doc = parser.parseFromString(xmlFormat, TEXT_XML);
         if (!doc.documentElement) {
@@ -31674,11 +31508,6 @@ const convertToHtml = (description) => {
     return `<html><body>${paragraphs}</body></html>`;
 };
 exports.convertToHtml = convertToHtml;
-const setActionPath = (action, actionsPathPrefix) => {
-    const actionName = action.logicalName || action.name;
-    action.repositoryPath = `${actionsPathPrefix}\\${action.name}:${actionName}`;
-};
-exports.setActionPath = setActionPath;
 const getAPITestDoc = (pathToTest) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const actionsXmlFile = yield checkIfFileExists(pathToTest, ACTIONS_XML);
