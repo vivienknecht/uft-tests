@@ -65,11 +65,23 @@ steps:
     name: GetFiles
     inputs:
       targetType: inline
+      # script: |
+      #   $files = git diff --name-status -M  HEAD~1 HEAD
+      #   $filesJoined = ($files | Where-Object { $_ -ne '' }) -join ','
+      #   Write-Host "Modified files: $filesJoined"
+      #   Write-Host "##vso[task.setvariable variable=MODIFIED_FILES;isOutput=true]$filesJoined"
       script: |
-        $files = git diff --name-status -M  HEAD~1 HEAD
+        git fetch --all
+
+        Write-Host "Diff from $Env:LAST_SUCCESSFUL_COMMIT to HEAD"
+
+        $files = git diff --name-status -M $Env:LAST_SUCCESSFUL_COMMIT HEAD
         $filesJoined = ($files | Where-Object { $_ -ne '' }) -join ','
+
         Write-Host "Modified files: $filesJoined"
         Write-Host "##vso[task.setvariable variable=MODIFIED_FILES;isOutput=true]$filesJoined"
+
+    displayName: "Get changed files since last successful run
 
   - powershell: |
       node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace=1001 --workspace=9001 --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
