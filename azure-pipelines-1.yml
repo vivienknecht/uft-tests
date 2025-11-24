@@ -34,17 +34,17 @@ steps:
   - checkout: self
     fetchDepth: 2
 
-  # - task: DownloadBuildArtifacts@0
-  #   displayName: "Download last successful commit SHA"
-  #   inputs:
-  #      buildType: "specific"
-  #      project: "$(System.TeamProjectId)"
-  #      definition: "$(System.DefinitionId)"
-  #      buildVersionToDownload: "latestFromBranch"
-  #      branchName: "$(Build.SourceBranch)"
-  #      artifactName: "last-successful"
-  #      downloadPath: "$(Pipeline.Workspace)"
-  #   continueOnError: true
+  - task: DownloadBuildArtifacts@0
+    displayName: "Download last successful commit SHA"
+    inputs:
+       buildType: "specific"
+       project: "$(System.TeamProjectId)"
+       definition: "$(System.DefinitionId)"
+       buildVersionToDownload: "latestFromBranch"
+       branchName: "$(Build.SourceBranch)"
+       artifactName: "last-successful"
+       downloadPath: "$(Pipeline.Workspace)"
+    continueOnError: true
 
   - powershell: |
       $artifactPath = "$(Pipeline.Workspace)/last-successful/last_successful_commit.txt"
