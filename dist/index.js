@@ -30551,7 +30551,7 @@ class Discovery {
     }
     getModifiedTests(discoveredTests, existingTests) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             const changedTests = [];
             const raw = (_a = process.env.MODIFIED_FILES) !== null && _a !== void 0 ? _a : "";
             const gitOutput = Buffer.from(raw, "base64").toString("utf8");
@@ -30562,30 +30562,40 @@ class Discovery {
             LOGGER.error("The modified files array is: " + modifiedFilesArray);
             const modifiedTestsMap = [];
             const testsToDelete = [];
-            for (const item of modifiedFilesArray) {
-                const parts = item.split("\t");
-                LOGGER.error("The parts are: " + JSON.stringify(parts));
-                if (parts.length === 2) {
-                    const operation = parts[0];
-                    const deletedFile = parts[1];
-                    if (operation === "D" && deletedFile.match(/\.(st|tsp)$/)) {
-                        const testToDeleteName = path.basename(path.dirname(deletedFile));
-                        testsToDelete.push(testToDeleteName);
-                    }
-                }
-                if (parts.length >= 3) {
-                    const operation = parts[0];
-                    const oldPath = parts[1];
-                    const newPath = parts[2];
-                    if (operation.startsWith("R") && (oldPath.match(/\.(st|tsp)$/) || newPath.match(/\.(st|tsp)$/))) {
-                        LOGGER.error("Processing rename from " + oldPath + " to " + newPath);
+            for (let i = 0; i < modifiedFilesArray.length;) {
+                const status = modifiedFilesArray[i++];
+                LOGGER.error("Status token: " + status);
+                if (!status)
+                    continue;
+                // Rename (status looks like "R" or "R100" etc)
+                if (status.startsWith("R")) {
+                    const oldPath = (_b = modifiedFilesArray[i++]) !== null && _b !== void 0 ? _b : "";
+                    const newPath = (_c = modifiedFilesArray[i++]) !== null && _c !== void 0 ? _c : "";
+                    LOGGER.error("Rename oldPath: " + oldPath);
+                    LOGGER.error("Rename newPath: " + newPath);
+                    if ((oldPath && oldPath.match(/\.(st|tsp)$/)) || (newPath && newPath.match(/\.(st|tsp)$/))) {
                         modifiedTestsMap.push({
                             oldValue: path.basename(path.dirname(oldPath)),
-                            newValue: path.basename(path.dirname(newPath))
+                            newValue: path.basename(path.dirname(newPath)),
                         });
                         LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
                     }
+                    continue;
                 }
+                // Delete (D <path>)
+                if (status === "D") {
+                    const deletedFile = (_d = modifiedFilesArray[i++]) !== null && _d !== void 0 ? _d : "";
+                    LOGGER.error("Deleted file: " + deletedFile);
+                    if (deletedFile && deletedFile.match(/\.(st|tsp)$/)) {
+                        const testToDeleteName = path.basename(path.dirname(deletedFile));
+                        testsToDelete.push(testToDeleteName);
+                    }
+                    continue;
+                }
+                // Other statuses (A, M, etc.): status + single path
+                const filePath = (_e = modifiedFilesArray[i++]) !== null && _e !== void 0 ? _e : "";
+                LOGGER.error(`Other status ${status}, path: ${filePath}`);
+                // handle if needed (e.g. if you care about added/modified .st/.tsp files)
             }
             LOGGER.error("The modified test names are: " + JSON.stringify(modifiedTestsMap, null, 2));
             LOGGER.error("The tests to delete are: " + JSON.stringify(testsToDelete, null, 2));
@@ -30624,7 +30634,7 @@ class Discovery {
                 }
             }
             for (const pair of modifiedPairs) {
-                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.name) || "", packageName: ((_c = pair.new) === null || _c === void 0 ? void 0 : _c.packageName) || "", className: ((_d = pair.new) === null || _d === void 0 ? void 0 : _d.className) || "", changeType: "modified", id: (_e = pair.old) === null || _e === void 0 ? void 0 : _e.id }));
+                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_f = pair.new) === null || _f === void 0 ? void 0 : _f.name) || "", packageName: ((_g = pair.new) === null || _g === void 0 ? void 0 : _g.packageName) || "", className: ((_h = pair.new) === null || _h === void 0 ? void 0 : _h.className) || "", changeType: "modified", id: (_j = pair.old) === null || _j === void 0 ? void 0 : _j.id }));
             }
             LOGGER.error("The changed tests are: " + JSON.stringify(changedTests));
             return changedTests;
