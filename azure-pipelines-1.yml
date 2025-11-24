@@ -68,10 +68,9 @@ steps:
       script: |
         git fetch --all
         Write-Host "Diff from $Env:LAST_SUCCESSFUL_COMMIT to HEAD"
-        $files = git diff --name-status -M $Env:LAST_SUCCESSFUL_COMMIT HEAD
-        $filesJoined = ($files | Where-Object { $_ -ne '' }) -join ','
-        Write-Host "Modified files: $filesJoined"
-        Write-Host "##vso[task.setvariable variable=MODIFIED_FILES;isOutput=true]$filesJoined"
+        $files = git diff --name-status -M -z $Env:LAST_SUCCESSFUL_COMMIT HEAD | Out-String -Stream
+        $encoded = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($files))
+        Write-Host "##vso[task.setvariable variable=MODIFIED_FILES]$encoded"
     displayName: "Get changed files since last successful run"
 
   - powershell: |
