@@ -30563,7 +30563,7 @@ class Discovery {
             const modifiedTestsMap = [];
             const testsToDelete = [];
             for (const item of modifiedFilesArray) {
-                const parts = item.trim().split(/\s+/);
+                const parts = item.split("\t");
                 if (parts.length === 2) {
                     const operation = parts[0];
                     const deletedFile = parts[1];
