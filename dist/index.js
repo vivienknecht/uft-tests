@@ -30560,28 +30560,25 @@ class Discovery {
             const modifiedTestsMap = [];
             const testsToDelete = [];
             for (const item of modifiedFilesArray) {
-                const parts = item.match(/^(R\d+)\s+(.+?)\s+(.+)$/);
-                LOGGER.error("The parts are: " + JSON.stringify(parts));
-                if (parts) {
-                    if (parts.length === 2) {
-                        const operation = parts[0];
-                        const deletedFile = parts[1];
-                        if (operation === "D" && deletedFile.match(/\.(st|tsp)$/)) {
-                            const testToDeleteName = path.basename(path.dirname(deletedFile));
-                            testsToDelete.push(testToDeleteName);
-                        }
+                const parts = item.trim().split(/\s+/);
+                if (parts.length === 2) {
+                    const operation = parts[0];
+                    const deletedFile = parts[1];
+                    if (operation === "D" && deletedFile.match(/\.(st|tsp)$/)) {
+                        const testToDeleteName = path.basename(path.dirname(deletedFile));
+                        testsToDelete.push(testToDeleteName);
                     }
-                    if (parts.length >= 3) {
-                        const operation = parts[0];
-                        const oldPath = parts[1];
-                        const newPath = parts[2];
-                        if (operation === "R100" && (oldPath.match(/\.(st|tsp)$/) || newPath.match(/\.(st|tsp)$/))) {
-                            modifiedTestsMap.push({
-                                oldValue: path.basename(path.dirname(oldPath)),
-                                newValue: path.basename(path.dirname(newPath))
-                            });
-                            LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
-                        }
+                }
+                if (parts.length >= 3) {
+                    const operation = parts[0];
+                    const oldPath = parts[1];
+                    const newPath = parts[2];
+                    if (operation === "R100" && (oldPath.match(/\.(st|tsp)$/) || newPath.match(/\.(st|tsp)$/))) {
+                        modifiedTestsMap.push({
+                            oldValue: path.basename(path.dirname(oldPath)),
+                            newValue: path.basename(path.dirname(newPath))
+                        });
+                        LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
                     }
                 }
             }
