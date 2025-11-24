@@ -34,7 +34,7 @@ steps:
   - checkout: self
     fetchDepth: 2
 
-  - task: DownloadBuildArtifacts@0
+  - task: DownloadPipelineArtifact@2
     displayName: "Download last successful commit SHA"
     inputs:
        buildType: "specific"
