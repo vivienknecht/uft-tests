@@ -30561,6 +30561,7 @@ class Discovery {
             const testsToDelete = [];
             for (const item of modifiedFilesArray) {
                 const parts = item.match(/^(R\d+)\s+(.+?)\s+(.+)$/);
+                LOGGER.error("The parts are: " + JSON.stringify(parts));
                 if (parts) {
                     if (parts.length === 2) {
                         const operation = parts[0];
