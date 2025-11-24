@@ -30477,7 +30477,7 @@ class Discovery {
             LOGGER.error("event sent to octane");
         });
     }
-    sendUpdateEventToOctane(octaneConnection, testId, name, packageName, description) {
+    sendUpdateEventToOctane(octaneConnection, testId, name, packageName, description, className) {
         return __awaiter(this, void 0, void 0, function* () {
             const body = {
                 "data": [
@@ -30486,7 +30486,8 @@ class Discovery {
                         "id": testId,
                         "name": name,
                         "package": packageName,
-                        "description": description
+                        "description": description,
+                        "class_name": className
                     }
                 ]
             };
@@ -30539,7 +30540,7 @@ class Discovery {
                 else if (test.changeType === 'renamed' || test.changeType === 'moved' || test.changeType === 'modified') {
                     LOGGER.error("the test to update id is: " + test.id);
                     if (test.id) {
-                        yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName, test.description);
+                        yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName, test.description, test.className);
                     }
                 }
                 else {
