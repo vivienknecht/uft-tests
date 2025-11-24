@@ -53,12 +53,12 @@ steps:
     Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
     echo "Please check the [$PWD\build\Results.xml] file."
   displayName: Testing
-# - task: octane-end-task-private@1
-#   inputs:
-#     OctaneServiceConnection: 'privateOctaneConnection'
-#     WorkspaceList: '9001'
-#   env: 
-#     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
+- task: octane-end-task-private@1
+  inputs:
+    OctaneServiceConnection: 'privateOctaneConnection'
+    WorkspaceList: '9001'
+  env: 
+    UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
 
          
 
