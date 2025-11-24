@@ -30551,41 +30551,37 @@ class Discovery {
     }
     getModifiedTests(discoveredTests, existingTests) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
+            var _a, _b, _c, _d, _e;
             const changedTests = [];
-            const modifiedFiles = process.env.MODIFIED_FILES;
-            LOGGER.error("The modified files are: " + modifiedFiles);
-            const modifiedFilesArray = modifiedFiles ? modifiedFiles.split(",") : [];
+            const raw = (_a = process.env.MODIFIED_FILES) !== null && _a !== void 0 ? _a : "";
+            const gitOutput = Buffer.from(raw, "base64").toString("utf8");
+            const modifiedFilesArray = gitOutput.split('\0').filter(Boolean);
+            //const modifiedFiles = process.env.MODIFIED_FILES;
+            //LOGGER.error("The modified files are: " + modifiedFiles);
+            //const modifiedFilesArray = modifiedFiles ? modifiedFiles.split(",") : [];
             LOGGER.error("The modified files array is: " + modifiedFilesArray);
             const modifiedTestsMap = [];
             const testsToDelete = [];
             for (const item of modifiedFilesArray) {
-                const parts = item.split(',');
-                for (const part of parts) {
-                    const trimmed = part.trim();
-                    const match = trimmed.match(/^R\d+\s+(.+?)\s+(.+)$/);
-                    LOGGER.error(`Processing modified file entry: ${trimmed}, Match: ${match}`);
-                    if (match) {
-                        if (match.length === 2) {
-                            const operation = parts[0];
-                            const deletedFile = parts[1];
-                            if (operation === "D" && deletedFile.match(/\.(st|tsp)$/)) {
-                                const testToDeleteName = path.basename(path.dirname(deletedFile));
-                                testsToDelete.push(testToDeleteName);
-                            }
-                        }
-                        if (match.length >= 3) {
-                            const operation = parts[0];
-                            const oldPath = parts[1];
-                            const newPath = parts[2];
-                            if (operation === "R100" && (oldPath.match(/\.(st|tsp)$/) || newPath.match(/\.(st|tsp)$/))) {
-                                modifiedTestsMap.push({
-                                    oldValue: path.basename(path.dirname(oldPath)),
-                                    newValue: path.basename(path.dirname(newPath))
-                                });
-                                LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
-                            }
-                        }
+                const parts = item.trim().split(/\s+/);
+                if (parts.length === 2) {
+                    const operation = parts[0];
+                    const deletedFile = parts[1];
+                    if (operation === "D" && deletedFile.match(/\.(st|tsp)$/)) {
+                        const testToDeleteName = path.basename(path.dirname(deletedFile));
+                        testsToDelete.push(testToDeleteName);
+                    }
+                }
+                if (parts.length >= 3) {
+                    const operation = parts[0];
+                    const oldPath = parts[1];
+                    const newPath = parts[2];
+                    if (operation.startsWith("R") && (oldPath.match(/\.(st|tsp)$/) || newPath.match(/\.(st|tsp)$/))) {
+                        modifiedTestsMap.push({
+                            oldValue: path.basename(path.dirname(oldPath)),
+                            newValue: path.basename(path.dirname(newPath))
+                        });
+                        LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
                     }
                 }
             }
@@ -30626,7 +30622,7 @@ class Discovery {
                 }
             }
             for (const pair of modifiedPairs) {
-                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_a = pair.new) === null || _a === void 0 ? void 0 : _a.name) || "", packageName: ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.packageName) || "", className: ((_c = pair.new) === null || _c === void 0 ? void 0 : _c.className) || "", changeType: "modified", id: (_d = pair.old) === null || _d === void 0 ? void 0 : _d.id }));
+                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.name) || "", packageName: ((_c = pair.new) === null || _c === void 0 ? void 0 : _c.packageName) || "", className: ((_d = pair.new) === null || _d === void 0 ? void 0 : _d.className) || "", changeType: "modified", id: (_e = pair.old) === null || _e === void 0 ? void 0 : _e.id }));
             }
             LOGGER.error("The changed tests are: " + JSON.stringify(changedTests));
             return changedTests;
