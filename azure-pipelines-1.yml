@@ -115,7 +115,7 @@ steps:
 
   - task: octane-end-task-private@1
     inputs:
-      OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "9001"
+      OctaneServiceConnection: 'octaneConnectionForDiscovery'
+      WorkspaceList: '9000'
     env:
       UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
