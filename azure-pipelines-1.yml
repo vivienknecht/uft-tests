@@ -80,6 +80,7 @@ steps:
     env:
       MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
       CLIENTSECRET: $(CLIENTSECRE)
+      CLIENTID: $(CLIENTID)
     displayName: Discovery
 
   - powershell: |
