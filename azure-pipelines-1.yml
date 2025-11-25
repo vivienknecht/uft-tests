@@ -84,7 +84,6 @@ steps:
       --logLevel=1
     env:
       MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
-      CLIENTSECRET: $(CLIENTSECRE)
     displayName: Discovery
 
   - powershell: |
