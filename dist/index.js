@@ -30832,9 +30832,8 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         const octaneUrl = args.octaneUrl;
         const sharedSpace = args.sharedSpace;
         const workspace = args.workspace;
-        const clientId = args.clientId;
-        //const clientSecret = args.clientSecret;
-        const clientSecret = process.env.CLIENTSECRET || args.clientSecret;
+        const clientId = process.env.CLIENTID || "";
+        const clientSecret = process.env.CLIENTSECRET || "";
         if (actionType === "convertTests") {
             convertTests();
         }
