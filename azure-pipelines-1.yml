@@ -117,5 +117,6 @@ steps:
     inputs:
       OctaneServiceConnection: 'octaneConnectionForDiscovery'
       WorkspaceList: '9001'
+      FrameworkType: 'uft'
     env:
       UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
