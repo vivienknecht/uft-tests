@@ -68,20 +68,15 @@ steps:
       script: |
         git fetch --all
         Write-Host "Diff from $Env:LAST_SUCCESSFUL_COMMIT to HEAD"
-        $files = git diff --name-status -M -z $Env:LAST_SUCCESSFUL_COMMIT HEAD | Out-String -Stream
+        $files = git diff --name-status -M -z $Env:LAST_SUCCESSFUL_COMMIT HEAD | Out-String
+        if (-not $files) { $files = "" }
         $encoded = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($files))
         Write-Host "Modified files: $files"
         Write-Host "##vso[task.setvariable variable=MODIFIED_FILES]$encoded"
     displayName: "Get changed files since last successful run"
 
   - powershell: |
-      node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" 
-      --octaneUrl="http://localhost:8080/dev" 
-      --sharedSpace="$env:SHAREDSPACE"
-      --workspace="$env:WORKSPACE"
-      --clientSecret="$env:CLIENTSECRE" 
-      --clientId="$env:CLIENTID" 
-      --logLevel=1
+      node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace="$env:SHAREDSPACE" --workspace="$env:WORKSPACE" --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
     env:
       MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
     displayName: Discovery
