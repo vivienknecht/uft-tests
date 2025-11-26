@@ -32,7 +32,7 @@ steps:
   #     Framework: "uft"
 
   - checkout: self
-    fetchDepth: 2
+    fetchDepth: 0
 
   - task: DownloadPipelineArtifact@2
     displayName: "Download last successful commit SHA"
