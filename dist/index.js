@@ -30556,9 +30556,6 @@ class Discovery {
             const raw = (_a = process.env.MODIFIED_FILES) !== null && _a !== void 0 ? _a : "";
             const gitOutput = Buffer.from(raw, "base64").toString("utf8");
             const modifiedFilesArray = gitOutput.split('\0').filter(Boolean);
-            //const modifiedFiles = process.env.MODIFIED_FILES;
-            //LOGGER.error("The modified files are: " + modifiedFiles);
-            //const modifiedFilesArray = modifiedFiles ? modifiedFiles.split(",") : [];
             LOGGER.error("The modified files array is: " + modifiedFilesArray);
             const modifiedTestsMap = [];
             const testsToDelete = [];
@@ -30672,9 +30669,10 @@ class ScanRepo {
     scanRepo(pathToRepo) {
         return __awaiter(this, void 0, void 0, function* () {
             const items = yield fs.promises.readdir(pathToRepo);
-            const testType = yield this.getTestType(items);
-            LOGGER.error("The test type is: " + testType);
             let found_tests = [];
+            let testType = "";
+            testType = yield this.getTestType(items);
+            LOGGER.error("The test type is: " + testType);
             if (testType === UFT_GUI_TEST_TYPE) {
                 LOGGER.error("GUI tests found. Creating automated tests...");
                 const automatedTests = yield this.createAutomatedTestsFromGUI(pathToRepo, testType);
@@ -30687,8 +30685,9 @@ class ScanRepo {
             else {
                 for (const item of items) {
                     const itemPath = path.join(pathToRepo, item);
-                    const stats = yield fs.promises.stat(itemPath);
-                    if (stats.isDirectory()) {
+                    const stats = yield fs.promises.lstat(itemPath);
+                    if (stats.isDirectory() || stats.isSymbolicLink()) {
+                        LOGGER.warn("The item is a directory or a symlink, scanning inside: " + itemPath);
                         yield this.scanRepo(itemPath);
                     }
                 }
@@ -30696,6 +30695,17 @@ class ScanRepo {
             found_tests = this._tests;
             LOGGER.error("The found tests are: " + JSON.stringify(found_tests));
             return found_tests;
+        });
+    }
+    isSymlink(filePath) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (const file of filePath) {
+                const stats = fs.lstatSync(file);
+                if (stats.isSymbolicLink()) {
+                    return true;
+                }
+            }
+            return false;
         });
     }
     getTestType(paths) {
