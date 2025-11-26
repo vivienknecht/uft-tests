@@ -30772,7 +30772,7 @@ class ScanRepo {
             let packageName = "";
             const parts = pathToTest.split(path.sep);
             const startIndex = parts.indexOf("s");
-            packageName = parts.slice(startIndex + 1, -1).join(".");
+            packageName = parts.slice(startIndex + 1, -1).join(path.sep) + path.sep + testName;
             LOGGER.error("The package name is: " + packageName);
             return packageName;
         });
