@@ -30762,7 +30762,7 @@ class ScanRepo {
             const parts = pathToTest.split(path.sep);
             const startIndex = parts.indexOf("s");
             const endIndex = parts.lastIndexOf(testName);
-            className = parts.slice(startIndex + 1, endIndex).join(path.sep);
+            className = parts.slice(startIndex + 1, endIndex).join("/");
             LOGGER.error("The class name is: " + className);
             return className;
         });
