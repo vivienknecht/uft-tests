@@ -19,11 +19,11 @@ steps:
     versionSpec: '22.x'  
   displayName: 'Use Node.js'
 
-# - task: octane-start-task-private@1
-#   inputs:
-#     OctaneServiceConnection: 'privateOctaneConnection'
-#     WorkspaceList: '9001'
-#     CreatePipelineCheckbox: true
+- task: octane-start-task-private@1
+  inputs:
+    OctaneServiceConnection: 'privateOctaneConnection'
+    WorkspaceList: '9001'
+    CreatePipelineCheckbox: true
 
 - task: octane-test-runner-start-task-private@1
   inputs:
@@ -57,6 +57,7 @@ steps:
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
     WorkspaceList: '9001'
+    Framework: 'uft'
   env: 
     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
 
