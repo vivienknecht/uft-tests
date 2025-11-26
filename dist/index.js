@@ -30687,7 +30687,6 @@ class ScanRepo {
                     const itemPath = path.join(pathToRepo, item);
                     const stats = yield fs.promises.lstat(itemPath);
                     if (stats.isDirectory() || stats.isSymbolicLink()) {
-                        LOGGER.warn("The item is a directory or a symlink, scanning inside: " + itemPath);
                         yield this.scanRepo(itemPath);
                     }
                 }
@@ -30695,17 +30694,6 @@ class ScanRepo {
             found_tests = this._tests;
             LOGGER.error("The found tests are: " + JSON.stringify(found_tests));
             return found_tests;
-        });
-    }
-    isSymlink(filePath) {
-        return __awaiter(this, void 0, void 0, function* () {
-            for (const file of filePath) {
-                const stats = fs.lstatSync(file);
-                if (stats.isSymbolicLink()) {
-                    return true;
-                }
-            }
-            return false;
         });
     }
     getTestType(paths) {
@@ -30739,15 +30727,16 @@ class ScanRepo {
     createTest(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
             const testName = path.basename(pathToTest);
-            let className = yield this.getTestClassName(pathToTest);
+            const className = yield this.getTestClassName(pathToTest, testName);
+            const packageName = yield this.getPackageName(pathToTest, testName);
             const test = {
                 name: testName,
                 description: "",
-                packageName: pathToTest,
+                packageName: packageName,
                 className: className,
                 uftOneTestType: testType,
             };
-            LOGGER.error("Created test: " + test.packageName + "\\" + test.name);
+            LOGGER.error("Created test: " + test.packageName + "\\" + test.name + ", class name: " + test.className);
             return test;
         });
     }
@@ -30762,16 +30751,30 @@ class ScanRepo {
             return test;
         });
     }
-    getTestClassName(pathToTest) {
+    getTestClassName(pathToTest, testName) {
         return __awaiter(this, void 0, void 0, function* () {
             let className = "";
-            pathToTest = pathToTest.replace(/\\/g, "/");
-            const parts = pathToTest.split("/");
-            parts.pop();
-            const part = parts.join("/");
-            className = "file:///" + part;
+            // pathToTest = pathToTest.replace(/\\/g, "/");
+            // const parts = pathToTest.split("/");
+            // parts.pop();
+            // const part = parts.join("/");
+            // className = "file:///" + part;
+            const parts = pathToTest.split(path.sep);
+            const startIndex = parts.indexOf("s");
+            const endIndex = parts.lastIndexOf(testName);
+            className = parts.slice(startIndex + 1, endIndex).join(path.sep);
             LOGGER.error("The class name is: " + className);
             return className;
+        });
+    }
+    getPackageName(pathToTest, testName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let packageName = "";
+            const parts = pathToTest.split(path.sep);
+            const startIndex = parts.indexOf("s");
+            packageName = parts.slice(startIndex + 1, -1).join(".");
+            LOGGER.error("The package name is: " + packageName);
+            return packageName;
         });
     }
 }
