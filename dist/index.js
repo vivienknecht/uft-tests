@@ -30880,8 +30880,13 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
 });
 const discoverTests = (path, octaneUrl, sharedSpace, workspace, clientId, clientSecret) => __awaiter(void 0, void 0, void 0, function* () {
     LOGGER.error("discovery");
-    const discovery = new Discovery_1.default(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
-    yield discovery.startDiscovery(path);
+    try {
+        const discovery = new Discovery_1.default(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
+        yield discovery.startDiscovery(path);
+    }
+    catch (e) {
+        throw new Error("Failed to discover UFT tests. " + (e instanceof Error ? e.message : String(e)));
+    }
 });
 const convertTests = () => {
     const parsedTestsToRun = (0, testsToRunParser_1.default)(args.testsToRun);
