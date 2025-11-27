@@ -11,7 +11,7 @@ parameters:
     type: string
     default: "build/Results.xml"
 
-pool: uft-one-agent-pool
+pool: Default
 
 steps:
   - task: NodeTool@0
