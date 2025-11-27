@@ -40204,7 +40204,6 @@ const octaneConnectionUtils_1 = __nccwpck_require__(7268);
 const alm_octane_js_rest_sdk_1 = __nccwpck_require__(3967);
 const logger_1 = __nccwpck_require__(7893);
 const path = __nccwpck_require__(6928);
-const tl = __nccwpck_require__(358);
 const LOGGER = new logger_1.default("Discovery.ts");
 class Discovery {
     constructor(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret) {
@@ -40230,7 +40229,8 @@ class Discovery {
             catch (e) {
                 const errorMessage = e instanceof Error ? e.message : String(e);
                 LOGGER.error("Failed to initialize Octane connection. " + errorMessage);
-                tl.setResult(tl.TaskResult.Failed, "Failed to initialize Octane connection. " + errorMessage);
+                throw new Error("Failed to initialize Octane connection. " + errorMessage);
+                //tl.setResult(tl.TaskResult.Failed, "Failed to initialize Octane connection. " + errorMessage);
             }
         });
     }
@@ -40602,13 +40602,14 @@ const config_1 = __nccwpck_require__(1122);
 const testsToRunConverter_1 = __nccwpck_require__(1644);
 const testsToRunParser_1 = __nccwpck_require__(4745);
 const Discovery_1 = __nccwpck_require__(6672);
+const tl = __nccwpck_require__(358);
 const LOGGER = new logger_1.default("main.ts");
 let args;
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         loadArguments();
         (0, config_1.initConfig)(args);
-        LOGGER.error("Initializing arguments");
+        LOGGER.info("Initializing arguments");
         const actionType = args.action;
         const path = args.path;
         const octaneUrl = args.octaneUrl;
@@ -40616,26 +40617,25 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         const workspace = args.workspace;
         const clientId = process.env.CLIENTID || "";
         const clientSecret = process.env.CLIENTSECRET || "";
+        if (!actionType) {
+            tl.setResult(tl.TaskResult.Failed, "You have to specify an action to execute: convertTests or discoverTests.");
+        }
         if (actionType === "convertTests") {
             convertTests();
         }
         else if (actionType === "discoverTests") {
-            if (path) {
-                LOGGER.error("Starting UFT tests discovery...");
-                try {
-                    LOGGER.error("The params are: " + path + ", " + octaneUrl + ", " + sharedSpace + ", " + workspace + ", " + clientId + ", " + clientSecret);
-                    yield discoverTests(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
-                }
-                catch (e) {
-                    LOGGER.error("An error occurred during UFT tests discovery: " + (e instanceof Error ? e.message : e));
-                }
+            if (!path && !octaneUrl && !sharedSpace && !workspace && !clientId && !clientSecret) {
+                tl.setResult(tl.TaskResult.Failed, "You have to specify all Octane connection parameters and the path to the repository to discover UFT tests from. ");
+                return;
             }
-            else {
-                LOGGER.error("You need to specify a path to the repository to discover UFT tests from.");
+            LOGGER.info("Starting UFT tests discovery...");
+            try {
+                LOGGER.info("The params are: " + path + ", " + octaneUrl + ", " + sharedSpace + ", " + workspace + ", " + clientId + ", " + clientSecret);
+                yield discoverTests(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
             }
-        }
-        else {
-            LOGGER.error("You have to specify a valid action to execute: convertTests or discoverTests.");
+            catch (e) {
+                tl.setResult(tl.TaskResult.Failed, "UFT tests discovery failed. " + (e instanceof Error ? e.message : String(e)));
+            }
         }
     }
     catch (error) {
