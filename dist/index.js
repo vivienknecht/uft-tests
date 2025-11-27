@@ -30449,15 +30449,20 @@ class Discovery {
     }
     initializeOctaneConnection() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             LOGGER.error("Initializing Octane connection...");
-            const customWebContext = (_a = this._octaneUrl) === null || _a === void 0 ? void 0 : _a.split('/ui/')[0].substring(1);
-            LOGGER.error("The arguments are: " + this._octaneUrl + ", " + customWebContext + ", " + this._sharedSpace + ", " + this._workspace + ", " + this._clientId + ", " + this._clientSecret);
-            const connection = octaneConnectionUtils_1.OctaneConnectionUtils.getNewOctaneConnection(this._octaneUrl, this._sharedSpace, this._workspace, this._clientId, this._clientSecret);
-            yield connection._requestHandler.authenticate();
-            LOGGER.error("authenticated to octane successfully");
-            this._octaneSDKConnection = connection;
-            LOGGER.error(`the octane connection ${connection}`);
+            try {
+                LOGGER.error("The arguments are: " + this._octaneUrl + ", " + this._sharedSpace + ", " + this._workspace + ", " + this._clientId + ", " + this._clientSecret);
+                const connection = octaneConnectionUtils_1.OctaneConnectionUtils.getNewOctaneConnection(this._octaneUrl, this._sharedSpace, this._workspace, this._clientId, this._clientSecret);
+                yield connection._requestHandler.authenticate();
+                LOGGER.error("authenticated to octane successfully");
+                this._octaneSDKConnection = connection;
+                LOGGER.error(`the octane connection ${connection}`);
+            }
+            catch (e) {
+                const errorMessage = e instanceof Error ? e.message : String(e);
+                LOGGER.error("Failed to initialize Octane connection. " + errorMessage);
+                throw new Error("Failed to initialize Octane connection. " + errorMessage);
+            }
         });
     }
     sendCreateEventToOctane(octaneConnection, name, packageName, className, description) {
@@ -30728,7 +30733,7 @@ class ScanRepo {
         return __awaiter(this, void 0, void 0, function* () {
             const testName = path.basename(pathToTest);
             const className = yield this.getTestClassName(pathToTest, testName);
-            const packageName = yield this.getPackageName(pathToTest, testName);
+            const packageName = yield this.getPackageName(pathToTest);
             const test = {
                 name: testName,
                 description: "",
@@ -30753,12 +30758,7 @@ class ScanRepo {
     }
     getTestClassName(pathToTest, testName) {
         return __awaiter(this, void 0, void 0, function* () {
-            let className = "";
-            // pathToTest = pathToTest.replace(/\\/g, "/");
-            // const parts = pathToTest.split("/");
-            // parts.pop();
-            // const part = parts.join("/");
-            // className = "file:///" + part;
+            let className;
             const parts = pathToTest.split(path.sep);
             const startIndex = parts.indexOf("s");
             const endIndex = parts.lastIndexOf(testName);
@@ -30767,9 +30767,9 @@ class ScanRepo {
             return className;
         });
     }
-    getPackageName(pathToTest, testName) {
+    getPackageName(pathToTest) {
         return __awaiter(this, void 0, void 0, function* () {
-            let packageName = "";
+            let packageName;
             const parts = pathToTest.split(path.sep);
             const startIndex = parts.indexOf("s");
             packageName = parts.slice(startIndex + 1).join("/");
