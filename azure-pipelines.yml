@@ -22,13 +22,13 @@ steps:
 - task: octane-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '9001'
+    WorkspaceList: '10001'
     CreatePipelineCheckbox: true
 
 - task: octane-test-runner-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '9001'
+    WorkspaceList: '10001'
     Framework: 'uft'
 
 - powershell: | 
@@ -39,7 +39,7 @@ steps:
    $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
    Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
    Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
-   Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\browsers" 
+   Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\browsers\\APITest2" 
    Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
    Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
    Get-Content -Path ./build/Props.txt
@@ -56,7 +56,7 @@ steps:
 - task: octane-end-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '9001'
+    WorkspaceList: '10001'
     Framework: 'uft'
   env: 
     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
