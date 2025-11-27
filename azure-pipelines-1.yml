@@ -76,7 +76,7 @@ steps:
     displayName: "Get changed files since last successful run"
 
   - powershell: |
-      node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace="$env:SHAREDSPACE" --workspace="10001" --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
+      node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://10.26.51.176:8080/dev" --sharedSpace="$env:SHAREDSPACE" --workspace="10001" --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
     env:
       MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
       CLIENTSECRET: $(CLIENTSECRE)
