@@ -40328,7 +40328,7 @@ class Discovery {
     }
     getModifiedTests(discoveredTests, existingTests) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
             const changedTests = [];
             const raw = (_a = process.env.MODIFIED_FILES) !== null && _a !== void 0 ? _a : "";
             const gitOutput = Buffer.from(raw, "base64").toString("utf8");
@@ -40390,7 +40390,15 @@ class Discovery {
                 }
             }
             for (const pair of modifiedPairs) {
-                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_e = pair.new) === null || _e === void 0 ? void 0 : _e.name) || "", packageName: ((_f = pair.new) === null || _f === void 0 ? void 0 : _f.packageName) || "", className: ((_g = pair.new) === null || _g === void 0 ? void 0 : _g.className) || "", changeType: "modified", id: (_h = pair.old) === null || _h === void 0 ? void 0 : _h.id }));
+                if (existingTests.some(e => {
+                    var _a, _b, _c;
+                    return e.name === ((_a = pair.new) === null || _a === void 0 ? void 0 : _a.name)
+                        && e.className === ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.className)
+                        && e.packageName === ((_c = pair.new) === null || _c === void 0 ? void 0 : _c.packageName);
+                })) {
+                    throw new Error(`A test with the name: ${(_e = pair.new) === null || _e === void 0 ? void 0 : _e.name}, ${(_f = pair.new) === null || _f === void 0 ? void 0 : _f.className} and ${(_g = pair.new) === null || _g === void 0 ? void 0 : _g.packageName} already exists.`);
+                }
+                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_h = pair.new) === null || _h === void 0 ? void 0 : _h.name) || "", packageName: ((_j = pair.new) === null || _j === void 0 ? void 0 : _j.packageName) || "", className: ((_k = pair.new) === null || _k === void 0 ? void 0 : _k.className) || "", changeType: "modified", id: (_l = pair.old) === null || _l === void 0 ? void 0 : _l.id }));
             }
             return changedTests;
         });
