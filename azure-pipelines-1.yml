@@ -47,7 +47,7 @@ steps:
     continueOnError: true
 
   - powershell: |
-      $artifactPath = "$(Pipeline.Workspace)/last_successful_commit.txt"
+      $artifactPath = "$(Pipeline.Workspace)/last-sucessful/last_successful_commit.txt"
 
       if (Test-Path $artifactPath) {
         $last = Get-Content $artifactPath
