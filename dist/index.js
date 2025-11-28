@@ -40302,15 +40302,15 @@ class Discovery {
             LOGGER.info("The modified tests are: " + JSON.stringify(modifiedTests));
             try {
                 for (const test of modifiedTests) {
-                    LOGGER.error("the change type of test " + test.name + " is: " + test.changeType);
+                    LOGGER.info("the change type of test " + test.name + " is: " + test.changeType);
                     if (test.changeType === 'deleted') {
-                        LOGGER.error("the test to delete id is: " + test.id);
+                        LOGGER.info("the test to delete id is: " + test.id);
                         if (test.id) {
                             yield this.sendDeleteEventToOctane(this._octaneSDKConnection, test.id);
                         }
                     }
                     else if (test.changeType === 'renamed' || test.changeType === 'moved' || test.changeType === 'modified') {
-                        LOGGER.error("the test to update id is: " + test.id);
+                        LOGGER.info("the test to update id is: " + test.id);
                         if (test.id) {
                             yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName, test.description, test.className);
                         }
@@ -40336,6 +40336,7 @@ class Discovery {
             LOGGER.error("The modified files array is: " + modifiedFilesArray);
             const modifiedTestsMap = [];
             const testsToDelete = [];
+            const addedTests = [];
             for (let i = 0; i < modifiedFilesArray.length;) {
                 const status = modifiedFilesArray[i++];
                 if (!status)
@@ -40359,6 +40360,13 @@ class Discovery {
                         testsToDelete.push(testToDeleteName);
                     }
                 }
+                if (status === "A") {
+                    const addedFile = modifiedFilesArray[i++];
+                    if (addedFile && addedFile.match(/\.(st|tsp)$/)) {
+                        const addedTestName = path.basename(path.dirname(addedFile));
+                        addedTests.push(addedTestName);
+                    }
+                }
             }
             LOGGER.error("The modified test names are: " + JSON.stringify(modifiedTestsMap, null, 2));
             LOGGER.error("The tests to delete are: " + JSON.stringify(testsToDelete, null, 2));
@@ -40366,6 +40374,14 @@ class Discovery {
             const existingByPackage = new Map(existingTests.map(test => [test.packageName, test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
             const currentByPackage = new Map(discoveredTests.map(test => [test.packageName, test]));
+            for (const test of addedTests) {
+                const newTest = currentByName.get(test);
+                if (existingTests.some(e => e.name === (newTest === null || newTest === void 0 ? void 0 : newTest.name)
+                    && e.packageName === newTest.packageName && e.className === newTest.className)) {
+                    LOGGER.warn(`A test with this name: ${newTest === null || newTest === void 0 ? void 0 : newTest.name}, package: ${newTest === null || newTest === void 0 ? void 0 : newTest.packageName}
+                and class name: ${newTest === null || newTest === void 0 ? void 0 : newTest.className} already exists.`);
+                }
+            }
             const modifiedPairs = [];
             for (const entry of modifiedTestsMap) {
                 const oldTestValue = existingByName.get(entry.oldValue);
@@ -40384,8 +40400,8 @@ class Discovery {
                     LOGGER.info("Exact match found for test: " + test.name);
                     continue; // No changes
                 }
-                const existsInModifiedOld = modifiedPairs.some(pair => pair.old === test || pair.new === test);
-                if (!existsInModifiedOld) {
+                const existsInModified = modifiedPairs.some(pair => pair.old === test || pair.new === test);
+                if (!existsInModified) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                 }
             }
