@@ -5,7 +5,7 @@
     *  Manually changing the contents of this file may result in 
     *  loss of information.
     *          
-    *  To edit the test, open the file ‘APITest2.st’ 
+    *  To edit the test, open the file ‘APITest1.st’ 
     *  in HP Service Test.
      ***************************************************************/
     
