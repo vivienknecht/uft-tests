@@ -40300,29 +40300,23 @@ class Discovery {
             const existingTests = yield this.getExistingTestsFromOctane(this._octaneSDKConnection);
             const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests);
             LOGGER.info("The modified tests are: " + JSON.stringify(modifiedTests));
-            try {
-                for (const test of modifiedTests) {
-                    LOGGER.info("the change type of test " + test.name + " is: " + test.changeType);
-                    if (test.changeType === 'deleted') {
-                        LOGGER.info("the test to delete id is: " + test.id);
-                        if (test.id) {
-                            yield this.sendDeleteEventToOctane(this._octaneSDKConnection, test.id);
-                        }
-                    }
-                    else if (test.changeType === 'renamed' || test.changeType === 'moved' || test.changeType === 'modified') {
-                        LOGGER.info("the test to update id is: " + test.id);
-                        if (test.id) {
-                            yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName, test.description, test.className);
-                        }
-                    }
-                    else {
-                        yield this.sendCreateEventToOctane(this._octaneSDKConnection, test.name, test.packageName, test.className, test.description);
+            for (const test of modifiedTests) {
+                LOGGER.info("the change type of test " + test.name + " is: " + test.changeType);
+                if (test.changeType === 'deleted') {
+                    LOGGER.info("the test to delete id is: " + test.id);
+                    if (test.id) {
+                        yield this.sendDeleteEventToOctane(this._octaneSDKConnection, test.id);
                     }
                 }
-            }
-            catch (e) {
-                const errorMessage = e instanceof Error ? e.message : String(e);
-                throw new Error("Error while processing modified tests: " + errorMessage);
+                else if (test.changeType === 'renamed' || test.changeType === 'moved' || test.changeType === 'modified') {
+                    LOGGER.info("the test to update id is: " + test.id);
+                    if (test.id) {
+                        yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName, test.description, test.className);
+                    }
+                }
+                else {
+                    yield this.sendCreateEventToOctane(this._octaneSDKConnection, test.name, test.packageName, test.className, test.description);
+                }
             }
         });
     }
@@ -40368,8 +40362,6 @@ class Discovery {
                     }
                 }
             }
-            LOGGER.error("The modified test names are: " + JSON.stringify(modifiedTestsMap, null, 2));
-            LOGGER.error("The tests to delete are: " + JSON.stringify(testsToDelete, null, 2));
             const existingByName = new Map(existingTests.map(test => [test.name, test]));
             const existingByPackage = new Map(existingTests.map(test => [test.packageName, test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
@@ -40461,7 +40453,6 @@ class ScanRepo {
             let testType;
             try {
                 testType = yield this.getTestType(items);
-                LOGGER.info("The test type is: " + testType);
                 if (testType === UFT_GUI_TEST_TYPE) {
                     const automatedTests = yield this.createAutomatedTestsFromGUI(pathToRepo, testType);
                     this._tests.push(automatedTests);
@@ -40475,6 +40466,9 @@ class ScanRepo {
                         const itemPath = path.join(pathToRepo, item);
                         const stats = yield fs.promises.lstat(itemPath);
                         if (stats.isDirectory() || stats.isSymbolicLink()) {
+                            if (stats.isSymbolicLink()) {
+                                LOGGER.error(`${itemPath} is a symlink and symlinks are not supported and will be ignored.`);
+                            }
                             yield this.scanRepo(itemPath);
                         }
                     }
