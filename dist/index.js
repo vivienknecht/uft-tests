@@ -40259,7 +40259,12 @@ class Discovery {
                     }
                 ]
             };
-            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+            try {
+                yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+            }
+            catch (e) {
+                throw new Error("Failed to update test with id " + testId + ". " + (e instanceof Error ? e.message : String(e)));
+            }
         });
     }
     sendDeleteEventToOctane(octaneConnection, testId) {
