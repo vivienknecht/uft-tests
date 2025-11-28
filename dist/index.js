@@ -40294,6 +40294,7 @@ class Discovery {
             yield this.initializeOctaneConnection();
             const scanner = new ScanRepo_1.default(path);
             const discoveredTests = yield scanner.scanRepo(path);
+            LOGGER.info("The discovered tests are: " + JSON.stringify(discoveredTests));
             if (discoveredTests.length === 0) {
                 LOGGER.warn("No UFT tests have been discovered in the repository.");
             }
@@ -40327,7 +40328,7 @@ class Discovery {
             const raw = (_a = process.env.MODIFIED_FILES) !== null && _a !== void 0 ? _a : "";
             const gitOutput = Buffer.from(raw, "base64").toString("utf8");
             const modifiedFilesArray = gitOutput.split('\0').filter(Boolean);
-            LOGGER.error("The modified files array is: " + modifiedFilesArray);
+            LOGGER.info("The modified files array is: " + modifiedFilesArray);
             const modifiedTestsMap = [];
             const testsToDelete = [];
             const addedTests = [];
@@ -40363,9 +40364,9 @@ class Discovery {
                 }
             }
             const existingByName = new Map(existingTests.map(test => [test.name, test]));
-            const existingByPackage = new Map(existingTests.map(test => [test.packageName, test]));
+            const existingByClass = new Map(existingTests.map(test => [test.className, test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
-            const currentByPackage = new Map(discoveredTests.map(test => [test.packageName, test]));
+            // const currentByClass = new Map(discoveredTests.map(test => [test.className, test]));
             for (const test of addedTests) {
                 const newTest = currentByName.get(test);
                 if (existingTests.some(e => e.name === (newTest === null || newTest === void 0 ? void 0 : newTest.name)
@@ -40386,8 +40387,8 @@ class Discovery {
                 changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.id, name: (testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.name) || "", packageName: (testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.packageName) || "", className: (testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.className) || "" }));
             }
             for (const test of discoveredTests) {
-                const existingTestFullPath = test.packageName;
-                const exactMatch = existingByPackage.get(existingTestFullPath);
+                const existingTestFullPath = test.className;
+                const exactMatch = existingByClass.get(existingTestFullPath);
                 if (exactMatch) {
                     LOGGER.info("Exact match found for test: " + test.name);
                     continue; // No changes
@@ -40451,6 +40452,7 @@ class ScanRepo {
         return __awaiter(this, void 0, void 0, function* () {
             const items = yield fs.promises.readdir(pathToRepo);
             let testType;
+            ///start switching
             try {
                 testType = yield this.getTestType(items);
                 if (testType === UFT_GUI_TEST_TYPE) {
@@ -40473,7 +40475,6 @@ class ScanRepo {
                         }
                     }
                 }
-                LOGGER.info("The found tests are: " + JSON.stringify(this._tests));
             }
             catch (e) {
                 throw new Error("Error while scanning the repo: " + (e instanceof Error ? e.message : String(e)));
@@ -40510,8 +40511,8 @@ class ScanRepo {
     createTest(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
             const testName = path.basename(pathToTest);
-            const className = yield this.getTestClassName(pathToTest, testName);
-            const packageName = yield this.getPackageName(pathToTest);
+            const className = yield this.getClassName(pathToTest, testName);
+            const packageName = yield this.getTestPackage(pathToTest);
             const test = {
                 name: testName,
                 description: "",
@@ -40533,7 +40534,17 @@ class ScanRepo {
             return test;
         });
     }
-    getTestClassName(pathToTest, testName) {
+    getTestPackage(pathToTest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let packageName;
+            const parts = pathToTest.split(path.sep);
+            const startIndex = parts.indexOf("s");
+            packageName = parts.slice(startIndex + 1).join("/");
+            LOGGER.info("The package name is: " + packageName);
+            return packageName;
+        });
+    }
+    getClassName(pathToTest, testName) {
         return __awaiter(this, void 0, void 0, function* () {
             let className;
             const parts = pathToTest.split(path.sep);
@@ -40542,16 +40553,6 @@ class ScanRepo {
             className = parts.slice(startIndex + 1, endIndex).join("/");
             LOGGER.info("The class name is: " + className);
             return className;
-        });
-    }
-    getPackageName(pathToTest) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let packageName;
-            const parts = pathToTest.split(path.sep);
-            const startIndex = parts.indexOf("s");
-            packageName = parts.slice(startIndex + 1).join("/");
-            LOGGER.info("The package name is: " + packageName);
-            return packageName;
         });
     }
 }
