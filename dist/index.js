@@ -40511,8 +40511,8 @@ class ScanRepo {
     createTest(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
             const testName = path.basename(pathToTest);
-            const className = yield this.getClassName(pathToTest, testName);
-            const packageName = yield this.getTestPackage(pathToTest);
+            const className = yield this.getClassName(pathToTest);
+            const packageName = yield this.getPackageName(pathToTest, testName);
             const test = {
                 name: testName,
                 description: "",
@@ -40534,25 +40534,25 @@ class ScanRepo {
             return test;
         });
     }
-    getTestPackage(pathToTest) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let packageName;
-            const parts = pathToTest.split(path.sep);
-            const startIndex = parts.indexOf("s");
-            packageName = parts.slice(startIndex + 1).join("/");
-            LOGGER.info("The package name is: " + packageName);
-            return packageName;
-        });
-    }
-    getClassName(pathToTest, testName) {
+    getClassName(pathToTest) {
         return __awaiter(this, void 0, void 0, function* () {
             let className;
             const parts = pathToTest.split(path.sep);
             const startIndex = parts.indexOf("s");
-            const endIndex = parts.lastIndexOf(testName);
-            className = parts.slice(startIndex + 1, endIndex).join("/");
+            className = parts.slice(startIndex + 1).join("/");
             LOGGER.info("The class name is: " + className);
             return className;
+        });
+    }
+    getPackageName(pathToTest, testName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let packageName;
+            const parts = pathToTest.split(path.sep);
+            const startIndex = parts.indexOf("s");
+            const endIndex = parts.lastIndexOf(testName);
+            packageName = parts.slice(startIndex + 1, endIndex).join("/");
+            LOGGER.info("The package name is: " + packageName);
+            return packageName;
         });
     }
 }
