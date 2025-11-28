@@ -43,7 +43,7 @@ steps:
       buildVersionToDownload: "latestFromBranch"
       branchName: "$(Build.SourceBranch)"
       artifactName: "last-successful"
-      downloadPath: "$(Pipeline.Workspace)"
+      downloadPath: "$(Pipeline.Workspace)/last-successful"
     continueOnError: true
 
   - powershell: |
