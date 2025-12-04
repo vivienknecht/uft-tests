@@ -85,6 +85,8 @@ steps:
 
   - powershell: |
       Write-Host "$Env:BUILD_SOURCESDIRECTORY"
+      Write-Host "Repo URL: $(Build.Repository.Url)"
+      Write-Host "Repo name: $(Build.Repository.Name)"
 
   - powershell: |
       echo $(Build.SourceVersion) > last_successful_commit.txt
