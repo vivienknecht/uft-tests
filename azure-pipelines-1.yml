@@ -84,6 +84,9 @@ steps:
     displayName: Discovery
 
   - powershell: |
+      Write-Host "$Env:BUILD_SOURCESDIRECTORY"
+
+  - powershell: |
       echo $(Build.SourceVersion) > last_successful_commit.txt
     displayName: "Store current commit SHA"
 
