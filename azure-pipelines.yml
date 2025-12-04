@@ -30,6 +30,7 @@ steps:
     OctaneServiceConnection: 'privateOctaneConnection'
     WorkspaceList: '12001'
     Framework: 'uft'
+
 - powershell: | 
    Write-Host "Current Directory:"
    Get-Location
