@@ -85,7 +85,7 @@ steps:
 
   - powershell: |
       Write-Host "$Env:BUILD_SOURCESDIRECTORY"
-      Write-Host "Repo URL: $env:BUILD_REPOSITORY_URL"
+      Write-Host "Repo URL: $env:BUILD_REPOSITORY_URI"
       Write-Host "Repo name: $env:BUILD_REPOSITORY_NAME"
 
   - powershell: |
