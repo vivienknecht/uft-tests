@@ -81,6 +81,7 @@ steps:
       MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
       CLIENTSECRET: $(CLIENTSECRE)
       CLIENTID: $(CLIENTID)
+      REPOURL: $(Build.Repository.Uri)
     displayName: Discovery
 
   - powershell: |
