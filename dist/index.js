@@ -40314,10 +40314,8 @@ class Discovery {
         return __awaiter(this, void 0, void 0, function* () {
             if (tests.length === 0 || scmResourceFiles.length === 0)
                 return;
-            scmResourceFiles = scmResourceFiles.filter(file => {
-                const parentName = path.dirname(file.relativePath);
-                return !Array.from(tests).some(test => test.className === file.relativePath);
-            });
+            const classNames = new Set(tests.map(t => t.className));
+            scmResourceFiles = scmResourceFiles.filter(file => !classNames.has(file.relativePath));
             LOGGER.info("The filtered data tables are: " + JSON.stringify(scmResourceFiles));
         });
     }
