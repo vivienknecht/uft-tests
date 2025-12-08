@@ -40482,9 +40482,9 @@ class ScanRepo {
             try {
                 isDatatable = yield this.isDataTable(items);
                 if (isDatatable) {
-                    LOGGER.info(`The data table file is found in the path: ${pathToRepo}. Skipping this folder.`);
-                    const dataTable = yield this.createScmResourceFile(pathToRepo);
-                    dataTables.push(dataTable);
+                    LOGGER.info(`The data table ${isDatatable} is found in the path ${pathToRepo}`);
+                    // const dataTable = await this.createScmResourceFile(pathToRepo);
+                    // dataTables.push(dataTable)
                 }
                 testType = yield this.getTestType(items);
                 if (testType === UFT_GUI_TEST_TYPE) {
@@ -40534,23 +40534,23 @@ class ScanRepo {
             for (const p of paths) {
                 const ext = path.extname(p).toLowerCase();
                 if (ext === XLSX || ext === XLS) {
-                    return true;
+                    return p;
                 }
             }
-            return false;
+            return null;
         });
     }
-    createScmResourceFile(pathToDataTable) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const dataTableName = path.basename(pathToDataTable);
-            const relativePath = path.relative(this.workDir, pathToDataTable);
-            const dataTable = {
-                name: dataTableName,
-                relativePath: relativePath
-            };
-            return dataTable;
-        });
-    }
+    // private async createScmResourceFile(pathToDataTable: string): Promise<ScmResourceFile> {
+    //     const dataTableName =
+    //     const relativePath = path.relative(this.workDir, pathToDataTable);
+    //
+    //     const dataTable: ScmResourceFile = {
+    //         name: dataTableName,
+    //         relativePath: relativePath
+    //     }
+    //
+    //     return dataTable;
+    // }
     createAutomatedTestsFromGUI(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
             const test = yield this.createTest(pathToTest, testType);
