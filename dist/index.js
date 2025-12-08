@@ -40236,11 +40236,18 @@ class Discovery {
             LOGGER.info("The scm repository roots are: " + JSON.stringify(scmRepos));
             const scmRepoRoot = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_repository_roots?query=\"(url=^${repoUrl}^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             LOGGER.info("The scm repository root is: " + JSON.stringify(scmRepoRoot));
-            const repoRootId = scmRepoRoot.data[0].id;
+            const repoRootId = scmRepoRoot.data[0].id; //todo add more checks
             LOGGER.info("The scm repository root id is: " + repoRootId);
+            for (const repo of scmRepos.data) {
+                if (repo.repository.id === repoRootId) {
+                    LOGGER.info("The scm repository id is: " + repo.id);
+                    return repo.id;
+                }
+            }
+            return "";
         });
     }
-    sendCreateEventToOctane(octaneConnection, name, packageName, className, description) {
+    sendCreateEventToOctane(octaneConnection, name, packageName, className, description, scmRepositoryId) {
         return __awaiter(this, void 0, void 0, function* () {
             const body = {
                 "data": [
@@ -40253,7 +40260,11 @@ class Discovery {
                         "name": name,
                         "package": packageName,
                         "class_name": className,
-                        "description": description
+                        "description": description,
+                        "scm_repository": {
+                            "type": "scm_repository",
+                            "id": scmRepositoryId
+                        }
                     }
                 ]
             };
@@ -40302,7 +40313,7 @@ class Discovery {
     startDiscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initializeOctaneConnection();
-            yield this.getScmRepo(this.octaneSDKConnection);
+            const repoRootID = yield this.getScmRepo(this.octaneSDKConnection);
             const scanner = new ScanRepo_1.default();
             const discoveredTests = yield scanner.scanRepo(path);
             LOGGER.info("The discovered tests are: " + JSON.stringify(discoveredTests));
@@ -40327,7 +40338,7 @@ class Discovery {
                     }
                 }
                 else {
-                    yield this.sendCreateEventToOctane(this.octaneSDKConnection, test.name, test.packageName, test.className, test.description);
+                    yield this.sendCreateEventToOctane(this.octaneSDKConnection, test.name, test.packageName, test.className, test.description, repoRootID);
                 }
             }
         });
