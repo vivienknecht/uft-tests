@@ -22,14 +22,15 @@ steps:
 - task: octane-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '10001'
+    WorkspaceList: '12003'
     CreatePipelineCheckbox: true
 
 - task: octane-test-runner-start-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '10001'
+    WorkspaceList: '12003'
     Framework: 'uft'
+    GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
 
 - powershell: | 
    Write-Host "Current Directory:"
@@ -56,7 +57,7 @@ steps:
 - task: octane-end-task-private@1
   inputs:
     OctaneServiceConnection: 'privateOctaneConnection'
-    WorkspaceList: '10001'
+    WorkspaceList: '12003'
     Framework: 'uft'
   env: 
     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
