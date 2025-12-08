@@ -40609,7 +40609,7 @@ class ScanRepo {
             for (const dataTableName of dataTableNames) {
                 const dataTable = {
                     name: dataTableName,
-                    relativePath: relativePath
+                    relativePath: relativePath + '/' + dataTableName,
                 };
                 dataTables.push(dataTable);
             }
