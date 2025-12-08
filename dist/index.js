@@ -40583,7 +40583,7 @@ class ScanRepo {
     createScmResourceFile(dataTableNames, pathToDataTable) {
         return __awaiter(this, void 0, void 0, function* () {
             const dataTables = [];
-            const relativePath = path.relative(this.workDir, pathToDataTable);
+            const relativePath = path.relative(this.workDir, pathToDataTable).replace(/\\/g, '/');
             for (const dataTableName of dataTableNames) {
                 const dataTable = {
                     name: dataTableName,
