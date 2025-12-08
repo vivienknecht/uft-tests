@@ -40477,14 +40477,15 @@ class ScanRepo {
         return __awaiter(this, void 0, void 0, function* () {
             const items = yield fs.promises.readdir(pathToRepo);
             let testType;
-            let dataTableName;
+            let dataTableNames;
             const dataTables = [];
             try {
-                dataTableName = yield this.isDataTable(items);
-                if (dataTableName) {
-                    LOGGER.info(`The data table ${dataTableName} is found in the path ${pathToRepo}`);
-                    const dataTable = yield this.createScmResourceFile(dataTableName, pathToRepo);
-                    dataTables.push(dataTable);
+                dataTableNames = yield this.isDataTable(items);
+                if (dataTableNames) {
+                    LOGGER.info(`The data table ${dataTableNames} is found in the path ${pathToRepo}`);
+                    const dataTable = yield this.createScmResourceFile(dataTableNames, pathToRepo);
+                    LOGGER.info("The data table scm resource file is: " + JSON.stringify(dataTable));
+                    //dataTables.push(dataTable)
                 }
                 testType = yield this.getTestType(items);
                 if (testType === UFT_GUI_TEST_TYPE) {
@@ -40531,23 +40532,28 @@ class ScanRepo {
     }
     isDataTable(paths) {
         return __awaiter(this, void 0, void 0, function* () {
+            const foundDataTables = [];
             for (const p of paths) {
                 const ext = path.extname(p).toLowerCase();
                 if (ext === XLSX || ext === XLS) {
-                    return p;
+                    foundDataTables.push(p);
                 }
             }
-            return null;
+            return foundDataTables;
         });
     }
-    createScmResourceFile(dataTableName, pathToDataTable) {
+    createScmResourceFile(dataTableNames, pathToDataTable) {
         return __awaiter(this, void 0, void 0, function* () {
+            const dataTables = [];
             const relativePath = path.relative(this.workDir, pathToDataTable);
-            const dataTable = {
-                name: dataTableName,
-                relativePath: relativePath
-            };
-            return dataTable;
+            for (const dataTableName of dataTableNames) {
+                const dataTable = {
+                    name: dataTableName,
+                    relativePath: relativePath
+                };
+                dataTables.push(dataTable);
+            }
+            return dataTables;
         });
     }
     createAutomatedTestsFromGUI(pathToTest, testType) {
