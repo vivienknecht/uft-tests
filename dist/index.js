@@ -40330,7 +40330,11 @@ class Discovery {
             if (tests.length === 0 || scmResourceFiles.length === 0)
                 return null;
             const classNames = new Set(tests.map(t => t.className));
-            scmResourceFiles = scmResourceFiles.filter(file => !classNames.has(file.relativePath));
+            scmResourceFiles = scmResourceFiles.filter(file => {
+                const relativeDir = path.dirname(file.relativePath);
+                LOGGER.info("The relative dir of data table is: " + relativeDir);
+                !classNames.has(relativeDir);
+            });
             LOGGER.info("The filtered data tables are: " + JSON.stringify(scmResourceFiles));
             return scmResourceFiles;
         });
