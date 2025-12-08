@@ -40328,10 +40328,11 @@ class Discovery {
     removeFalsePositiveDataTables(tests, scmResourceFiles) {
         return __awaiter(this, void 0, void 0, function* () {
             if (tests.length === 0 || scmResourceFiles.length === 0)
-                return;
+                return null;
             const classNames = new Set(tests.map(t => t.className));
             scmResourceFiles = scmResourceFiles.filter(file => !classNames.has(file.relativePath));
             LOGGER.info("The filtered data tables are: " + JSON.stringify(scmResourceFiles));
+            return scmResourceFiles;
         });
     }
     startDiscovery(path) {
@@ -40347,7 +40348,7 @@ class Discovery {
             }
             const scmResourceFiles = discovery.getAllScmResourceFiles();
             LOGGER.info("The discovered data tables are: " + JSON.stringify(scmResourceFiles));
-            yield this.removeFalsePositiveDataTables(discoveredTests, scmResourceFiles);
+            const filteredScmResourceFiles = yield this.removeFalsePositiveDataTables(discoveredTests, scmResourceFiles);
             const existingTests = yield this.getExistingTestsFromOctane(this.octaneSDKConnection);
             const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests);
             LOGGER.info("The modified tests are: " + JSON.stringify(modifiedTests));
@@ -40369,9 +40370,11 @@ class Discovery {
                     yield this.sendCreateEventToOctane(this.octaneSDKConnection, test.name, test.packageName, test.className, test.description, repoRootID);
                 }
             }
-            for (const dataTable of scmResourceFiles) {
-                yield this.createScmResourceFile(this.octaneSDKConnection, dataTable.name, dataTable.relativePath, repoRootID);
-                LOGGER.info("Created SCM Resource File for data table: " + dataTable.name);
+            if (filteredScmResourceFiles) {
+                for (const dataTable of filteredScmResourceFiles) {
+                    yield this.createScmResourceFile(this.octaneSDKConnection, dataTable.name, dataTable.relativePath, repoRootID);
+                    LOGGER.info("Created SCM Resource File for data table: " + dataTable.name);
+                }
             }
         });
     }
