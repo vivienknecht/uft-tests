@@ -40235,7 +40235,7 @@ class Discovery {
             const scmRepos = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_repositories`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             LOGGER.info("The scm repository roots are: " + JSON.stringify(scmRepos));
             const scmRepoRoot = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_repository_roots?query=\"(url=^${repoUrl}^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-            const repoRootId = scmRepoRoot.id;
+            const repoRootId = scmRepoRoot.data.id;
             LOGGER.info("The scm repository root id is: " + repoRootId);
         });
     }
