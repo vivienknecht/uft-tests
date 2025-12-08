@@ -40477,14 +40477,14 @@ class ScanRepo {
         return __awaiter(this, void 0, void 0, function* () {
             const items = yield fs.promises.readdir(pathToRepo);
             let testType;
-            let isDatatable;
+            let dataTableName;
             const dataTables = [];
             try {
-                isDatatable = yield this.isDataTable(items);
-                if (isDatatable) {
-                    LOGGER.info(`The data table ${isDatatable} is found in the path ${pathToRepo}`);
-                    // const dataTable = await this.createScmResourceFile(pathToRepo);
-                    // dataTables.push(dataTable)
+                dataTableName = yield this.isDataTable(items);
+                if (dataTableName) {
+                    LOGGER.info(`The data table ${dataTableName} is found in the path ${pathToRepo}`);
+                    const dataTable = yield this.createScmResourceFile(dataTableName, pathToRepo);
+                    dataTables.push(dataTable);
                 }
                 testType = yield this.getTestType(items);
                 if (testType === UFT_GUI_TEST_TYPE) {
@@ -40540,17 +40540,16 @@ class ScanRepo {
             return null;
         });
     }
-    // private async createScmResourceFile(pathToDataTable: string): Promise<ScmResourceFile> {
-    //     const dataTableName =
-    //     const relativePath = path.relative(this.workDir, pathToDataTable);
-    //
-    //     const dataTable: ScmResourceFile = {
-    //         name: dataTableName,
-    //         relativePath: relativePath
-    //     }
-    //
-    //     return dataTable;
-    // }
+    createScmResourceFile(dataTableName, pathToDataTable) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const relativePath = path.relative(this.workDir, pathToDataTable);
+            const dataTable = {
+                name: dataTableName,
+                relativePath: relativePath
+            };
+            return dataTable;
+        });
+    }
     createAutomatedTestsFromGUI(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
             const test = yield this.createTest(pathToTest, testType);
