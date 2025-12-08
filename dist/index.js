@@ -40471,6 +40471,7 @@ class ScanRepo {
     constructor(workDir) {
         this.workDir = "";
         this.tests = [];
+        this.scmResourceFiles = [];
         this.workDir = workDir;
     }
     scanRepo(pathToRepo) {
@@ -40478,14 +40479,13 @@ class ScanRepo {
             const items = yield fs.promises.readdir(pathToRepo);
             let testType;
             let dataTableNames;
-            const dataTables = [];
             try {
                 dataTableNames = yield this.isDataTable(items);
                 if (dataTableNames) {
                     LOGGER.info(`The data table ${dataTableNames} is found in the path ${pathToRepo}`);
                     const dataTable = yield this.createScmResourceFile(dataTableNames, pathToRepo);
                     LOGGER.info("The data table scm resource file is: " + JSON.stringify(dataTable));
-                    dataTables.push(...dataTable);
+                    this.scmResourceFiles.push(...dataTable);
                 }
                 testType = yield this.getTestType(items);
                 if (testType === UFT_GUI_TEST_TYPE) {
@@ -40512,7 +40512,7 @@ class ScanRepo {
             catch (e) {
                 throw new Error("Error while scanning the repo: " + (e instanceof Error ? e.message : String(e)));
             }
-            LOGGER.info("The data tables are: " + JSON.stringify(dataTables));
+            LOGGER.info("The data tables are: " + JSON.stringify(this.scmResourceFiles));
             return this.tests;
         });
     }
