@@ -40293,6 +40293,21 @@ class Discovery {
             yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests/${testId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
         });
     }
+    createScmResourceFile(octaneConnection, name, relativePath, scmRepoId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const body = {
+                "data": [{
+                        "name": name,
+                        "relative_path": relativePath,
+                        "scm_repository": {
+                            "type": "scm_repository",
+                            "id": scmRepoId
+                        }
+                    }]
+            };
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_resource_files`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+        });
+    }
     getExistingTestsFromOctane(octaneConnection) {
         return __awaiter(this, void 0, void 0, function* () {
             const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests?query=\"(subtype=^test_automated^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
@@ -40353,6 +40368,10 @@ class Discovery {
                 else {
                     yield this.sendCreateEventToOctane(this.octaneSDKConnection, test.name, test.packageName, test.className, test.description, repoRootID);
                 }
+            }
+            for (const dataTable of scmResourceFiles) {
+                yield this.createScmResourceFile(this.octaneSDKConnection, dataTable.name, dataTable.relativePath, repoRootID);
+                LOGGER.info("Created SCM Resource File for data table: " + dataTable.name);
             }
         });
     }
