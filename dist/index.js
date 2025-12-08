@@ -40206,22 +40206,21 @@ const logger_1 = __nccwpck_require__(7893);
 const path = __nccwpck_require__(6928);
 const LOGGER = new logger_1.default("Discovery.ts");
 class Discovery {
-    constructor(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret) {
-        this._path = path;
-        this._octaneUrl = octaneUrl;
-        this._sharedSpace = sharedSpace;
-        this._workspace = workspace;
-        this._clientId = clientId;
-        this._clientSecret = clientSecret;
-        this._octaneSDKConnection = {};
+    constructor(octaneUrl, sharedSpace, workspace, clientId, clientSecret) {
+        this.octaneUrl = octaneUrl;
+        this.sharedSpace = sharedSpace;
+        this.workspace = workspace;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.octaneSDKConnection = {};
     }
     initializeOctaneConnection() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                LOGGER.info("The parameters are: " + this._octaneUrl + ", " + this._sharedSpace + ", " + this._workspace + ", " + this._clientId + ", " + this._clientSecret);
-                const connection = octaneConnectionUtils_1.OctaneConnectionUtils.getNewOctaneConnection(this._octaneUrl, this._sharedSpace, this._workspace, this._clientId, this._clientSecret);
+                LOGGER.info("The parameters are: " + this.octaneUrl + ", " + this.sharedSpace + ", " + this.workspace + ", " + this.clientId + ", " + this.clientSecret);
+                const connection = octaneConnectionUtils_1.OctaneConnectionUtils.getNewOctaneConnection(this.octaneUrl, this.sharedSpace, this.workspace, this.clientId, this.clientSecret);
                 yield connection._requestHandler.authenticate();
-                this._octaneSDKConnection = connection;
+                this.octaneSDKConnection = connection;
             }
             catch (e) {
                 const errorMessage = e instanceof Error ? e.message : String(e);
@@ -40229,11 +40228,22 @@ class Discovery {
             }
         });
     }
+    getScmRepo(octaneConnection) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const repoUrl = process.env.REPOURL || "";
+            const scmr = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_repository_roots/?query="(url=^${repoUrl}^)`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            LOGGER.info("The scm repository roots are: " + JSON.stringify(scmr));
+        });
+    }
     sendCreateEventToOctane(octaneConnection, name, packageName, className, description) {
         return __awaiter(this, void 0, void 0, function* () {
             const body = {
                 "data": [
                     {
+                        "testing_tool_type": {
+                            "type": "list_node",
+                            "id": "list_node.testing_tool_type.uft"
+                        },
                         "subtype": "test_automated",
                         "name": name,
                         "package": packageName,
@@ -40242,7 +40252,7 @@ class Discovery {
                     }
                 ]
             };
-            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
         });
     }
     sendUpdateEventToOctane(octaneConnection, testId, name, packageName, description, className) {
@@ -40259,22 +40269,17 @@ class Discovery {
                     }
                 ]
             };
-            try {
-                yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
-            }
-            catch (e) {
-                throw new Error("Failed to update test with id " + testId + ". " + (e instanceof Error ? e.message : String(e)));
-            }
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
         });
     }
     sendDeleteEventToOctane(octaneConnection, testId) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests/${testId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests/${testId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
         });
     }
     getExistingTestsFromOctane(octaneConnection) {
         return __awaiter(this, void 0, void 0, function* () {
-            const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this._sharedSpace}/workspaces/${this._workspace}/tests?query=\"(subtype=^test_automated^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests?query=\"(subtype=^test_automated^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             let existingTests = [];
             for (const testData of response.data) {
                 const test = {
@@ -40292,13 +40297,14 @@ class Discovery {
     startDiscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initializeOctaneConnection();
-            const scanner = new ScanRepo_1.default(path);
+            yield this.getScmRepo(this.octaneSDKConnection);
+            const scanner = new ScanRepo_1.default();
             const discoveredTests = yield scanner.scanRepo(path);
             LOGGER.info("The discovered tests are: " + JSON.stringify(discoveredTests));
             if (discoveredTests.length === 0) {
                 LOGGER.warn("No UFT tests have been discovered in the repository.");
             }
-            const existingTests = yield this.getExistingTestsFromOctane(this._octaneSDKConnection);
+            const existingTests = yield this.getExistingTestsFromOctane(this.octaneSDKConnection);
             const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests);
             LOGGER.info("The modified tests are: " + JSON.stringify(modifiedTests));
             for (const test of modifiedTests) {
@@ -40306,17 +40312,17 @@ class Discovery {
                 if (test.changeType === 'deleted') {
                     LOGGER.info("the test to delete id is: " + test.id);
                     if (test.id) {
-                        yield this.sendDeleteEventToOctane(this._octaneSDKConnection, test.id);
+                        yield this.sendDeleteEventToOctane(this.octaneSDKConnection, test.id);
                     }
                 }
-                else if (test.changeType === 'renamed' || test.changeType === 'moved' || test.changeType === 'modified') {
+                else if (test.changeType === 'modified') {
                     LOGGER.info("the test to update id is: " + test.id);
                     if (test.id) {
-                        yield this.sendUpdateEventToOctane(this._octaneSDKConnection, test.id, test.name, test.packageName, test.description, test.className);
+                        yield this.sendUpdateEventToOctane(this.octaneSDKConnection, test.id, test.name, test.packageName, test.description, test.className);
                     }
                 }
                 else {
-                    yield this.sendCreateEventToOctane(this._octaneSDKConnection, test.name, test.packageName, test.className, test.description);
+                    yield this.sendCreateEventToOctane(this.octaneSDKConnection, test.name, test.packageName, test.className, test.description);
                 }
             }
         });
@@ -40366,13 +40372,13 @@ class Discovery {
             const existingByName = new Map(existingTests.map(test => [test.name, test]));
             const existingByClass = new Map(existingTests.map(test => [test.className, test]));
             const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
-            // const currentByClass = new Map(discoveredTests.map(test => [test.className, test]));
             for (const test of addedTests) {
                 const newTest = currentByName.get(test);
                 if (existingTests.some(e => e.name === (newTest === null || newTest === void 0 ? void 0 : newTest.name)
-                    && e.packageName === newTest.packageName && e.className === newTest.className)) {
-                    LOGGER.warn(`A test with this name: ${newTest === null || newTest === void 0 ? void 0 : newTest.name}, package: ${newTest === null || newTest === void 0 ? void 0 : newTest.packageName}
-                and class name: ${newTest === null || newTest === void 0 ? void 0 : newTest.className} already exists.`);
+                    && e.packageName === newTest.packageName
+                    && e.className === newTest.className)) {
+                    LOGGER.warn(`A test with this name: ${newTest === null || newTest === void 0 ? void 0 : newTest.name}, package: ${newTest === null || newTest === void 0 ? void 0 : newTest.packageName} and class name: ${newTest === null || newTest === void 0 ? void 0 : newTest.className} already exists. 
+                This test will be skipped because duplicates are not allowed.`);
                 }
             }
             const modifiedPairs = [];
@@ -40444,24 +40450,22 @@ const UFT_GUI_TEST_TYPE = "GUI";
 const UFT_API_TEST_TYPE = "API";
 const NOT_UFT_TEST_TYPE = "Unknown test type";
 class ScanRepo {
-    constructor(workDirectory) {
-        this._tests = [];
-        this._workDirectory = workDirectory;
+    constructor() {
+        this.tests = [];
     }
     scanRepo(pathToRepo) {
         return __awaiter(this, void 0, void 0, function* () {
             const items = yield fs.promises.readdir(pathToRepo);
             let testType;
-            ///start switching
             try {
                 testType = yield this.getTestType(items);
                 if (testType === UFT_GUI_TEST_TYPE) {
                     const automatedTests = yield this.createAutomatedTestsFromGUI(pathToRepo, testType);
-                    this._tests.push(automatedTests);
+                    this.tests.push(automatedTests);
                 }
                 else if (testType === UFT_API_TEST_TYPE) {
                     const foundApiTests = yield this.createAutomatedTestFromAPI(pathToRepo, testType);
-                    this._tests.push(foundApiTests);
+                    this.tests.push(foundApiTests);
                 }
                 else {
                     for (const item of items) {
@@ -40469,7 +40473,7 @@ class ScanRepo {
                         const stats = yield fs.promises.lstat(itemPath);
                         if (stats.isDirectory() || stats.isSymbolicLink()) {
                             if (stats.isSymbolicLink()) {
-                                LOGGER.error(`${itemPath} is a symlink and symlinks are not supported and will be ignored.`);
+                                LOGGER.warn(`${itemPath} is a symlink and symlinks are not supported and will be ignored.`);
                             }
                             yield this.scanRepo(itemPath);
                         }
@@ -40479,14 +40483,14 @@ class ScanRepo {
             catch (e) {
                 throw new Error("Error while scanning the repo: " + (e instanceof Error ? e.message : String(e)));
             }
-            return this._tests;
+            return this.tests;
         });
     }
     getTestType(paths) {
         return __awaiter(this, void 0, void 0, function* () {
             for (const p of paths) {
                 const ext = path.extname(p).toLowerCase();
-                if (p.endsWith(UFT_GUI_TEST_EXTENSION)) {
+                if (ext === UFT_GUI_TEST_EXTENSION) {
                     return UFT_GUI_TEST_TYPE;
                 }
                 else if (ext === UFT_API_TEST_EXTENSION) {
@@ -40515,7 +40519,6 @@ class ScanRepo {
             const packageName = yield this.getPackageName(pathToTest, testName);
             const test = {
                 name: testName,
-                description: "",
                 packageName: packageName,
                 className: className,
                 uftOneTestType: testType,
@@ -40540,7 +40543,6 @@ class ScanRepo {
             const parts = pathToTest.split(path.sep);
             const startIndex = parts.indexOf("s");
             className = parts.slice(startIndex + 1).join("/");
-            LOGGER.info("The class name is: " + className);
             return className;
         });
     }
@@ -40551,7 +40553,6 @@ class ScanRepo {
             const startIndex = parts.indexOf("s");
             const endIndex = parts.lastIndexOf(testName);
             packageName = parts.slice(startIndex + 1, endIndex).join("/");
-            LOGGER.info("The package name is: " + packageName);
             return packageName;
         });
     }
@@ -40637,25 +40638,15 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
                 tl.setResult(tl.TaskResult.Failed, "You have to specify all Octane connection parameters and the path to the repository to discover UFT tests from. ");
                 return;
             }
-            try {
-                yield discoverTests(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
-            }
-            catch (e) {
-                tl.setResult(tl.TaskResult.Failed, "UFT tests discovery failed. " + (e instanceof Error ? e.message : String(e)));
-            }
+            yield discoverTests(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
         }
     }
     catch (error) {
-        if (error instanceof Error) {
-            LOGGER.error(error.message);
-        }
-        else {
-            throw error;
-        }
+        tl.setResult(tl.TaskResult.Failed, "UFT tests discovery failed. " + (error instanceof Error ? error.message : String(error)));
     }
 });
 const discoverTests = (path, octaneUrl, sharedSpace, workspace, clientId, clientSecret) => __awaiter(void 0, void 0, void 0, function* () {
-    const discovery = new Discovery_1.default(path, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
+    const discovery = new Discovery_1.default(octaneUrl, sharedSpace, workspace, clientId, clientSecret);
     yield discovery.startDiscovery(path);
 });
 const convertTests = () => {
@@ -40693,7 +40684,7 @@ const loadArguments = () => {
         type: "string",
         demandOption: true,
         default: "convertTests",
-        describe: "Specify the action you want to execute, concertTests or discoverTests",
+        describe: "Specify the action you want to execute, convertTests or discoverTests",
     })
         .option("path", {
         type: "string",
@@ -41203,7 +41194,7 @@ const getGUITestDoc = (pathToTest) => __awaiter(void 0, void 0, void 0, function
     catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         LOGGER.error("Failed to get GUI test document. " + errorMessage);
-        throw new Error("Failed to get GUI test document. " + errorMessage);
+        return null;
     }
 });
 exports.getGUITestDoc = getGUITestDoc;
@@ -41324,7 +41315,7 @@ const getAPITestDoc = (pathToTest) => __awaiter(void 0, void 0, void 0, function
     catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         LOGGER.error("Failed to get API test document. " + errorMessage);
-        throw new Error("Failed to get API test document. " + errorMessage);
+        return null;
     }
 });
 exports.getAPITestDoc = getAPITestDoc;
