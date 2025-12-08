@@ -40228,16 +40228,22 @@ class Discovery {
             }
         });
     }
-    getScmRepo(octaneConnection) {
+    getScmRepoRootId(octaneConnection) {
         return __awaiter(this, void 0, void 0, function* () {
             const repoUrl = process.env.REPOURL || "";
             LOGGER.info("The repo url is: " + repoUrl);
-            const scmRepos = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_repositories`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-            LOGGER.info("The scm repository roots are: " + JSON.stringify(scmRepos));
             const scmRepoRoot = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_repository_roots?query=\"(url=^${repoUrl}^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             LOGGER.info("The scm repository root is: " + JSON.stringify(scmRepoRoot));
             const repoRootId = scmRepoRoot.data[0].id; //todo add more checks
             LOGGER.info("The scm repository root id is: " + repoRootId);
+            return repoRootId;
+        });
+    }
+    getScmRepo(octaneConnection) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const scmRepos = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_repositories`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            LOGGER.info("The scm repository roots are: " + JSON.stringify(scmRepos));
+            const repoRootId = yield this.getScmRepoRootId(octaneConnection);
             for (const repo of scmRepos.data) {
                 if (repo.repository.id === repoRootId) {
                     LOGGER.info("The scm repository id is: " + repo.id);
@@ -40325,6 +40331,19 @@ class Discovery {
             return existingTests;
         });
     }
+    getScmResourceFilesFromOctane(octaneConnection) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const resourceFiles = [];
+            const allResourceFiles = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_resource_files`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            const repoRootId = yield this.getScmRepoRootId(octaneConnection);
+            for (const fileData of allResourceFiles.data) {
+                if (fileData.scm_repository.id === repoRootId) {
+                    resourceFiles.push(fileData);
+                }
+            }
+            return resourceFiles;
+        });
+    }
     removeFalsePositiveDataTables(tests, scmResourceFiles) {
         return __awaiter(this, void 0, void 0, function* () {
             if (tests.length === 0 || scmResourceFiles.length === 0)
@@ -40374,21 +40393,34 @@ class Discovery {
                     yield this.sendCreateEventToOctane(this.octaneSDKConnection, test.name, test.packageName, test.className, test.description, repoRootID);
                 }
             }
+            const existingDataTables = yield this.getScmResourceFilesFromOctane(this.octaneSDKConnection);
             if (filteredScmResourceFiles) {
+                yield this.getModifiedDataTables(filteredScmResourceFiles, existingDataTables);
                 for (const dataTable of filteredScmResourceFiles) {
-                    yield this.createScmResourceFile(this.octaneSDKConnection, dataTable.name, dataTable.relativePath, repoRootID);
-                    LOGGER.info("Created SCM Resource File for data table: " + dataTable.name);
+                    if (dataTable.changeType === "added") {
+                        yield this.createScmResourceFile(this.octaneSDKConnection, dataTable.name, dataTable.relativePath, repoRootID);
+                        LOGGER.info("Created SCM Resource File for data table: " + dataTable.name);
+                    }
                 }
             }
         });
     }
-    getModifiedTests(discoveredTests, existingTests) {
+    getModifiedFiles() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
-            const changedTests = [];
+            var _a;
             const raw = (_a = process.env.MODIFIED_FILES) !== null && _a !== void 0 ? _a : "";
             const gitOutput = Buffer.from(raw, "base64").toString("utf8");
-            const modifiedFilesArray = gitOutput.split('\0').filter(Boolean);
+            return gitOutput.split('\0').filter(Boolean);
+        });
+    }
+    getModifiedTests(discoveredTests, existingTests) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+            const changedTests = [];
+            // const raw = process.env.MODIFIED_FILES ?? "";
+            // const gitOutput = Buffer.from(raw, "base64").toString("utf8");
+            // const modifiedFilesArray = gitOutput.split('\0').filter(Boolean);
+            const modifiedFilesArray = yield this.getModifiedFiles();
             LOGGER.info("The modified files array is: " + modifiedFilesArray);
             const modifiedTestsMap = [];
             const testsToDelete = [];
@@ -40398,8 +40430,8 @@ class Discovery {
                 if (!status)
                     continue;
                 if (status.startsWith("R")) {
-                    const oldPath = (_b = modifiedFilesArray[i++]) !== null && _b !== void 0 ? _b : "";
-                    const newPath = (_c = modifiedFilesArray[i++]) !== null && _c !== void 0 ? _c : "";
+                    const oldPath = (_a = modifiedFilesArray[i++]) !== null && _a !== void 0 ? _a : "";
+                    const newPath = (_b = modifiedFilesArray[i++]) !== null && _b !== void 0 ? _b : "";
                     if ((oldPath && oldPath.match(/\.(st|tsp)$/)) || (newPath && newPath.match(/\.(st|tsp)$/))) {
                         modifiedTestsMap.push({
                             oldValue: path.basename(path.dirname(oldPath)),
@@ -40410,7 +40442,7 @@ class Discovery {
                     continue;
                 }
                 if (status === "D") {
-                    const deletedFile = (_d = modifiedFilesArray[i++]) !== null && _d !== void 0 ? _d : "";
+                    const deletedFile = (_c = modifiedFilesArray[i++]) !== null && _c !== void 0 ? _c : "";
                     if (deletedFile && deletedFile.match(/\.(st|tsp)$/)) {
                         const testToDeleteName = path.basename(path.dirname(deletedFile));
                         testsToDelete.push(testToDeleteName);
@@ -40466,11 +40498,19 @@ class Discovery {
                         && e.className === ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.className)
                         && e.packageName === ((_c = pair.new) === null || _c === void 0 ? void 0 : _c.packageName);
                 })) {
-                    throw new Error(`A test with the name: ${(_e = pair.new) === null || _e === void 0 ? void 0 : _e.name}, ${(_f = pair.new) === null || _f === void 0 ? void 0 : _f.className} and ${(_g = pair.new) === null || _g === void 0 ? void 0 : _g.packageName} already exists.`);
+                    throw new Error(`A test with the name: ${(_d = pair.new) === null || _d === void 0 ? void 0 : _d.name}, ${(_e = pair.new) === null || _e === void 0 ? void 0 : _e.className} and ${(_f = pair.new) === null || _f === void 0 ? void 0 : _f.packageName} already exists.`);
                 }
-                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_h = pair.new) === null || _h === void 0 ? void 0 : _h.name) || "", packageName: ((_j = pair.new) === null || _j === void 0 ? void 0 : _j.packageName) || "", className: ((_k = pair.new) === null || _k === void 0 ? void 0 : _k.className) || "", changeType: "modified", id: (_l = pair.old) === null || _l === void 0 ? void 0 : _l.id }));
+                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_g = pair.new) === null || _g === void 0 ? void 0 : _g.name) || "", packageName: ((_h = pair.new) === null || _h === void 0 ? void 0 : _h.packageName) || "", className: ((_j = pair.new) === null || _j === void 0 ? void 0 : _j.className) || "", changeType: "modified", id: (_k = pair.old) === null || _k === void 0 ? void 0 : _k.id }));
             }
             return changedTests;
+        });
+    }
+    getModifiedDataTables(discoveredDataTables, existingDataTables) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const changedDataTables = [];
+            const modifiedFilesArray = yield this.getModifiedFiles();
+            LOGGER.info("The modified files array is: " + modifiedFilesArray);
+            return changedDataTables;
         });
     }
 }
