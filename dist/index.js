@@ -40314,7 +40314,7 @@ class Discovery {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initializeOctaneConnection();
             const repoRootID = yield this.getScmRepo(this.octaneSDKConnection);
-            const scanner = new ScanRepo_1.default();
+            const scanner = new ScanRepo_1.default(path);
             const discoveredTests = yield scanner.scanRepo(path);
             LOGGER.info("The discovered tests are: " + JSON.stringify(discoveredTests));
             if (discoveredTests.length === 0) {
@@ -40465,15 +40465,27 @@ const UFT_API_TEST_EXTENSION = ".st";
 const UFT_GUI_TEST_TYPE = "GUI";
 const UFT_API_TEST_TYPE = "API";
 const NOT_UFT_TEST_TYPE = "Unknown test type";
+const XLSX = ".xlsx";
+const XLS = ".xls";
 class ScanRepo {
-    constructor() {
+    constructor(workDir) {
+        this.workDir = "";
         this.tests = [];
+        this.workDir = workDir;
     }
     scanRepo(pathToRepo) {
         return __awaiter(this, void 0, void 0, function* () {
             const items = yield fs.promises.readdir(pathToRepo);
             let testType;
+            let isDatatable;
+            const dataTables = [];
             try {
+                isDatatable = yield this.isDataTable(items);
+                if (isDatatable) {
+                    LOGGER.info(`The data table file is found in the path: ${pathToRepo}. Skipping this folder.`);
+                    const dataTable = yield this.createScmResourceFile(pathToRepo);
+                    dataTables.push(dataTable);
+                }
                 testType = yield this.getTestType(items);
                 if (testType === UFT_GUI_TEST_TYPE) {
                     const automatedTests = yield this.createAutomatedTestsFromGUI(pathToRepo, testType);
@@ -40499,6 +40511,7 @@ class ScanRepo {
             catch (e) {
                 throw new Error("Error while scanning the repo: " + (e instanceof Error ? e.message : String(e)));
             }
+            LOGGER.info("The data tables are: " + JSON.stringify(dataTables));
             return this.tests;
         });
     }
@@ -40514,6 +40527,28 @@ class ScanRepo {
                 }
             }
             return NOT_UFT_TEST_TYPE;
+        });
+    }
+    isDataTable(paths) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (const p of paths) {
+                const ext = path.extname(p).toLowerCase();
+                if (ext === XLSX || ext === XLS) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+    createScmResourceFile(pathToDataTable) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const dataTableName = path.basename(pathToDataTable);
+            const relativePath = path.relative(this.workDir, pathToDataTable);
+            const dataTable = {
+                name: dataTableName,
+                relativePath: relativePath
+            };
+            return dataTable;
         });
     }
     createAutomatedTestsFromGUI(pathToTest, testType) {
