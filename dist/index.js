@@ -40485,7 +40485,7 @@ class ScanRepo {
                     LOGGER.info(`The data table ${dataTableNames} is found in the path ${pathToRepo}`);
                     const dataTable = yield this.createScmResourceFile(dataTableNames, pathToRepo);
                     LOGGER.info("The data table scm resource file is: " + JSON.stringify(dataTable));
-                    //dataTables.push(dataTable)
+                    dataTables.push(...dataTable);
                 }
                 testType = yield this.getTestType(items);
                 if (testType === UFT_GUI_TEST_TYPE) {
