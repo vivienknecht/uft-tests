@@ -40310,16 +40310,31 @@ class Discovery {
             return existingTests;
         });
     }
+    removeFalsePositiveDataTables(tests, scmResourceFiles) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (tests.length === 0 || scmResourceFiles.length === 0)
+                return;
+            scmResourceFiles = scmResourceFiles.filter(file => {
+                const parentName = path.dirname(file.relativePath);
+                return !Array.from(tests).some(test => test.className === parentName);
+            });
+            LOGGER.info("The filtered data tables are: " + JSON.stringify(scmResourceFiles));
+        });
+    }
     startDiscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initializeOctaneConnection();
             const repoRootID = yield this.getScmRepo(this.octaneSDKConnection);
             const scanner = new ScanRepo_1.default(path);
-            const discoveredTests = yield scanner.scanRepo(path);
+            const discovery = yield scanner.scanRepo(path);
+            const discoveredTests = discovery.getAllTests();
             LOGGER.info("The discovered tests are: " + JSON.stringify(discoveredTests));
             if (discoveredTests.length === 0) {
                 LOGGER.warn("No UFT tests have been discovered in the repository.");
             }
+            const scmResourceFiles = discovery.getAllScmResourceFiles();
+            LOGGER.info("The discovered data tables are: " + JSON.stringify(scmResourceFiles));
+            yield this.removeFalsePositiveDataTables(discoveredTests, scmResourceFiles);
             const existingTests = yield this.getExistingTestsFromOctane(this.octaneSDKConnection);
             const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests);
             LOGGER.info("The modified tests are: " + JSON.stringify(modifiedTests));
@@ -40440,6 +40455,29 @@ exports["default"] = Discovery;
 
 /***/ }),
 
+/***/ 6376:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+class DiscoveryResults {
+    constructor(tests, scmResourceFiles) {
+        this._tests = tests;
+        this._scmResourceFiles = scmResourceFiles;
+    }
+    getAllTests() {
+        return this._tests;
+    }
+    getAllScmResourceFiles() {
+        return this._scmResourceFiles;
+    }
+}
+exports["default"] = DiscoveryResults;
+
+
+/***/ }),
+
 /***/ 6825:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -40459,6 +40497,7 @@ const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(9896);
 const utils_1 = __nccwpck_require__(5268);
 const logger_1 = __nccwpck_require__(7893);
+const DiscoveryResults_1 = __nccwpck_require__(6376);
 const LOGGER = new logger_1.default("ScanRepo.ts");
 const UFT_GUI_TEST_EXTENSION = ".tsp";
 const UFT_API_TEST_EXTENSION = ".st";
@@ -40482,9 +40521,9 @@ class ScanRepo {
             try {
                 dataTableNames = yield this.isDataTable(items);
                 if (dataTableNames) {
-                    LOGGER.info(`The data table ${dataTableNames} is found in the path ${pathToRepo}`);
+                    // LOGGER.info(`The data table ${dataTableNames} is found in the path ${pathToRepo}`);
                     const dataTable = yield this.createScmResourceFile(dataTableNames, pathToRepo);
-                    LOGGER.info("The data table scm resource file is: " + JSON.stringify(dataTable));
+                    //  LOGGER.info("The data table scm resource file is: " + JSON.stringify(dataTable));
                     this.scmResourceFiles.push(...dataTable);
                 }
                 testType = yield this.getTestType(items);
@@ -40512,8 +40551,9 @@ class ScanRepo {
             catch (e) {
                 throw new Error("Error while scanning the repo: " + (e instanceof Error ? e.message : String(e)));
             }
-            LOGGER.info("The data tables are: " + JSON.stringify(this.scmResourceFiles));
-            return this.tests;
+            //LOGGER.info("The data tables are: " + JSON.stringify(this.scmResourceFiles));
+            //return this.tests;
+            return new DiscoveryResults_1.default(this.tests, this.scmResourceFiles);
         });
     }
     getTestType(paths) {
