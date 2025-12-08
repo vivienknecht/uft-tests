@@ -40316,7 +40316,7 @@ class Discovery {
                 return;
             scmResourceFiles = scmResourceFiles.filter(file => {
                 const parentName = path.dirname(file.relativePath);
-                return !Array.from(tests).some(test => test.className === parentName);
+                return !Array.from(tests).some(test => test.className === file.relativePath);
             });
             LOGGER.info("The filtered data tables are: " + JSON.stringify(scmResourceFiles));
         });
