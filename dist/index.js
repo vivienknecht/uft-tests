@@ -40364,7 +40364,13 @@ class Discovery {
             const repoRootId = yield this.getScmRepoRootId(octaneConnection);
             for (const fileData of allResourceFiles.data) {
                 if (fileData.scm_repository.id === repoRootId) {
-                    resourceFiles.push(fileData);
+                    const scmResourceFile = {
+                        id: fileData.id,
+                        name: fileData.name,
+                        relativePath: fileData.relative_path,
+                        scmRepositoryId: fileData.scm_repository.id
+                    };
+                    resourceFiles.push(scmResourceFile);
                 }
             }
             return resourceFiles;
