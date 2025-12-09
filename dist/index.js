@@ -40294,9 +40294,17 @@ class Discovery {
             yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
         });
     }
-    sendDeleteEventToOctane(octaneConnection, testId) {
+    makeTestNotExecutableInOctane(octaneConnection, testId) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests/${testId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
+            // await octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests/${testId}?delete=true`,
+            //     Octane.operationTypes.delete);
+            const body = {
+                "data": [{
+                        "id": testId,
+                        "executable": false
+                    }]
+            };
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
         });
     }
     createScmResourceFile(octaneConnection, name, relativePath, scmRepoId) {
@@ -40314,6 +40322,23 @@ class Discovery {
             yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_resource_files`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
         });
     }
+    updateScmResourceFile(octaneConnection, scmResourceFileId, name, relativePath) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const body = {
+                "data": [{
+                        "id": scmResourceFileId,
+                        "name": name,
+                        "relative_path": relativePath
+                    }]
+            };
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_resource_files`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+        });
+    }
+    deleteScmResourceFile(octaneConnection, scmResourceFileId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_resource_files/${scmResourceFileId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
+        });
+    }
     getExistingTestsFromOctane(octaneConnection) {
         return __awaiter(this, void 0, void 0, function* () {
             const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests?query=\"(subtype=^test_automated^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
@@ -40323,7 +40348,8 @@ class Discovery {
                     id: testData.id,
                     name: testData.name,
                     packageName: testData.package,
-                    className: testData.class_name
+                    className: testData.class_name,
+                    isExecutable: testData.executable
                 };
                 existingTests.push(test);
             }
@@ -40346,8 +40372,6 @@ class Discovery {
     }
     removeFalsePositiveDataTables(tests, scmResourceFiles) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (tests.length === 0 || scmResourceFiles.length === 0)
-                return null;
             const classNames = new Set(tests.map(t => t.className));
             scmResourceFiles = scmResourceFiles.filter(file => {
                 const relativeDir = path.dirname(file.relativePath);
@@ -40369,18 +40393,35 @@ class Discovery {
             if (discoveredTests.length === 0) {
                 LOGGER.warn("No UFT tests have been discovered in the repository.");
             }
+            const existingTests = yield this.getExistingTestsFromOctane(this.octaneSDKConnection);
             const scmResourceFiles = discovery.getAllScmResourceFiles();
+            if (scmResourceFiles.length === 0) {
+                LOGGER.warn("No data tables have been discovered in the repository.");
+            }
             LOGGER.info("The discovered data tables are: " + JSON.stringify(scmResourceFiles));
             const filteredScmResourceFiles = yield this.removeFalsePositiveDataTables(discoveredTests, scmResourceFiles);
-            const existingTests = yield this.getExistingTestsFromOctane(this.octaneSDKConnection);
-            const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests);
+            const existingDataTables = yield this.getScmResourceFilesFromOctane(this.octaneSDKConnection);
+            const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests, filteredScmResourceFiles, existingDataTables);
             LOGGER.info("The modified tests are: " + JSON.stringify(modifiedTests));
+            yield this.sendTestEventsToOctane(modifiedTests, repoRootID);
+        });
+    }
+    getModifiedFiles() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            const raw = (_a = process.env.MODIFIED_FILES) !== null && _a !== void 0 ? _a : "";
+            const gitOutput = Buffer.from(raw, "base64").toString("utf8");
+            return gitOutput.split('\0').filter(Boolean);
+        });
+    }
+    sendTestEventsToOctane(modifiedTests, repoRootID) {
+        return __awaiter(this, void 0, void 0, function* () {
             for (const test of modifiedTests) {
                 LOGGER.info("the change type of test " + test.name + " is: " + test.changeType);
                 if (test.changeType === 'deleted') {
                     LOGGER.info("the test to delete id is: " + test.id);
                     if (test.id) {
-                        yield this.sendDeleteEventToOctane(this.octaneSDKConnection, test.id);
+                        yield this.makeTestNotExecutableInOctane(this.octaneSDKConnection, test.id);
                     }
                 }
                 else if (test.changeType === 'modified') {
@@ -40393,38 +40434,42 @@ class Discovery {
                     yield this.sendCreateEventToOctane(this.octaneSDKConnection, test.name, test.packageName, test.className, test.description, repoRootID);
                 }
             }
-            const existingDataTables = yield this.getScmResourceFilesFromOctane(this.octaneSDKConnection);
-            if (filteredScmResourceFiles) {
-                yield this.getModifiedDataTables(filteredScmResourceFiles, existingDataTables);
-                for (const dataTable of filteredScmResourceFiles) {
-                    if (dataTable.changeType === "added") {
-                        yield this.createScmResourceFile(this.octaneSDKConnection, dataTable.name, dataTable.relativePath, repoRootID);
-                        LOGGER.info("Created SCM Resource File for data table: " + dataTable.name);
+        });
+    }
+    sendDataTableEventsToOctane(modifiedDataTables, repoRootID) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (const dataTable of modifiedDataTables) {
+                if (dataTable.changeType === "added") {
+                    yield this.createScmResourceFile(this.octaneSDKConnection, dataTable.name, dataTable.relativePath, repoRootID);
+                    LOGGER.info("Created SCM Resource File for data table: " + dataTable.name + " and the relative path is: " + dataTable.relativePath);
+                }
+                else if (dataTable.changeType === "modified") {
+                    if (dataTable.id) {
+                        yield this.updateScmResourceFile(this.octaneSDKConnection, dataTable.id, dataTable.name, dataTable.relativePath);
+                        LOGGER.info("Updated SCM Resource File for data table: " + dataTable.name + " with id: " + dataTable.id);
+                    }
+                }
+                else if (dataTable.changeType === "deleted") {
+                    if (dataTable.id) {
+                        yield this.deleteScmResourceFile(this.octaneSDKConnection, dataTable.id);
+                        LOGGER.info("Deleted SCM Resource File for data table: " + dataTable.name + " with id: " + dataTable.id);
                     }
                 }
             }
         });
     }
-    getModifiedFiles() {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            const raw = (_a = process.env.MODIFIED_FILES) !== null && _a !== void 0 ? _a : "";
-            const gitOutput = Buffer.from(raw, "base64").toString("utf8");
-            return gitOutput.split('\0').filter(Boolean);
-        });
-    }
-    getModifiedTests(discoveredTests, existingTests) {
+    getModifiedTests(discoveredTests, existingTests, discoveredScmResourceFiles, existingScmResourceFiles) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
             const changedTests = [];
-            // const raw = process.env.MODIFIED_FILES ?? "";
-            // const gitOutput = Buffer.from(raw, "base64").toString("utf8");
-            // const modifiedFilesArray = gitOutput.split('\0').filter(Boolean);
             const modifiedFilesArray = yield this.getModifiedFiles();
             LOGGER.info("The modified files array is: " + modifiedFilesArray);
             const modifiedTestsMap = [];
             const testsToDelete = [];
             const addedTests = [];
+            const addedDataTables = [];
+            const removedDataTables = [];
+            const modifiedDataTables = [];
             for (let i = 0; i < modifiedFilesArray.length;) {
                 const status = modifiedFilesArray[i++];
                 if (!status)
@@ -40439,6 +40484,13 @@ class Discovery {
                         });
                         LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
                     }
+                    else if ((oldPath && oldPath.match(/\.(xlsx|xls)$/)) || (newPath && newPath.match(/\.(xlsx|xls)$/))) {
+                        modifiedDataTables.push({
+                            oldValue: path.basename(oldPath),
+                            newValue: path.basename(newPath),
+                        });
+                        LOGGER.info(`Mapped data table: ${oldPath} → ${newPath}`);
+                    }
                     continue;
                 }
                 if (status === "D") {
@@ -40447,12 +40499,21 @@ class Discovery {
                         const testToDeleteName = path.basename(path.dirname(deletedFile));
                         testsToDelete.push(testToDeleteName);
                     }
+                    else if (deletedFile && deletedFile.match(/\.(xlsx|xls)$/)) {
+                        const deletedDataTableName = path.basename(deletedFile);
+                        removedDataTables.push(deletedDataTableName);
+                    }
+                    continue;
                 }
                 if (status === "A") {
                     const addedFile = modifiedFilesArray[i++];
                     if (addedFile && addedFile.match(/\.(st|tsp)$/)) {
                         const addedTestName = path.basename(path.dirname(addedFile));
                         addedTests.push(addedTestName);
+                    }
+                    else if (addedFile && addedFile.match(/\.(xlsx|xls)$/)) {
+                        const addedDataTableName = path.basename(addedFile);
+                        addedDataTables.push(addedDataTableName);
                     }
                 }
             }
@@ -40477,7 +40538,7 @@ class Discovery {
             LOGGER.error("The modified pairs are: " + JSON.stringify(modifiedPairs));
             for (const test of testsToDelete) {
                 const testToDelete = existingByName.get(test);
-                changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.id, name: (testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.name) || "", packageName: (testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.packageName) || "", className: (testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.className) || "" }));
+                changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.id, name: (testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.name) || "", packageName: (testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.packageName) || "", className: (testToDelete === null || testToDelete === void 0 ? void 0 : testToDelete.className) || "", isExecutable: false }));
             }
             for (const test of discoveredTests) {
                 const existingTestFullPath = test.className;
@@ -40500,17 +40561,41 @@ class Discovery {
                 })) {
                     throw new Error(`A test with the name: ${(_d = pair.new) === null || _d === void 0 ? void 0 : _d.name}, ${(_e = pair.new) === null || _e === void 0 ? void 0 : _e.className} and ${(_f = pair.new) === null || _f === void 0 ? void 0 : _f.packageName} already exists.`);
                 }
-                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_g = pair.new) === null || _g === void 0 ? void 0 : _g.name) || "", packageName: ((_h = pair.new) === null || _h === void 0 ? void 0 : _h.packageName) || "", className: ((_j = pair.new) === null || _j === void 0 ? void 0 : _j.className) || "", changeType: "modified", id: (_k = pair.old) === null || _k === void 0 ? void 0 : _k.id }));
+                changedTests.push(Object.assign(Object.assign({}, pair.new), { name: ((_g = pair.new) === null || _g === void 0 ? void 0 : _g.name) || "", packageName: ((_h = pair.new) === null || _h === void 0 ? void 0 : _h.packageName) || "", className: ((_j = pair.new) === null || _j === void 0 ? void 0 : _j.className) || "", changeType: "modified", id: (_k = pair.old) === null || _k === void 0 ? void 0 : _k.id, isExecutable: true }));
             }
+            yield this.getModifiedScmResourceFiles(addedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
             return changedTests;
         });
     }
-    getModifiedDataTables(discoveredDataTables, existingDataTables) {
+    getModifiedScmResourceFiles(addedDataTables, deletedDataTables, modifiedDataTables, discoveredDataTables, existingDataTables) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c;
             const changedDataTables = [];
-            const modifiedFilesArray = yield this.getModifiedFiles();
-            LOGGER.info("The modified files array is: " + modifiedFilesArray);
-            return changedDataTables;
+            const existingByName = new Map(existingDataTables.map(dataTable => [dataTable.name, dataTable]));
+            const currentByName = new Map(discoveredDataTables.map(dataTable => [dataTable.name, dataTable]));
+            for (const dataTableName of addedDataTables) {
+                const newDataTable = currentByName.get(dataTableName);
+                if (newDataTable) {
+                    changedDataTables.push(Object.assign(Object.assign({}, newDataTable), { changeType: "added" }));
+                }
+            }
+            for (const dataTableName of deletedDataTables) {
+                const dataTableToDelete = existingByName.get(dataTableName);
+                if (dataTableToDelete) {
+                    changedDataTables.push(Object.assign(Object.assign({}, dataTableToDelete), { changeType: "deleted" }));
+                }
+            }
+            const modifiedDataTablePairs = [];
+            for (const entry of modifiedDataTables) {
+                const oldDataTableValue = existingByName.get(entry.oldValue);
+                const newDataTableValue = currentByName.get(entry.newValue);
+                modifiedDataTablePairs.push({ old: oldDataTableValue, new: newDataTableValue });
+            }
+            for (const pair of modifiedDataTablePairs) {
+                changedDataTables.push(Object.assign(Object.assign({}, pair.new), { id: ((_a = pair.old) === null || _a === void 0 ? void 0 : _a.id) || "", name: ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.name) || "", relativePath: ((_c = pair.new) === null || _c === void 0 ? void 0 : _c.relativePath) || "", changeType: "modified" }));
+            }
+            const repoRootID = yield this.getScmRepo(this.octaneSDKConnection);
+            yield this.sendDataTableEventsToOctane(changedDataTables, repoRootID);
         });
     }
 }
@@ -40682,6 +40767,7 @@ class ScanRepo {
                 packageName: packageName,
                 className: className,
                 uftOneTestType: testType,
+                isExecutable: true,
             };
             return test;
         });
