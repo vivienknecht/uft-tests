@@ -40583,12 +40583,23 @@ class Discovery {
             const changedDataTables = [];
             const existingByName = new Map(existingDataTables.map(dataTable => [dataTable.name, dataTable]));
             const currentByName = new Map(discoveredDataTables.map(dataTable => [dataTable.name, dataTable]));
-            for (const dataTableName of addedDataTables) {
-                const newDataTable = currentByName.get(dataTableName);
-                if (newDataTable) {
-                    changedDataTables.push(Object.assign(Object.assign({}, newDataTable), { changeType: "added" }));
+            for (const dataTable of discoveredDataTables) {
+                const existingDataTable = existingByName.get(dataTable.name);
+                if (existingDataTable) {
+                    LOGGER.info("Data table already exists in Octane: " + dataTable.name);
+                    continue; // No changes
+                }
+                const existsInModified = modifiedDataTables.some(pair => pair.oldValue === dataTable.name || pair.newValue === dataTable.name);
+                if (!existsInModified) {
+                    changedDataTables.push(Object.assign(Object.assign({}, dataTable), { changeType: "added" }));
                 }
             }
+            // for (const dataTableName of addedDataTables) {
+            //     const newDataTable = currentByName.get(dataTableName);
+            //     if (newDataTable) {
+            //         changedDataTables.push({...newDataTable, changeType: "added"});
+            //     }
+            // }
             for (const dataTableName of deletedDataTables) {
                 const dataTableToDelete = existingByName.get(dataTableName);
                 if (dataTableToDelete) {
