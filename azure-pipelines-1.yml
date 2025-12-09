@@ -25,13 +25,13 @@ steps:
   #     WorkspaceList: "9001"
   #     CreatePipelineCheckbox: true
 
-  # - task: octane-test-runner-start-task-private@1
-  #   inputs:
-  #     OctaneServiceConnection: 'octaneConnectionForDiscovery'
-  #     WorkspaceList: '13003'
-  #     Framework: 'uft'
-  #     GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
-  #   continueOnError: true
+  - task: octane-test-runner-start-task-private@1
+    inputs:
+      OctaneServiceConnection: 'octaneConnectionForDiscovery'
+      WorkspaceList: '14005'
+      Framework: 'uft'
+      GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
+    continueOnError: true
 
   - checkout: self
     fetchDepth: 0
