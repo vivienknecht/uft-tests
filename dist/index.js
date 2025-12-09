@@ -40270,7 +40270,8 @@ class Discovery {
                         "scm_repository": {
                             "type": "scm_repository",
                             "id": scmRepositoryId
-                        }
+                        },
+                        "executable": true
                     }
                 ]
             };
@@ -40361,6 +40362,7 @@ class Discovery {
         return __awaiter(this, void 0, void 0, function* () {
             const resourceFiles = [];
             const allResourceFiles = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_resource_files`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            LOGGER.info("The all scm resource files from octane are: " + JSON.stringify(allResourceFiles));
             const repoRootId = yield this.getScmRepoRootId(octaneConnection);
             for (const fileData of allResourceFiles.data) {
                 if (fileData.scm_repository.id === repoRootId) {
@@ -40373,6 +40375,7 @@ class Discovery {
                     resourceFiles.push(scmResourceFile);
                 }
             }
+            LOGGER.info("The existing scm resource files are: " + JSON.stringify(resourceFiles));
             return resourceFiles;
         });
     }
