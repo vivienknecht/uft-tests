@@ -40594,6 +40594,7 @@ class Discovery {
             for (const pair of modifiedDataTablePairs) {
                 changedDataTables.push(Object.assign(Object.assign({}, pair.new), { id: ((_a = pair.old) === null || _a === void 0 ? void 0 : _a.id) || "", name: ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.name) || "", relativePath: ((_c = pair.new) === null || _c === void 0 ? void 0 : _c.relativePath) || "", changeType: "modified" }));
             }
+            LOGGER.info("The changed data tables are: " + JSON.stringify(changedDataTables));
             const repoRootID = yield this.getScmRepo(this.octaneSDKConnection);
             yield this.sendDataTableEventsToOctane(changedDataTables, repoRootID);
         });
