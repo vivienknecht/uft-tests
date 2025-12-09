@@ -40340,9 +40340,12 @@ class Discovery {
             yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_resource_files/${scmResourceFileId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
         });
     }
-    getExistingTestsFromOctane(octaneConnection) {
+    getExistingTestsFromOctane(octaneConnection, scmRepoId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests?query=\"(subtype=^test_automated^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            // const response = await octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests?query=\"(subtype=^test_automated^)\"`,
+            //     Octane.operationTypes.get);
+            const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests/?query="scm_repository EQ {id EQ ^${scmRepoId}^}`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            LOGGER.info("The existing tests from octane are: " + JSON.stringify(response.data));
             let existingTests = [];
             for (const testData of response.data) {
                 const test = {
@@ -40358,15 +40361,14 @@ class Discovery {
             return existingTests;
         });
     }
-    getScmResourceFilesFromOctane(octaneConnection) {
+    getScmResourceFilesFromOctane(octaneConnection, repoId) {
         return __awaiter(this, void 0, void 0, function* () {
             const resourceFiles = [];
             const allResourceFiles = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_resource_files?fields=name,relative_path,scm_repository`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             LOGGER.info("The all scm resource files from octane are: " + JSON.stringify(allResourceFiles));
-            const repoRootId = yield this.getScmRepo(octaneConnection);
             for (const fileData of allResourceFiles.data) {
                 LOGGER.info("The scm repository id of file " + fileData.name + " is: " + fileData.scm_repository.id);
-                if (fileData.scm_repository.id === repoRootId) {
+                if (fileData.scm_repository.id === repoId) {
                     const scmResourceFile = {
                         id: fileData.id,
                         name: fileData.name,
@@ -40395,7 +40397,7 @@ class Discovery {
     startDiscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initializeOctaneConnection();
-            const repoRootID = yield this.getScmRepo(this.octaneSDKConnection);
+            const repoID = yield this.getScmRepo(this.octaneSDKConnection);
             const scanner = new ScanRepo_1.default(path);
             const discovery = yield scanner.scanRepo(path);
             const discoveredTests = discovery.getAllTests();
@@ -40403,17 +40405,17 @@ class Discovery {
             if (discoveredTests.length === 0) {
                 LOGGER.warn("No UFT tests have been discovered in the repository.");
             }
-            const existingTests = yield this.getExistingTestsFromOctane(this.octaneSDKConnection);
+            const existingTests = yield this.getExistingTestsFromOctane(this.octaneSDKConnection, repoID);
             const scmResourceFiles = discovery.getAllScmResourceFiles();
             if (scmResourceFiles.length === 0) {
                 LOGGER.warn("No data tables have been discovered in the repository.");
             }
             LOGGER.info("The discovered data tables are: " + JSON.stringify(scmResourceFiles));
             const filteredScmResourceFiles = yield this.removeFalsePositiveDataTables(discoveredTests, scmResourceFiles);
-            const existingDataTables = yield this.getScmResourceFilesFromOctane(this.octaneSDKConnection);
+            const existingDataTables = yield this.getScmResourceFilesFromOctane(this.octaneSDKConnection, repoID);
             const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests, filteredScmResourceFiles, existingDataTables);
             LOGGER.info("The modified tests are: " + JSON.stringify(modifiedTests));
-            yield this.sendTestEventsToOctane(modifiedTests, repoRootID);
+            yield this.sendTestEventsToOctane(modifiedTests, repoID);
         });
     }
     getModifiedFiles() {
