@@ -40344,7 +40344,7 @@ class Discovery {
         return __awaiter(this, void 0, void 0, function* () {
             // const response = await octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests?query=\"(subtype=^test_automated^)\"`,
             //     Octane.operationTypes.get);
-            const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests/?query="scm_repository EQ {id EQ ^${scmRepoId}^}`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests/?query=\"scm_repository EQ {id EQ ^${scmRepoId}^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             LOGGER.info("The existing tests from octane are: " + JSON.stringify(response.data));
             let existingTests = [];
             for (const testData of response.data) {
