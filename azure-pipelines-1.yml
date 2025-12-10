@@ -31,7 +31,9 @@ steps:
       WorkspaceList: '14005'
       Framework: 'uft'
       GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
-    continueOnError: true
+   
+  - powershell: |
+     Write-Host "Value: $(testsToRunConverted)"
 
   - checkout: self
     fetchDepth: 0
