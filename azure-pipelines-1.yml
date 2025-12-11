@@ -27,13 +27,13 @@ steps:
 
   - task: octane-test-runner-start-task-private@1
     inputs:
-      OctaneServiceConnection: 'octaneConnectionForDiscovery'
-      WorkspaceList: '14005'
-      Framework: 'uft'
-      GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
-   
+      OctaneServiceConnection: "octaneConnectionForDiscovery"
+      WorkspaceList: "14005"
+      Framework: "uft"
+      GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
+
   - powershell: |
-     Write-Host "Value: $(testsToRunConverted)"
+      Write-Host "Value: $(testsToRunConverted)"
 
   - checkout: self
     fetchDepth: 0
@@ -112,8 +112,8 @@ steps:
       "@
       Set-Content -Path "./build/testsToRun.mtbx" -Value $content -Encoding UTF8
       Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
-      Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
-      Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\build\\testsToRun.mtbx"
+      Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\reports\\reports.xml"
+      Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\tests.mtbx"
       Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
       Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
       Get-Content -Path ./build/Props.txt
