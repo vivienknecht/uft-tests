@@ -40232,10 +40232,8 @@ class Discovery {
         return __awaiter(this, void 0, void 0, function* () {
             const pipelineName = process.env.BUILD_DEFINITIONNAME;
             LOGGER.info("The pipeline name is: " + pipelineName);
-            // const testRunner = await octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/executors` +
-            // `?query=\"ci_job EQ {name EQ ^${pipelineName}*^}\"`, Octane.operationTypes.get);
-            // LOGGER.info("The test runners are: " + JSON.stringify(testRunner));
-            // return testRunner.data.id;
+            const testRunner = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/executors?query=\"ci_job EQ {name EQ ^${pipelineName}*^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            LOGGER.info("The test runners are: " + JSON.stringify(testRunner));
             return "";
         });
     }
@@ -40410,6 +40408,7 @@ class Discovery {
     startDiscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initializeOctaneConnection();
+            yield this.getTestRunnerId(this.octaneSDKConnection);
             const repoID = yield this.getScmRepo(this.octaneSDKConnection);
             const scanner = new ScanRepo_1.default(path);
             const discovery = yield scanner.scanRepo(path);
