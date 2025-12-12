@@ -40234,7 +40234,7 @@ class Discovery {
             LOGGER.info("The pipeline name is: " + pipelineName);
             const testRunner = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/executors?query=\"ci_job EQ {name EQ ^${pipelineName}*^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             LOGGER.info("The test runners are: " + JSON.stringify(testRunner));
-            return "";
+            return testRunner.data[0].id;
         });
     }
     getScmRepoRootId(octaneConnection) {
@@ -40282,11 +40282,11 @@ class Discovery {
                             "type": "scm_repository",
                             "id": scmRepositoryId
                         },
-                        "executable": true
-                        // "test_runner": {
-                        //     "type": "executor",
-                        //     "id": await this.getTestRunnerId(octaneConnection)
-                        // }
+                        "executable": true,
+                        "test_runner": {
+                            "type": "executor",
+                            "id": yield this.getTestRunnerId(octaneConnection)
+                        }
                     }
                 ]
             };
