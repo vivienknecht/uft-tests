@@ -40228,6 +40228,16 @@ class Discovery {
             }
         });
     }
+    getTestRunnerId(octaneConnection) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const pipelineName = process.env.BUILD_DEFINITIONNAME;
+            LOGGER.info("The pipeline name is: " + pipelineName);
+            const testRunner = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/executors` +
+                `?query=\"ci_job EQ {name EQ ^${pipelineName}*^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            LOGGER.info("The test runners are: " + JSON.stringify(testRunner));
+            return testRunner.data.id;
+        });
+    }
     getScmRepoRootId(octaneConnection) {
         return __awaiter(this, void 0, void 0, function* () {
             const repoUrl = process.env.REPOURL || "";
@@ -40241,16 +40251,19 @@ class Discovery {
     }
     getScmRepo(octaneConnection) {
         return __awaiter(this, void 0, void 0, function* () {
-            const scmRepos = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_repositories`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            const repoUrl = process.env.REPOURL || "";
+            const scmRepos = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_repositories/
+        ?query=\"repository EQ {url EQ ^${repoUrl}^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             LOGGER.info("The scm repository roots are: " + JSON.stringify(scmRepos));
-            const repoRootId = yield this.getScmRepoRootId(octaneConnection); ///5005
-            for (const repo of scmRepos.data) {
-                if (repo.repository.id === repoRootId) {
-                    LOGGER.info("The scm repository id is: " + repo.id);
-                    return repo.id;
-                }
-            }
-            return "";
+            return scmRepos.data.id;
+            // const repoRootId = await this.getScmRepoRootId(octaneConnection); ///5005
+            // for (const repo of scmRepos.data) {
+            //     if (repo.repository.id === repoRootId) {
+            //         LOGGER.info("The scm repository id is: " + repo.id);
+            //         return repo.id;
+            //     }
+            // }
+            // return "";
         });
     }
     sendCreateEventToOctane(octaneConnection, name, packageName, className, description, scmRepositoryId) {
@@ -40271,7 +40284,11 @@ class Discovery {
                             "type": "scm_repository",
                             "id": scmRepositoryId
                         },
-                        "executable": true
+                        "executable": true,
+                        "test_runner": {
+                            "type": "executor",
+                            "id": yield this.getTestRunnerId(octaneConnection)
+                        }
                     }
                 ]
             };
@@ -40297,8 +40314,6 @@ class Discovery {
     }
     makeTestNotExecutableInOctane(octaneConnection, testId) {
         return __awaiter(this, void 0, void 0, function* () {
-            // await octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests/${testId}?delete=true`,
-            //     Octane.operationTypes.delete);
             const body = {
                 "data": [{
                         "id": testId,
@@ -40342,8 +40357,6 @@ class Discovery {
     }
     getExistingTestsFromOctane(octaneConnection, scmRepoId) {
         return __awaiter(this, void 0, void 0, function* () {
-            // const response = await octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests?query=\"(subtype=^test_automated^)\"`,
-            //     Octane.operationTypes.get);
             const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/tests/?query=\"scm_repository EQ {id EQ ^${scmRepoId}^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             LOGGER.info("The existing tests from octane are: " + JSON.stringify(response.data));
             let existingTests = [];
@@ -40364,19 +40377,19 @@ class Discovery {
     getScmResourceFilesFromOctane(octaneConnection, repoId) {
         return __awaiter(this, void 0, void 0, function* () {
             const resourceFiles = [];
-            const allResourceFiles = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_resource_files?fields=name,relative_path,scm_repository`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+            const allResourceFiles = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/scm_resource_files?/?query=\"scm_repository EQ {id EQ ^${repoId}^}\"&fields=name,relative_path,scm_repository`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
             LOGGER.info("The all scm resource files from octane are: " + JSON.stringify(allResourceFiles));
             for (const fileData of allResourceFiles.data) {
                 LOGGER.info("The scm repository id of file " + fileData.name + " is: " + fileData.scm_repository.id);
-                if (fileData.scm_repository.id === repoId) {
-                    const scmResourceFile = {
-                        id: fileData.id,
-                        name: fileData.name,
-                        relativePath: fileData.relative_path,
-                        scmRepositoryId: fileData.scm_repository.id
-                    };
-                    resourceFiles.push(scmResourceFile);
-                }
+                //if (fileData.scm_repository.id === repoId) {
+                const scmResourceFile = {
+                    id: fileData.id,
+                    name: fileData.name,
+                    relativePath: fileData.relative_path,
+                    scmRepositoryId: fileData.scm_repository.id
+                };
+                resourceFiles.push(scmResourceFile);
+                //}
             }
             LOGGER.info("The existing scm resource files are: " + JSON.stringify(resourceFiles));
             return resourceFiles;
