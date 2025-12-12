@@ -1,7 +1,9 @@
 <Mtbx>
-    <Test name="APITest2Re" path="C:\dev\azure-devops-integration\agent\_work\7\s\browsers\APITest2Re">
+    <Test name="APITest2Re" path="browsers\APITest2Re">
     </Test>
-    <Test name="GUITest1" path="C:\dev\azure-devops-integration\agent\_work\7\s\browsers\GUITest1">
+    <Test name="GUITest1" path="browsers\GUITest1">
         <DataTable path="C:\dev\azure-devops-integration\agent\_work\7\s\DataTables\Book5_3.xlsx" />
     </Test>
 </Mtbx>
+
+
