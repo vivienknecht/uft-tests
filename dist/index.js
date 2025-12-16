@@ -40320,7 +40320,7 @@ class Discovery {
     }
     getModifiedTests(discoveredTests, existingTests, discoveredScmResourceFiles, existingScmResourceFiles) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
             const changedTests = [];
             const rootFolder = process.env.BUILD_SOURCESDIRECTORY || "";
             const scmRepoId = yield (0, octaneClient_1.getScmRepo)(this.octaneSDKConnection, this.sharedSpace, this.workspace);
@@ -40443,7 +40443,8 @@ class Discovery {
                 })) {
                     throw new Error(`A test with the name: ${(_d = pair.newValue) === null || _d === void 0 ? void 0 : _d.name}, ${(_e = pair.newValue) === null || _e === void 0 ? void 0 : _e.className} and ${(_f = pair.newValue) === null || _f === void 0 ? void 0 : _f.packageName} already exists.`);
                 }
-                changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: ((_g = pair.newValue) === null || _g === void 0 ? void 0 : _g.name) || "", packageName: ((_h = pair.newValue) === null || _h === void 0 ? void 0 : _h.packageName) || "", className: ((_j = pair.newValue) === null || _j === void 0 ? void 0 : _j.className) || "", changeType: "modified", id: (_k = pair.oldValue) === null || _k === void 0 ? void 0 : _k.id, isExecutable: true }));
+                const oldTest = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.oldValue.name, pair.oldValue.packageName, pair.oldValue.className, scmRepoId);
+                changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: ((_g = pair.newValue) === null || _g === void 0 ? void 0 : _g.name) || "", packageName: ((_h = pair.newValue) === null || _h === void 0 ? void 0 : _h.packageName) || "", className: ((_j = pair.newValue) === null || _j === void 0 ? void 0 : _j.className) || "", changeType: "modified", id: oldTest.id, isExecutable: true }));
             }
             yield this.getModifiedScmResourceFiles(addedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
             return changedTests;
