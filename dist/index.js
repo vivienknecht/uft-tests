@@ -40442,12 +40442,6 @@ class Discovery {
                 // const testToDelete = existingByName.get(test);
             }
             for (const test of discoveredTests) {
-                const existingTestFullPath = test.className;
-                const exactMatch = existingByClass.get(existingTestFullPath);
-                if (exactMatch) {
-                    LOGGER.info("Exact match found for test: " + test.name);
-                    continue; // No changes
-                }
                 const existsInModified = modifiedTestsMap.some(pair => (pair.oldValue.name === test.name &&
                     pair.oldValue.className === test.className &&
                     pair.oldValue.packageName === test.packageName) ||
@@ -40463,7 +40457,22 @@ class Discovery {
                 }
                 if (!existsInModified) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
+                    continue;
                 }
+                const testExists = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, scmRepoId);
+                if (!testExists) {
+                    LOGGER.warn(`Could not find the existing test for modification: ${test.name}`);
+                    yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, test.description, scmRepoId);
+                }
+                else {
+                    LOGGER.info("The test already exists " + test.name);
+                }
+                //const existingTestFullPath = test.className;
+                // const exactMatch = existingByClass.get(existingTestFullPath);
+                //
+                // if (exactMatch) {
+                //     LOGGER.info("Exact match found for test: " + test.name);
+                // }
             }
             for (const pair of modifiedTestsMap) {
                 // if (existingTests.some(e => e.name === pair.newValue?.name
