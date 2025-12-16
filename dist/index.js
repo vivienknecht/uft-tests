@@ -40846,7 +40846,7 @@ const deleteScmResourceFile = (octaneConnection, sharedSpace, workspace, scmReso
 exports.deleteScmResourceFile = deleteScmResourceFile;
 const getScmResourceFilesFromOctane = (octaneConnection, sharedSpace, workspace, repoId) => __awaiter(void 0, void 0, void 0, function* () {
     const resourceFiles = [];
-    const allResourceFiles = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/$workspace}/scm_resource_files?/?query=\"scm_repository EQ {id EQ ^${repoId}^}\"&fields=name,relative_path,scm_repository`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+    const allResourceFiles = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files?/?query=\"scm_repository EQ {id EQ ^${repoId}^}\"&fields=name,relative_path,scm_repository`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
     LOGGER.info("The all scm resource files from octane are: " + JSON.stringify(allResourceFiles));
     for (const fileData of allResourceFiles.data) {
         LOGGER.info("The scm repository id of file " + fileData.name + " is: " + fileData.scm_repository.id);
