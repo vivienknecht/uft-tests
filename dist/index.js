@@ -40420,7 +40420,7 @@ class Discovery {
             for (const test of testsToDelete) {
                 const testToDelete = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, scmRepoId);
                 // const testToDelete = existingByName.get(test);
-                changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete.id, name: testToDelete.name, packageName: testToDelete.packageName, className: testToDelete.className, isExecutable: false }));
+                changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete.id, name: testToDelete.name, packageName: testToDelete.package, className: testToDelete.class_name, isExecutable: false }));
             }
             for (const test of discoveredTests) {
                 const existingTestFullPath = test.className;
@@ -40791,9 +40791,8 @@ const makeTestNotExecutableInOctane = (octaneConnection, sharedSpace, workspace,
 });
 exports.makeTestNotExecutableInOctane = makeTestNotExecutableInOctane;
 const getModifiedTests = (octaneConnection, sharedSpace, workspace, name, packageName, className, repoId) => __awaiter(void 0, void 0, void 0, function* () {
-    const modifiedTest = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"name EQ ^${name}^;` + `
-    package EQ ^${packageName}^;class_name EQ ^${className}^;scm_repository EQ {id EQ ^${repoId}^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-    LOGGER.info("The modified test from octane is: " + JSON.stringify(modifiedTest.data));
+    const modifiedTest = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"name EQ ^${name}^;package EQ ^${packageName}^;class_name EQ ^${className}^;scm_repository EQ {id EQ ^${repoId}^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+    LOGGER.info("The modified test from octane is: " + JSON.stringify(modifiedTest));
     return modifiedTest.data;
 });
 exports.getModifiedTests = getModifiedTests;
