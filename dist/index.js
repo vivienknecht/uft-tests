@@ -40455,12 +40455,12 @@ class Discovery {
                     (pair.newValue.name === test.name &&
                         pair.newValue.className === test.className &&
                         pair.newValue.packageName === test.packageName));
-                if (!existsInModified) {
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
-                    continue;
-                }
+                // if (!existsInModified) {
+                //     changedTests.push({...test, changeType: "added"});
+                //     continue;
+                // }
                 const testExists = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, scmRepoId);
-                if (!testExists) {
+                if (!existsInModified && !testExists) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                     LOGGER.warn(`This is a new test: ${test.name}`);
                     //await sendCreateTestEventToOctane(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, test.description, scmRepoId);
