@@ -40368,7 +40368,7 @@ class Discovery {
                         const testToDeleteName = path.basename(path.dirname(deletedFile));
                         const packageName = (0, utils_1.getPackageName)(deletedFile, testToDeleteName);
                         LOGGER.info("The package name of the deleted test is: " + packageName);
-                        const className = (0, utils_1.getClassName)(deletedFile);
+                        const className = path.dirname(deletedFile);
                         LOGGER.info("The class name of the deleted test is: " + className);
                         const testToDelete = {
                             name: testToDeleteName,
@@ -41659,12 +41659,8 @@ const getClassName = (pathToTest) => {
 };
 exports.getClassName = getClassName;
 const getPackageName = (pathToTest, testName) => {
-    let packageName;
-    const parts = pathToTest.split(path.sep);
-    const startIndex = parts.indexOf("s");
-    const endIndex = parts.lastIndexOf(testName);
-    packageName = parts.slice(startIndex + 1, endIndex).join("/");
-    return packageName;
+    const withoutFile = path.dirname(pathToTest);
+    return path.dirname(withoutFile);
 };
 exports.getPackageName = getPackageName;
 
