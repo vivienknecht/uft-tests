@@ -40488,7 +40488,7 @@ class Discovery {
                 }
                 else {
                     LOGGER.warn(`Could not find the existing test for modification: ${pair.oldValue.name}`);
-                    yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.newValue.name, pair.newValue.packageName, pair.newValue.className, pair.newValue.description, scmRepoId);
+                    //await sendCreateTestEventToOctane(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.newValue.name, pair.newValue.packageName, pair.newValue.className, pair.newValue.description, scmRepoId);
                 }
             }
             yield this.getModifiedScmResourceFiles(addedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
