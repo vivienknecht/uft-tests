@@ -40455,14 +40455,15 @@ class Discovery {
                     LOGGER.info("Test already exists in added tests: " + test.name);
                     continue;
                 }
-                if (!existsInModified) {
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
-                    continue;
-                }
+                // if (!existsInModified) {
+                //     changedTests.push({...test, changeType: "added"});
+                //     continue;
+                // }
                 const testExists = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, scmRepoId);
-                if (!testExists) {
+                if (!testExists && !existsInModified) {
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                     LOGGER.warn(`Could not find the existing test for modification: ${test.name}`);
-                    yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, test.description, scmRepoId);
+                    //await sendCreateTestEventToOctane(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, test.description, scmRepoId);
                 }
                 else {
                     LOGGER.info("The test already exists " + test.name);
