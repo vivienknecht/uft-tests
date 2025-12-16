@@ -40442,12 +40442,6 @@ class Discovery {
                 // const testToDelete = existingByName.get(test);
             }
             for (const test of discoveredTests) {
-                const existsInModified = modifiedTestsMap.some(pair => (pair.oldValue.name === test.name &&
-                    pair.oldValue.className === test.className &&
-                    pair.oldValue.packageName === test.packageName) ||
-                    (pair.newValue.name === test.name &&
-                        pair.newValue.className === test.className &&
-                        pair.newValue.packageName === test.packageName));
                 const existsInAdded = addedTests.some(addedTest => addedTest.name === test.name &&
                     addedTest.className === test.className &&
                     addedTest.packageName === test.packageName);
@@ -40455,14 +40449,20 @@ class Discovery {
                     LOGGER.info("Test already exists in added tests: " + test.name);
                     continue;
                 }
-                // if (!existsInModified) {
-                //     changedTests.push({...test, changeType: "added"});
-                //     continue;
-                // }
-                const testExists = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, scmRepoId);
-                if (!testExists && !existsInModified) {
+                const existsInModified = modifiedTestsMap.some(pair => (pair.oldValue.name === test.name &&
+                    pair.oldValue.className === test.className &&
+                    pair.oldValue.packageName === test.packageName) ||
+                    (pair.newValue.name === test.name &&
+                        pair.newValue.className === test.className &&
+                        pair.newValue.packageName === test.packageName));
+                if (!existsInModified) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
-                    LOGGER.warn(`Could not find the existing test for modification: ${test.name}`);
+                    continue;
+                }
+                const testExists = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, scmRepoId);
+                if (!testExists) {
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
+                    LOGGER.warn(`This is a new test: ${test.name}`);
                     //await sendCreateTestEventToOctane(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, test.description, scmRepoId);
                 }
                 else {
