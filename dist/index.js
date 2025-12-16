@@ -40434,8 +40434,13 @@ class Discovery {
             // LOGGER.error("The modified pairs are: " + JSON.stringify(modifiedPairs));
             for (const test of testsToDelete) {
                 const testToDelete = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, scmRepoId);
+                if (testToDelete) {
+                    changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete.id, name: testToDelete.name, packageName: testToDelete.package, className: testToDelete.class_name, isExecutable: false }));
+                }
+                else {
+                    LOGGER.warn(`Could not find the existing test to delete: ${test.name}`);
+                }
                 // const testToDelete = existingByName.get(test);
-                changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete.id, name: testToDelete.name, packageName: testToDelete.package, className: testToDelete.class_name, isExecutable: false }));
             }
             for (const test of discoveredTests) {
                 // const existingTestFullPath = test.className;
@@ -40470,7 +40475,12 @@ class Discovery {
                 //     throw new Error(`A test with the name: ${pair.newValue?.name}, ${pair.newValue?.className} and ${pair.newValue?.packageName} already exists.`);
                 // }
                 const oldTest = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.oldValue.name, pair.oldValue.packageName, pair.oldValue.className, scmRepoId);
-                changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: ((_d = pair.newValue) === null || _d === void 0 ? void 0 : _d.name) || "", packageName: ((_e = pair.newValue) === null || _e === void 0 ? void 0 : _e.packageName) || "", className: ((_f = pair.newValue) === null || _f === void 0 ? void 0 : _f.className) || "", changeType: "modified", id: oldTest.id, isExecutable: true }));
+                if (oldTest) {
+                    changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: ((_d = pair.newValue) === null || _d === void 0 ? void 0 : _d.name) || "", packageName: ((_e = pair.newValue) === null || _e === void 0 ? void 0 : _e.packageName) || "", className: ((_f = pair.newValue) === null || _f === void 0 ? void 0 : _f.className) || "", changeType: "modified", id: oldTest.id, isExecutable: true }));
+                }
+                else {
+                    LOGGER.warn(`Could not find the existing test for modification: ${pair.oldValue.name}`);
+                }
             }
             yield this.getModifiedScmResourceFiles(addedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
             return changedTests;
