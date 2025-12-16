@@ -40847,31 +40847,36 @@ const getScmRepo = (octaneConnection, sharedSpace, workspace) => __awaiter(void 
 });
 exports.getScmRepo = getScmRepo;
 const sendCreateTestEventToOctane = (octaneConnection, sharedSpace, workspace, name, packageName, className, description, scmRepositoryId) => __awaiter(void 0, void 0, void 0, function* () {
-    const body = {
-        "data": [
-            {
-                "testing_tool_type": {
-                    "type": "list_node",
-                    "id": "list_node.testing_tool_type.uft"
-                },
-                "subtype": "test_automated",
-                "name": name,
-                "package": packageName,
-                "class_name": className,
-                "description": description,
-                "scm_repository": {
-                    "type": "scm_repository",
-                    "id": scmRepositoryId
-                },
-                "executable": true,
-                "test_runner": {
-                    "type": "executor",
-                    "id": yield getTestRunnerId(octaneConnection, sharedSpace, workspace)
+    try {
+        const body = {
+            "data": [
+                {
+                    "testing_tool_type": {
+                        "type": "list_node",
+                        "id": "list_node.testing_tool_type.uft"
+                    },
+                    "subtype": "test_automated",
+                    "name": name,
+                    "package": packageName,
+                    "class_name": className,
+                    "description": description,
+                    "scm_repository": {
+                        "type": "scm_repository",
+                        "id": scmRepositoryId
+                    },
+                    "executable": true,
+                    "test_runner": {
+                        "type": "executor",
+                        "id": yield getTestRunnerId(octaneConnection, sharedSpace, workspace)
+                    }
                 }
-            }
-        ]
-    };
-    yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+            ]
+        };
+        yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+    }
+    catch (error) {
+        LOGGER.error("Error occurred while sending create test event to Octane: " + error);
+    }
 });
 exports.sendCreateTestEventToOctane = sendCreateTestEventToOctane;
 const sendUpdateTestEventToOctane = (octaneConnection, sharedSpace, workspace, testId, name, packageName, description, className) => __awaiter(void 0, void 0, void 0, function* () {
