@@ -40343,12 +40343,12 @@ class Discovery {
                         const oldTest = {
                             name: path.basename(path.dirname(oldPath)),
                             packageName: (0, utils_1.getPackageName)(oldPath, path.basename(path.dirname(oldPath))),
-                            className: (0, utils_1.getClassName)(oldPath)
+                            className: path.dirname(oldPath)
                         };
                         const newTest = {
                             name: path.basename(path.dirname(newPath)),
                             packageName: (0, utils_1.getPackageName)(newPath, path.basename(path.dirname(newPath))),
-                            className: (0, utils_1.getClassName)(newPath)
+                            className: path.dirname(newPath)
                         };
                         modifiedTestsMap.push({ oldValue: oldTest, newValue: newTest });
                         LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
