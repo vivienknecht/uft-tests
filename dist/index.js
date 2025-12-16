@@ -40442,13 +40442,12 @@ class Discovery {
                 // const testToDelete = existingByName.get(test);
             }
             for (const test of discoveredTests) {
-                // const existingTestFullPath = test.className;
-                // const exactMatch = existingByClass.get(existingTestFullPath);
-                //
-                // if (exactMatch) {
-                //     LOGGER.info("Exact match found for test: " + test.name);
-                //     continue; // No changes
-                // }
+                const existingTestFullPath = test.className;
+                const exactMatch = existingByClass.get(existingTestFullPath);
+                if (exactMatch) {
+                    LOGGER.info("Exact match found for test: " + test.name);
+                    continue; // No changes
+                }
                 const existsInModified = modifiedTestsMap.some(pair => (pair.oldValue.name === test.name &&
                     pair.oldValue.className === test.className &&
                     pair.oldValue.packageName === test.packageName) ||
@@ -40875,7 +40874,7 @@ const sendCreateTestEventToOctane = (octaneConnection, sharedSpace, workspace, n
         yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
     }
     catch (error) {
-        LOGGER.error("Error occurred while sending create test event to Octane: " + error);
+        LOGGER.error("Error occurred while sending create test event to Octane: " + typeof error === 'string' ? error : error.message);
     }
 });
 exports.sendCreateTestEventToOctane = sendCreateTestEventToOctane;
