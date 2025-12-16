@@ -40342,12 +40342,12 @@ class Discovery {
                     if ((oldPath && oldPath.match(/\.(st|tsp)$/)) || (newPath && newPath.match(/\.(st|tsp)$/))) {
                         const oldTest = {
                             name: path.basename(path.dirname(oldPath)),
-                            packageName: path.relative(rootFolder, oldPath),
+                            packageName: (0, utils_1.getPackageName)(oldPath, path.basename(path.dirname(oldPath))),
                             className: (0, utils_1.getClassName)(oldPath)
                         };
                         const newTest = {
                             name: path.basename(path.dirname(newPath)),
-                            packageName: path.relative(rootFolder, newPath),
+                            packageName: (0, utils_1.getPackageName)(newPath, path.basename(path.dirname(newPath))),
                             className: (0, utils_1.getClassName)(newPath)
                         };
                         modifiedTestsMap.push({ oldValue: oldTest, newValue: newTest });
@@ -40366,7 +40366,7 @@ class Discovery {
                     const deletedFile = (_c = modifiedFilesArray[i++]) !== null && _c !== void 0 ? _c : "";
                     if (deletedFile && deletedFile.match(/\.(st|tsp)$/)) {
                         const testToDeleteName = path.basename(path.dirname(deletedFile));
-                        const packageName = path.relative(rootFolder, deletedFile);
+                        const packageName = (0, utils_1.getPackageName)(deletedFile, testToDeleteName);
                         LOGGER.info("The package name of the deleted test is: " + packageName);
                         const className = (0, utils_1.getClassName)(deletedFile);
                         LOGGER.info("The class name of the deleted test is: " + className);
@@ -41466,7 +41466,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getClassName = exports.getDescriptionForAPITest = exports.getAPITestDoc = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
+exports.getPackageName = exports.getClassName = exports.getDescriptionForAPITest = exports.getAPITestDoc = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
 const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(1943);
 const logger_1 = __nccwpck_require__(7893);
@@ -41659,6 +41659,15 @@ const getClassName = (pathToTest) => {
     return className;
 };
 exports.getClassName = getClassName;
+const getPackageName = (pathToTest, testName) => {
+    let packageName;
+    const parts = pathToTest.split(path.sep);
+    const startIndex = parts.indexOf("s");
+    const endIndex = parts.lastIndexOf(testName);
+    packageName = parts.slice(startIndex + 1, endIndex).join("/");
+    return packageName;
+};
+exports.getPackageName = getPackageName;
 
 
 /***/ }),
