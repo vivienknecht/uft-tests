@@ -40205,6 +40205,7 @@ const logger_1 = __nccwpck_require__(7893);
 const path = __nccwpck_require__(6928);
 const octaneClient_1 = __nccwpck_require__(1171);
 const utils_1 = __nccwpck_require__(5268);
+const createAutomatedTests_1 = __nccwpck_require__(5951);
 const LOGGER = new logger_1.default("Discovery.ts");
 class Discovery {
     constructor(octaneUrl, sharedSpace, workspace, clientId, clientSecret) {
@@ -40320,7 +40321,7 @@ class Discovery {
     }
     getModifiedTests(discoveredTests, existingTests, discoveredScmResourceFiles, existingScmResourceFiles) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+            var _a, _b, _c, _d, _e, _f;
             const changedTests = [];
             const rootFolder = process.env.BUILD_SOURCESDIRECTORY || "";
             const scmRepoId = yield (0, octaneClient_1.getScmRepo)(this.octaneSDKConnection, this.sharedSpace, this.workspace);
@@ -40387,8 +40388,17 @@ class Discovery {
                 if (status === "A") {
                     const addedFile = modifiedFilesArray[i++];
                     if (addedFile && addedFile.match(/\.(st|tsp)$/)) {
-                        const addedTestName = path.basename(path.dirname(addedFile));
-                        addedTests.push(addedTestName);
+                        const addedFileRenamed = rootFolder + "\\" + addedFile.replace("/", "\\");
+                        if (addedFile.endsWith(".tsp")) {
+                            const addGUITest = yield (0, createAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, "GUI");
+                            LOGGER.info("The added GUI test is: " + JSON.stringify(addGUITest));
+                            addedTests.push(addGUITest);
+                        }
+                        else if (addedFile.endsWith(".st")) {
+                            const addAPITest = yield (0, createAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, "API");
+                            LOGGER.info("The added API test is: " + JSON.stringify(addAPITest));
+                            addedTests.push(addAPITest);
+                        }
                     }
                     else if (addedFile && addedFile.match(/\.(xlsx|xls)$/)) {
                         const addedDataTableName = path.basename(addedFile);
@@ -40396,18 +40406,23 @@ class Discovery {
                     }
                 }
             }
-            const existingByName = new Map(existingTests.map(test => [test.name, test]));
-            const existingByClass = new Map(existingTests.map(test => [test.className, test]));
-            const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
-            for (const test of addedTests) {
-                const newTest = currentByName.get(test);
-                if (existingTests.some(e => e.name === (newTest === null || newTest === void 0 ? void 0 : newTest.name)
-                    && e.packageName === newTest.packageName
-                    && e.className === newTest.className)) {
-                    LOGGER.warn(`A test with this name: ${newTest === null || newTest === void 0 ? void 0 : newTest.name}, package: ${newTest === null || newTest === void 0 ? void 0 : newTest.packageName} and class name: ${newTest === null || newTest === void 0 ? void 0 : newTest.className} already exists. 
-                This test will be skipped because duplicates are not allowed.`);
-                }
+            for (const addedTest of addedTests) {
+                yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, addedTest.name, addedTest.packageName, addedTest.className, addedTest.description, scmRepoId);
             }
+            //
+            // const existingByName = new Map(existingTests.map(test => [test.name, test]));
+            const existingByClass = new Map(existingTests.map(test => [test.className, test]));
+            // const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
+            // for (const test of addedTests) {
+            //     const newTest = currentByName.get(test);
+            //     if (existingTests.some(e => e.name === newTest?.name
+            //         && e.packageName === newTest.packageName
+            //         && e.className === newTest.className
+            //     )) {
+            //         LOGGER.warn(`A test with this name: ${newTest?.name}, package: ${newTest?.packageName} and class name: ${newTest?.className} already exists.
+            //         This test will be skipped because duplicates are not allowed.`);
+            //     }
+            // }
             // const modifiedPairs = [];
             //
             // for (const entry of modifiedTestsMap) {
@@ -40423,28 +40438,39 @@ class Discovery {
                 changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete.id, name: testToDelete.name, packageName: testToDelete.package, className: testToDelete.class_name, isExecutable: false }));
             }
             for (const test of discoveredTests) {
-                const existingTestFullPath = test.className;
-                const exactMatch = existingByClass.get(existingTestFullPath);
-                if (exactMatch) {
-                    LOGGER.info("Exact match found for test: " + test.name);
-                    continue; // No changes
+                // const existingTestFullPath = test.className;
+                // const exactMatch = existingByClass.get(existingTestFullPath);
+                //
+                // if (exactMatch) {
+                //     LOGGER.info("Exact match found for test: " + test.name);
+                //     continue; // No changes
+                // }
+                const existsInModified = modifiedTestsMap.some(pair => (pair.oldValue.name === test.name &&
+                    pair.oldValue.className === test.className &&
+                    pair.oldValue.packageName === test.packageName) ||
+                    (pair.newValue.name === test.name &&
+                        pair.newValue.className === test.className &&
+                        pair.newValue.packageName === test.packageName));
+                const existsInAdded = addedTests.some(addedTest => addedTest.name === test.name &&
+                    addedTest.className === test.className &&
+                    addedTest.packageName === test.packageName);
+                if (existsInAdded) {
+                    LOGGER.info("Test already exists in added tests: " + test.name);
+                    continue;
                 }
-                const existsInModified = modifiedTestsMap.some(pair => pair.oldValue === test || pair.newValue === test);
                 if (!existsInModified) {
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "addded" }));
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                 }
             }
             for (const pair of modifiedTestsMap) {
-                if (existingTests.some(e => {
-                    var _a, _b, _c;
-                    return e.name === ((_a = pair.newValue) === null || _a === void 0 ? void 0 : _a.name)
-                        && e.className === ((_b = pair.newValue) === null || _b === void 0 ? void 0 : _b.className)
-                        && e.packageName === ((_c = pair.newValue) === null || _c === void 0 ? void 0 : _c.packageName);
-                })) {
-                    throw new Error(`A test with the name: ${(_d = pair.newValue) === null || _d === void 0 ? void 0 : _d.name}, ${(_e = pair.newValue) === null || _e === void 0 ? void 0 : _e.className} and ${(_f = pair.newValue) === null || _f === void 0 ? void 0 : _f.packageName} already exists.`);
-                }
+                // if (existingTests.some(e => e.name === pair.newValue?.name
+                //     && e.className === pair.newValue?.className
+                //     && e.packageName === pair.newValue?.packageName
+                // )) {
+                //     throw new Error(`A test with the name: ${pair.newValue?.name}, ${pair.newValue?.className} and ${pair.newValue?.packageName} already exists.`);
+                // }
                 const oldTest = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.oldValue.name, pair.oldValue.packageName, pair.oldValue.className, scmRepoId);
-                changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: ((_g = pair.newValue) === null || _g === void 0 ? void 0 : _g.name) || "", packageName: ((_h = pair.newValue) === null || _h === void 0 ? void 0 : _h.packageName) || "", className: ((_j = pair.newValue) === null || _j === void 0 ? void 0 : _j.className) || "", changeType: "modified", id: oldTest.id, isExecutable: true }));
+                changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: ((_d = pair.newValue) === null || _d === void 0 ? void 0 : _d.name) || "", packageName: ((_e = pair.newValue) === null || _e === void 0 ? void 0 : _e.packageName) || "", className: ((_f = pair.newValue) === null || _f === void 0 ? void 0 : _f.className) || "", changeType: "modified", id: oldTest.id, isExecutable: true }));
             }
             yield this.getModifiedScmResourceFiles(addedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
             return changedTests;
@@ -40542,6 +40568,7 @@ const fs = __nccwpck_require__(9896);
 const utils_1 = __nccwpck_require__(5268);
 const logger_1 = __nccwpck_require__(7893);
 const DiscoveryResults_1 = __nccwpck_require__(6376);
+const createAutomatedTests_1 = __nccwpck_require__(5951);
 const LOGGER = new logger_1.default("ScanRepo.ts");
 const UFT_GUI_TEST_EXTENSION = ".tsp";
 const UFT_API_TEST_EXTENSION = ".st";
@@ -40572,11 +40599,11 @@ class ScanRepo {
                 }
                 testType = yield this.getTestType(items);
                 if (testType === UFT_GUI_TEST_TYPE) {
-                    const automatedTests = yield this.createAutomatedTestsFromGUI(pathToRepo, testType);
+                    const automatedTests = yield (0, createAutomatedTests_1.createAutomatedTestsFromGUI)(pathToRepo, testType);
                     this.tests.push(automatedTests);
                 }
                 else if (testType === UFT_API_TEST_TYPE) {
-                    const foundApiTests = yield this.createAutomatedTestFromAPI(pathToRepo, testType);
+                    const foundApiTests = yield (0, createAutomatedTests_1.createAutomatedTestFromAPI)(pathToRepo, testType);
                     this.tests.push(foundApiTests);
                 }
                 else {
@@ -40640,18 +40667,17 @@ class ScanRepo {
             return dataTables;
         });
     }
-    createAutomatedTestsFromGUI(pathToTest, testType) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const test = yield this.createTest(pathToTest, testType);
-            const document = yield (0, utils_1.getGUITestDoc)(pathToTest);
-            let description;
-            description = (0, utils_1.getDescriptionForGUITest)(document);
-            description = (0, utils_1.convertToHtml)(description);
-            test.description = description || "";
-            LOGGER.info("The test is: " + JSON.stringify(test));
-            return test;
-        });
-    }
+    // public async createAutomatedTestsFromGUI(pathToTest: string, testType: string): Promise<AutomatedTest> {
+    //     const test = await this.createTest(pathToTest, testType);
+    //     const document = await getGUITestDoc(pathToTest);
+    //     let description: string | null;
+    //     description = getDescriptionForGUITest(document);
+    //     description = convertToHtml(description);
+    //     test.description = description || "";
+    //
+    //     LOGGER.info("The test is: " + JSON.stringify(test));
+    //     return test;
+    // }
     createTest(pathToTest, testType) {
         return __awaiter(this, void 0, void 0, function* () {
             const testName = path.basename(pathToTest);
@@ -40699,6 +40725,79 @@ class ScanRepo {
     }
 }
 exports["default"] = ScanRepo;
+
+
+/***/ }),
+
+/***/ 5951:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createAutomatedTestFromAPI = exports.createAutomatedTestsFromGUI = void 0;
+const path = __nccwpck_require__(6760);
+const utils_1 = __nccwpck_require__(5268);
+const logger_1 = __nccwpck_require__(7893);
+const LOGGER = new logger_1.default("ScanRepo.ts");
+const createAutomatedTestsFromGUI = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
+    const test = yield createTest(pathToTest, testType);
+    const document = yield (0, utils_1.getGUITestDoc)(pathToTest);
+    let description;
+    description = (0, utils_1.getDescriptionForGUITest)(document);
+    description = (0, utils_1.convertToHtml)(description);
+    test.description = description || "";
+    LOGGER.info("The test is: " + JSON.stringify(test));
+    return test;
+});
+exports.createAutomatedTestsFromGUI = createAutomatedTestsFromGUI;
+const createAutomatedTestFromAPI = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
+    const test = yield createTest(pathToTest, testType);
+    const documentForApiTest = yield (0, utils_1.getAPITestDoc)(pathToTest);
+    let description = (0, utils_1.getDescriptionForAPITest)(documentForApiTest);
+    description = (0, utils_1.convertToHtml)(description);
+    test.description = description || "";
+    LOGGER.info("The api test is: " + JSON.stringify(test));
+    return test;
+});
+exports.createAutomatedTestFromAPI = createAutomatedTestFromAPI;
+const createTest = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
+    const testName = path.basename(pathToTest);
+    const className = getClassName(pathToTest);
+    const packageName = getPackageName(pathToTest, testName);
+    const test = {
+        name: testName,
+        packageName: packageName,
+        className: className,
+        uftOneTestType: testType,
+        isExecutable: true,
+    };
+    return test;
+});
+const getClassName = (pathToTest) => {
+    let className;
+    const parts = pathToTest.split(path.sep);
+    const startIndex = parts.indexOf("s");
+    className = parts.slice(startIndex + 1).join("/");
+    return className;
+};
+const getPackageName = (pathToTest, testName) => {
+    let packageName;
+    const parts = pathToTest.split(path.sep);
+    const startIndex = parts.indexOf("s");
+    const endIndex = parts.lastIndexOf(testName);
+    packageName = parts.slice(startIndex + 1, endIndex).join("/");
+    return packageName;
+};
 
 
 /***/ }),
@@ -41798,6 +41897,14 @@ module.exports = require("https");
 
 "use strict";
 module.exports = require("net");
+
+/***/ }),
+
+/***/ 6760:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
 
 /***/ }),
 
