@@ -40431,7 +40431,7 @@ class Discovery {
                 }
                 const existsInModified = modifiedTestsMap.some(pair => pair.oldValue === test || pair.newValue === test);
                 if (!existsInModified) {
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "addded" }));
                 }
             }
             for (const pair of modifiedTestsMap) {
