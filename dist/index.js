@@ -40245,7 +40245,6 @@ class Discovery {
     startDiscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initializeOctaneConnection();
-            yield (0, octaneClient_1.getTestRunnerId)(this.octaneSDKConnection, this.sharedSpace, this.workspace);
             const repoID = yield (0, octaneClient_1.getScmRepo)(this.octaneSDKConnection, this.sharedSpace, this.workspace);
             const scanner = new ScanRepo_1.default(path);
             const discovery = yield scanner.scanRepo(path);
@@ -40480,6 +40479,7 @@ class Discovery {
                 }
                 else {
                     LOGGER.warn(`Could not find the existing test for modification: ${pair.oldValue.name}`);
+                    yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.newValue.name, pair.newValue.packageName, pair.newValue.className, pair.newValue.description, scmRepoId);
                 }
             }
             yield this.getModifiedScmResourceFiles(addedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
