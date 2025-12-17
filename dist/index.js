@@ -40184,6 +40184,90 @@ exports["default"] = parseCustomFramework;
 
 /***/ }),
 
+/***/ 111:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createAutomatedTestFromAPI = exports.createAutomatedTestsFromGUI = void 0;
+const path = __nccwpck_require__(6760);
+const utils_1 = __nccwpck_require__(5268);
+const logger_1 = __nccwpck_require__(7893);
+const LOGGER = new logger_1.default("ScanRepo.ts");
+const ROOT_TESTS_DIR = process.env.BUILD_SOURCESDIRECTORY || "";
+const createAutomatedTestsFromGUI = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
+    const test = yield createTest(pathToTest, testType);
+    const document = yield (0, utils_1.getGUITestDoc)(pathToTest);
+    let description;
+    description = (0, utils_1.getDescriptionForGUITest)(document);
+    description = (0, utils_1.convertToHtml)(description);
+    test.description = description || "";
+    LOGGER.info("The test is: " + JSON.stringify(test));
+    return test;
+});
+exports.createAutomatedTestsFromGUI = createAutomatedTestsFromGUI;
+const createAutomatedTestFromAPI = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
+    const test = yield createTest(pathToTest, testType);
+    const documentForApiTest = yield (0, utils_1.getAPITestDoc)(pathToTest);
+    let description = (0, utils_1.getDescriptionForAPITest)(documentForApiTest);
+    description = (0, utils_1.convertToHtml)(description);
+    test.description = description || "";
+    LOGGER.info("The api test is: " + JSON.stringify(test));
+    return test;
+});
+exports.createAutomatedTestFromAPI = createAutomatedTestFromAPI;
+const createTest = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
+    const testName = path.basename(pathToTest);
+    const className = getClassName(pathToTest);
+    const packageName = getPackageName(pathToTest, testName, className);
+    const test = {
+        name: testName,
+        packageName: packageName,
+        className: className,
+        uftOneTestType: testType,
+        isExecutable: true,
+    };
+    return test;
+});
+const getClassName = (pathToTest) => {
+    let className;
+    // const parts = pathToTest.split(path.sep);
+    // const startIndex = parts.indexOf("s");
+    // className = parts.slice(startIndex + 1).join("/");
+    className = path.dirname(pathToTest);
+    className = className.replace("\\", "/");
+    LOGGER.info("The class name is: " + className);
+    return className;
+};
+const getPackageName = (pathToTest, testName, className) => {
+    let packageName;
+    // const parts = pathToTest.split(path.sep);
+    // const startIndex = parts.indexOf("s");
+    // const endIndex = parts.lastIndexOf(testName);
+    // packageName = parts.slice(startIndex + 1, endIndex).join("/");
+    LOGGER.info("The path to test is: " + pathToTest);
+    // const relativePath = path.relative(ROOT_TESTS_DIR, pathToTest);
+    // const parts = relativePath.split(path.sep);
+    // packageName = parts.splice(0, -2).join("/");
+    const parts = className.split(path.sep);
+    packageName = parts.slice(0, -1).join("/");
+    LOGGER.info("The package name is: " + packageName);
+    return packageName;
+};
+
+
+/***/ }),
+
 /***/ 6672:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -40205,7 +40289,7 @@ const logger_1 = __nccwpck_require__(7893);
 const path = __nccwpck_require__(6928);
 const octaneClient_1 = __nccwpck_require__(1171);
 const utils_1 = __nccwpck_require__(5268);
-const createAutomatedTests_1 = __nccwpck_require__(5951);
+const CreateAutomatedTests_1 = __nccwpck_require__(111);
 const LOGGER = new logger_1.default("Discovery.ts");
 class Discovery {
     constructor(octaneUrl, sharedSpace, workspace, clientId, clientSecret) {
@@ -40392,12 +40476,12 @@ class Discovery {
                     if (addedFile && addedFile.match(/\.(st|tsp)$/)) {
                         const addedFileRenamed = rootFolder + "\\" + addedFile.replace("/", "\\");
                         if (addedFile.endsWith(".tsp")) {
-                            const addGUITest = yield (0, createAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, "GUI");
+                            const addGUITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, "GUI");
                             LOGGER.info("The added GUI test is: " + JSON.stringify(addGUITest));
                             addedTests.push(addGUITest);
                         }
                         else if (addedFile.endsWith(".st")) {
-                            const addAPITest = yield (0, createAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, "API");
+                            const addAPITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, "API");
                             LOGGER.info("The added API test is: " + JSON.stringify(addAPITest));
                             addedTests.push(addAPITest);
                         }
@@ -40538,7 +40622,7 @@ const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(9896);
 const logger_1 = __nccwpck_require__(7893);
 const DiscoveryResults_1 = __nccwpck_require__(6376);
-const createAutomatedTests_1 = __nccwpck_require__(5951);
+const CreateAutomatedTests_1 = __nccwpck_require__(111);
 const LOGGER = new logger_1.default("ScanRepo.ts");
 const UFT_GUI_TEST_EXTENSION = ".tsp";
 const UFT_API_TEST_EXTENSION = ".st";
@@ -40567,11 +40651,11 @@ class ScanRepo {
                 }
                 testType = yield this.getTestType(items);
                 if (testType === UFT_GUI_TEST_TYPE) {
-                    const automatedTests = yield (0, createAutomatedTests_1.createAutomatedTestsFromGUI)(pathToRepo, testType);
+                    const automatedTests = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(pathToRepo, testType);
                     this.tests.push(automatedTests);
                 }
                 else if (testType === UFT_API_TEST_TYPE) {
-                    const foundApiTests = yield (0, createAutomatedTests_1.createAutomatedTestFromAPI)(pathToRepo, testType);
+                    const foundApiTests = yield (0, CreateAutomatedTests_1.createAutomatedTestFromAPI)(pathToRepo, testType);
                     this.tests.push(foundApiTests);
                 }
                 else {
@@ -40635,88 +40719,6 @@ class ScanRepo {
     }
 }
 exports["default"] = ScanRepo;
-
-
-/***/ }),
-
-/***/ 5951:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createAutomatedTestFromAPI = exports.createAutomatedTestsFromGUI = void 0;
-const path = __nccwpck_require__(6760);
-const utils_1 = __nccwpck_require__(5268);
-const logger_1 = __nccwpck_require__(7893);
-const LOGGER = new logger_1.default("ScanRepo.ts");
-const ROOT_TESTS_DIR = process.env.BUILD_SOURCESDIRECTORY || "";
-const createAutomatedTestsFromGUI = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
-    const test = yield createTest(pathToTest, testType);
-    const document = yield (0, utils_1.getGUITestDoc)(pathToTest);
-    let description;
-    description = (0, utils_1.getDescriptionForGUITest)(document);
-    description = (0, utils_1.convertToHtml)(description);
-    test.description = description || "";
-    LOGGER.info("The test is: " + JSON.stringify(test));
-    return test;
-});
-exports.createAutomatedTestsFromGUI = createAutomatedTestsFromGUI;
-const createAutomatedTestFromAPI = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
-    const test = yield createTest(pathToTest, testType);
-    const documentForApiTest = yield (0, utils_1.getAPITestDoc)(pathToTest);
-    let description = (0, utils_1.getDescriptionForAPITest)(documentForApiTest);
-    description = (0, utils_1.convertToHtml)(description);
-    test.description = description || "";
-    LOGGER.info("The api test is: " + JSON.stringify(test));
-    return test;
-});
-exports.createAutomatedTestFromAPI = createAutomatedTestFromAPI;
-const createTest = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
-    const testName = path.basename(pathToTest);
-    const className = getClassName(pathToTest);
-    const packageName = getPackageName(pathToTest, testName);
-    const test = {
-        name: testName,
-        packageName: packageName,
-        className: className,
-        uftOneTestType: testType,
-        isExecutable: true,
-    };
-    return test;
-});
-const getClassName = (pathToTest) => {
-    let className;
-    // const parts = pathToTest.split(path.sep);
-    // const startIndex = parts.indexOf("s");
-    // className = parts.slice(startIndex + 1).join("/");
-    className = path.dirname(path.relative(ROOT_TESTS_DIR, pathToTest));
-    className = className.replace("\\", "/");
-    LOGGER.info("The class name is: " + className);
-    return className;
-};
-const getPackageName = (pathToTest, testName) => {
-    let packageName;
-    // const parts = pathToTest.split(path.sep);
-    // const startIndex = parts.indexOf("s");
-    // const endIndex = parts.lastIndexOf(testName);
-    // packageName = parts.slice(startIndex + 1, endIndex).join("/");
-    LOGGER.info("The path to test is: " + pathToTest);
-    const relativePath = path.relative(ROOT_TESTS_DIR, pathToTest);
-    const parts = relativePath.split(path.sep);
-    packageName = parts.splice(0, -2).join("/");
-    LOGGER.info("The package name is: " + packageName);
-    return packageName;
-};
 
 
 /***/ }),
