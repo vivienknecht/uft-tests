@@ -40441,6 +40441,22 @@ class Discovery {
                 }
                 // const testToDelete = existingByName.get(test);
             }
+            for (const pair of modifiedTestsMap) {
+                // if (existingTests.some(e => e.name === pair.newValue?.name
+                //     && e.className === pair.newValue?.className
+                //     && e.packageName === pair.newValue?.packageName
+                // )) {
+                //     throw new Error(`A test with the name: ${pair.newValue?.name}, ${pair.newValue?.className} and ${pair.newValue?.packageName} already exists.`);
+                // }
+                const oldTest = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.oldValue.name, pair.oldValue.packageName, pair.oldValue.className, scmRepoId);
+                if (oldTest) {
+                    changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: ((_d = pair.newValue) === null || _d === void 0 ? void 0 : _d.name) || "", packageName: ((_e = pair.newValue) === null || _e === void 0 ? void 0 : _e.packageName) || "", className: ((_f = pair.newValue) === null || _f === void 0 ? void 0 : _f.className) || "", changeType: "modified", id: oldTest.id, isExecutable: true }));
+                }
+                else {
+                    LOGGER.warn(`Could not find the existing test for modification: ${pair.oldValue.name}`);
+                    yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.newValue.name, pair.newValue.packageName, pair.newValue.className, pair.newValue.description, scmRepoId);
+                }
+            }
             for (const test of discoveredTests) {
                 const existsInAdded = addedTests.some(addedTest => addedTest.name === test.name &&
                     addedTest.className === test.className &&
@@ -40474,22 +40490,6 @@ class Discovery {
                 // if (exactMatch) {
                 //     LOGGER.info("Exact match found for test: " + test.name);
                 // }
-            }
-            for (const pair of modifiedTestsMap) {
-                // if (existingTests.some(e => e.name === pair.newValue?.name
-                //     && e.className === pair.newValue?.className
-                //     && e.packageName === pair.newValue?.packageName
-                // )) {
-                //     throw new Error(`A test with the name: ${pair.newValue?.name}, ${pair.newValue?.className} and ${pair.newValue?.packageName} already exists.`);
-                // }
-                const oldTest = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.oldValue.name, pair.oldValue.packageName, pair.oldValue.className, scmRepoId);
-                if (oldTest) {
-                    changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: ((_d = pair.newValue) === null || _d === void 0 ? void 0 : _d.name) || "", packageName: ((_e = pair.newValue) === null || _e === void 0 ? void 0 : _e.packageName) || "", className: ((_f = pair.newValue) === null || _f === void 0 ? void 0 : _f.className) || "", changeType: "modified", id: oldTest.id, isExecutable: true }));
-                }
-                else {
-                    LOGGER.warn(`Could not find the existing test for modification: ${pair.oldValue.name}`);
-                    //await sendCreateTestEventToOctane(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.newValue.name, pair.newValue.packageName, pair.newValue.className, pair.newValue.description, scmRepoId);
-                }
             }
             yield this.getModifiedScmResourceFiles(addedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
             return changedTests;
