@@ -40230,6 +40230,11 @@ class Discovery {
             }
         });
     }
+    buildUrl() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return `/api/shared_spaces/${this.sharedSpace}/workspaces/${this.workspace}/`;
+        });
+    }
     removeFalsePositiveDataTables(tests, scmResourceFiles) {
         return __awaiter(this, void 0, void 0, function* () {
             const classNames = new Set(tests.map(t => t.className));
@@ -40253,7 +40258,6 @@ class Discovery {
             if (discoveredTests.length === 0) {
                 LOGGER.warn("No UFT tests have been discovered in the repository.");
             }
-            const existingTests = yield (0, octaneClient_1.getExistingTestsFromOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, repoID);
             const scmResourceFiles = discovery.getAllScmResourceFiles();
             if (scmResourceFiles.length === 0) {
                 LOGGER.warn("No data tables have been discovered in the repository.");
@@ -40261,7 +40265,7 @@ class Discovery {
             LOGGER.info("The discovered data tables are: " + JSON.stringify(scmResourceFiles));
             const filteredScmResourceFiles = yield this.removeFalsePositiveDataTables(discoveredTests, scmResourceFiles);
             const existingDataTables = yield (0, octaneClient_1.getScmResourceFilesFromOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, repoID);
-            const modifiedTests = yield this.getModifiedTests(discoveredTests, existingTests, filteredScmResourceFiles, existingDataTables);
+            const modifiedTests = yield this.getModifiedTests(discoveredTests, filteredScmResourceFiles, existingDataTables);
             LOGGER.info("The modified tests are: " + JSON.stringify(modifiedTests));
             yield this.sendTestEventsToOctane(modifiedTests, repoID);
         });
@@ -40276,6 +40280,7 @@ class Discovery {
     }
     sendTestEventsToOctane(modifiedTests, repoRootID) {
         return __awaiter(this, void 0, void 0, function* () {
+            const buildUrl = yield this.buildUrl();
             for (const test of modifiedTests) {
                 LOGGER.info("the change type of test " + test.name + " is: " + test.changeType);
                 if (test.changeType === 'deleted') {
@@ -40291,7 +40296,7 @@ class Discovery {
                     }
                 }
                 else {
-                    yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, test.description, repoRootID);
+                    yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, buildUrl, test.name, test.packageName, test.className, test.description, repoRootID);
                 }
             }
         });
@@ -40318,18 +40323,16 @@ class Discovery {
             }
         });
     }
-    getModifiedTests(discoveredTests, existingTests, discoveredScmResourceFiles, existingScmResourceFiles) {
+    getModifiedTests(discoveredTests, discoveredScmResourceFiles, existingScmResourceFiles) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f;
+            var _a, _b, _c;
             const changedTests = [];
             const rootFolder = process.env.BUILD_SOURCESDIRECTORY || "";
-            const scmRepoId = yield (0, octaneClient_1.getScmRepo)(this.octaneSDKConnection, this.sharedSpace, this.workspace);
             const modifiedFilesArray = yield this.getModifiedFiles();
             LOGGER.info("The modified files array is: " + modifiedFilesArray);
             const modifiedTestsMap = [];
             const testsToDelete = [];
             const addedTests = [];
-            const addedDataTables = [];
             const removedDataTables = [];
             const modifiedDataTables = [];
             for (let i = 0; i < modifiedFilesArray.length;) {
@@ -40399,62 +40402,28 @@ class Discovery {
                             addedTests.push(addAPITest);
                         }
                     }
-                    else if (addedFile && addedFile.match(/\.(xlsx|xls)$/)) {
-                        const addedDataTableName = path.basename(addedFile);
-                        addedDataTables.push(addedDataTableName);
-                    }
                 }
             }
             for (const addedTest of addedTests) {
-                yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, addedTest.name, addedTest.packageName, addedTest.className, addedTest.description, scmRepoId);
+                changedTests.push(Object.assign(Object.assign({}, addedTest), { changeType: 'added' }));
             }
-            //
-            // const existingByName = new Map(existingTests.map(test => [test.name, test]));
-            const existingByClass = new Map(existingTests.map(test => [test.className, test]));
-            // const currentByName = new Map(discoveredTests.map(test => [test.name, test]));
-            // for (const test of addedTests) {
-            //     const newTest = currentByName.get(test);
-            //     if (existingTests.some(e => e.name === newTest?.name
-            //         && e.packageName === newTest.packageName
-            //         && e.className === newTest.className
-            //     )) {
-            //         LOGGER.warn(`A test with this name: ${newTest?.name}, package: ${newTest?.packageName} and class name: ${newTest?.className} already exists.
-            //         This test will be skipped because duplicates are not allowed.`);
-            //     }
-            // }
-            // const modifiedPairs = [];
-            //
-            // for (const entry of modifiedTestsMap) {
-            //     const oldTestValue = existingByName.get(entry.oldValue);
-            //     const newTestValue = currentByName.get(entry.newValue);
-            //     modifiedPairs.push({old: oldTestValue, new: newTestValue});
-            // }
-            //
-            // LOGGER.error("The modified pairs are: " + JSON.stringify(modifiedPairs));
             for (const test of testsToDelete) {
-                const testToDelete = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, scmRepoId);
+                const testToDelete = yield (0, octaneClient_1.checkIfTestExists)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className);
                 if (testToDelete) {
                     changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete.id, name: testToDelete.name, packageName: testToDelete.package, className: testToDelete.class_name, isExecutable: false }));
                 }
                 else {
                     LOGGER.warn(`Could not find the existing test to delete: ${test.name}`);
                 }
-                // const testToDelete = existingByName.get(test);
             }
             for (const pair of modifiedTestsMap) {
-                // if (existingTests.some(e => e.name === pair.newValue?.name
-                //     && e.className === pair.newValue?.className
-                //     && e.packageName === pair.newValue?.packageName
-                // )) {
-                //     throw new Error(`A test with the name: ${pair.newValue?.name}, ${pair.newValue?.className} and ${pair.newValue?.packageName} already exists.`);
-                // }
-                const oldTest = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.oldValue.name, pair.oldValue.packageName, pair.oldValue.className, scmRepoId);
+                const oldTest = yield (0, octaneClient_1.checkIfTestExists)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.oldValue.name, pair.oldValue.packageName, pair.oldValue.className);
                 if (oldTest) {
-                    changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: ((_d = pair.newValue) === null || _d === void 0 ? void 0 : _d.name) || "", packageName: ((_e = pair.newValue) === null || _e === void 0 ? void 0 : _e.packageName) || "", className: ((_f = pair.newValue) === null || _f === void 0 ? void 0 : _f.className) || "", changeType: "modified", id: oldTest.id, isExecutable: true }));
+                    changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: pair.newValue.name, packageName: pair.newValue.packageName, className: pair.newValue.className, changeType: "modified", id: oldTest.id, isExecutable: true }));
                 }
                 else {
                     LOGGER.warn(`Could not find the existing test for modification: ${pair.oldValue.name}`);
-                    yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.newValue.name, pair.newValue.packageName, pair.newValue.className, pair.newValue.description, scmRepoId);
+                    changedTests.push(Object.assign(Object.assign({}, pair.newValue), { changeType: "added" }));
                 }
             }
             for (const test of discoveredTests) {
@@ -40462,7 +40431,7 @@ class Discovery {
                     addedTest.className === test.className &&
                     addedTest.packageName === test.packageName);
                 if (existsInAdded) {
-                    LOGGER.info("Test already exists in added tests: " + test.name);
+                    LOGGER.info("The test was already added. " + test.name);
                     continue;
                 }
                 const existsInModified = modifiedTestsMap.some(pair => (pair.oldValue.name === test.name &&
@@ -40471,31 +40440,20 @@ class Discovery {
                     (pair.newValue.name === test.name &&
                         pair.newValue.className === test.className &&
                         pair.newValue.packageName === test.packageName));
-                // if (!existsInModified) {
-                //     changedTests.push({...test, changeType: "added"});
-                //     continue;
-                // }
-                const testExists = yield (0, octaneClient_1.getModifiedTests)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, scmRepoId);
+                const testExists = yield (0, octaneClient_1.checkIfTestExists)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className);
                 if (!existsInModified && !testExists) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                     LOGGER.warn(`This is a new test: ${test.name}`);
-                    //await sendCreateTestEventToOctane(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className, test.description, scmRepoId);
                 }
                 else {
                     LOGGER.info("The test already exists " + test.name);
                 }
-                //const existingTestFullPath = test.className;
-                // const exactMatch = existingByClass.get(existingTestFullPath);
-                //
-                // if (exactMatch) {
-                //     LOGGER.info("Exact match found for test: " + test.name);
-                // }
             }
-            yield this.getModifiedScmResourceFiles(addedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
+            yield this.getModifiedScmResourceFiles(removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
             return changedTests;
         });
     }
-    getModifiedScmResourceFiles(addedDataTables, deletedDataTables, modifiedDataTables, discoveredDataTables, existingDataTables) {
+    getModifiedScmResourceFiles(deletedDataTables, modifiedDataTables, discoveredDataTables, existingDataTables) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c;
             const changedDataTables = [];
@@ -40512,12 +40470,6 @@ class Discovery {
                     changedDataTables.push(Object.assign(Object.assign({}, dataTable), { changeType: "added" }));
                 }
             }
-            // for (const dataTableName of addedDataTables) {
-            //     const newDataTable = currentByName.get(dataTableName);
-            //     if (newDataTable) {
-            //         changedDataTables.push({...newDataTable, changeType: "added"});
-            //     }
-            // }
             for (const dataTableName of deletedDataTables) {
                 const dataTableToDelete = existingByName.get(dataTableName);
                 if (dataTableToDelete) {
@@ -40584,7 +40536,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(9896);
-const utils_1 = __nccwpck_require__(5268);
 const logger_1 = __nccwpck_require__(7893);
 const DiscoveryResults_1 = __nccwpck_require__(6376);
 const createAutomatedTests_1 = __nccwpck_require__(5951);
@@ -40611,9 +40562,7 @@ class ScanRepo {
             try {
                 dataTableNames = yield this.isDataTable(items);
                 if (dataTableNames) {
-                    // LOGGER.info(`The data table ${dataTableNames} is found in the path ${pathToRepo}`);
                     const dataTable = yield this.createScmResourceFile(dataTableNames, pathToRepo);
-                    //  LOGGER.info("The data table scm resource file is: " + JSON.stringify(dataTable));
                     this.scmResourceFiles.push(...dataTable);
                 }
                 testType = yield this.getTestType(items);
@@ -40641,8 +40590,6 @@ class ScanRepo {
             catch (e) {
                 throw new Error("Error while scanning the repo: " + (e instanceof Error ? e.message : String(e)));
             }
-            //LOGGER.info("The data tables are: " + JSON.stringify(this.scmResourceFiles));
-            //return this.tests;
             return new DiscoveryResults_1.default(this.tests, this.scmResourceFiles);
         });
     }
@@ -40686,62 +40633,6 @@ class ScanRepo {
             return dataTables;
         });
     }
-    // public async createAutomatedTestsFromGUI(pathToTest: string, testType: string): Promise<AutomatedTest> {
-    //     const test = await this.createTest(pathToTest, testType);
-    //     const document = await getGUITestDoc(pathToTest);
-    //     let description: string | null;
-    //     description = getDescriptionForGUITest(document);
-    //     description = convertToHtml(description);
-    //     test.description = description || "";
-    //
-    //     LOGGER.info("The test is: " + JSON.stringify(test));
-    //     return test;
-    // }
-    createTest(pathToTest, testType) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const testName = path.basename(pathToTest);
-            const className = yield this.getClassName(pathToTest);
-            const packageName = yield this.getPackageName(pathToTest, testName);
-            const test = {
-                name: testName,
-                packageName: packageName,
-                className: className,
-                uftOneTestType: testType,
-                isExecutable: true,
-            };
-            return test;
-        });
-    }
-    createAutomatedTestFromAPI(pathToTest, testType) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const test = yield this.createTest(pathToTest, testType);
-            const documentForApiTest = yield (0, utils_1.getAPITestDoc)(pathToTest);
-            let description = (0, utils_1.getDescriptionForAPITest)(documentForApiTest);
-            description = (0, utils_1.convertToHtml)(description);
-            test.description = description || "";
-            LOGGER.info("The api test is: " + JSON.stringify(test));
-            return test;
-        });
-    }
-    getClassName(pathToTest) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let className;
-            const parts = pathToTest.split(path.sep);
-            const startIndex = parts.indexOf("s");
-            className = parts.slice(startIndex + 1).join("/");
-            return className;
-        });
-    }
-    getPackageName(pathToTest, testName) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let packageName;
-            const parts = pathToTest.split(path.sep);
-            const startIndex = parts.indexOf("s");
-            const endIndex = parts.lastIndexOf(testName);
-            packageName = parts.slice(startIndex + 1, endIndex).join("/");
-            return packageName;
-        });
-    }
 }
 exports["default"] = ScanRepo;
 
@@ -40768,6 +40659,7 @@ const path = __nccwpck_require__(6760);
 const utils_1 = __nccwpck_require__(5268);
 const logger_1 = __nccwpck_require__(7893);
 const LOGGER = new logger_1.default("ScanRepo.ts");
+const ROOT_TESTS_DIR = process.env.BUILD_SOURCESDIRECTORY || "";
 const createAutomatedTestsFromGUI = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
     const test = yield createTest(pathToTest, testType);
     const document = yield (0, utils_1.getGUITestDoc)(pathToTest);
@@ -40804,17 +40696,24 @@ const createTest = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, f
 });
 const getClassName = (pathToTest) => {
     let className;
-    const parts = pathToTest.split(path.sep);
-    const startIndex = parts.indexOf("s");
-    className = parts.slice(startIndex + 1).join("/");
+    // const parts = pathToTest.split(path.sep);
+    // const startIndex = parts.indexOf("s");
+    // className = parts.slice(startIndex + 1).join("/");
+    className = path.dirname(path.relative(ROOT_TESTS_DIR, pathToTest));
+    className = className.replace("\\", "/");
+    LOGGER.info("The class name is: " + className);
     return className;
 };
 const getPackageName = (pathToTest, testName) => {
     let packageName;
-    const parts = pathToTest.split(path.sep);
-    const startIndex = parts.indexOf("s");
-    const endIndex = parts.lastIndexOf(testName);
-    packageName = parts.slice(startIndex + 1, endIndex).join("/");
+    // const parts = pathToTest.split(path.sep);
+    // const startIndex = parts.indexOf("s");
+    // const endIndex = parts.lastIndexOf(testName);
+    // packageName = parts.slice(startIndex + 1, endIndex).join("/");
+    const relativePath = path.relative(ROOT_TESTS_DIR, pathToTest);
+    const parts = relativePath.split(path.sep);
+    packageName = parts.splice(0, -2).join("/");
+    LOGGER.info("The package name is: " + packageName);
     return packageName;
 };
 
@@ -40836,26 +40735,39 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getScmResourceFilesFromOctane = exports.deleteScmResourceFile = exports.updateScmResourceFile = exports.createScmResourceFile = exports.getExistingTestsFromOctane = exports.getModifiedTests = exports.makeTestNotExecutableInOctane = exports.sendUpdateTestEventToOctane = exports.sendCreateTestEventToOctane = exports.getScmRepo = exports.getTestRunnerId = void 0;
+exports.getScmResourceFilesFromOctane = exports.deleteScmResourceFile = exports.updateScmResourceFile = exports.createScmResourceFile = exports.checkIfTestExists = exports.makeTestNotExecutableInOctane = exports.sendUpdateTestEventToOctane = exports.sendCreateTestEventToOctane = exports.getScmRepo = exports.getTestRunnerId = void 0;
 const alm_octane_js_rest_sdk_1 = __nccwpck_require__(3967);
 const logger_1 = __nccwpck_require__(7893);
+const utils_1 = __nccwpck_require__(5268);
 const LOGGER = new logger_1.default("octaneClient.ts");
-const getTestRunnerId = (octaneConnection, sharedSpace, workspace) => __awaiter(void 0, void 0, void 0, function* () {
-    const pipelineName = process.env.BUILD_DEFINITIONNAME;
-    LOGGER.info("The pipeline name is: " + pipelineName);
-    const testRunner = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/executors?query=\"ci_job EQ {name EQ ^${pipelineName}*^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-    LOGGER.info("The test runners are: " + JSON.stringify(testRunner));
-    return testRunner.data[0].id;
+const getTestRunnerId = (octaneConnection, url) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const pipelineName = process.env.BUILD_DEFINITIONNAME;
+        LOGGER.info("The pipeline name is: " + pipelineName);
+        const testRunner = yield octaneConnection.executeCustomRequest(`${url}executors?query=\"ci_job EQ {name EQ ^${pipelineName}*^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        LOGGER.info("The test runners are: " + JSON.stringify(testRunner));
+        return testRunner.data[0].id;
+    }
+    catch (error) {
+        LOGGER.error("Error occurred while getting test runner id from Octane: " + error.message);
+        return "";
+    }
 });
 exports.getTestRunnerId = getTestRunnerId;
 const getScmRepo = (octaneConnection, sharedSpace, workspace) => __awaiter(void 0, void 0, void 0, function* () {
-    const repoUrl = process.env.REPOURL || "";
-    const scmRepos = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_repositories/?query=\"repository EQ {url EQ ^${repoUrl}^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-    LOGGER.info("The scm repository roots are: " + JSON.stringify(scmRepos));
-    return scmRepos.data[0].id;
+    try {
+        const repoUrl = process.env.REPOURL || "";
+        const scmRepos = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_repositories/?query=\"repository EQ {url EQ ^${repoUrl}^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        LOGGER.info("The scm repository roots are: " + JSON.stringify(scmRepos));
+        return scmRepos.data[0].id;
+    }
+    catch (error) {
+        LOGGER.error("Error occurred while getting scm repository from Octane: " + error.message);
+        return "";
+    }
 });
 exports.getScmRepo = getScmRepo;
-const sendCreateTestEventToOctane = (octaneConnection, sharedSpace, workspace, name, packageName, className, description, scmRepositoryId) => __awaiter(void 0, void 0, void 0, function* () {
+const sendCreateTestEventToOctane = (octaneConnection, url, name, packageName, className, description, scmRepositoryId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const body = {
             "data": [
@@ -40876,12 +40788,12 @@ const sendCreateTestEventToOctane = (octaneConnection, sharedSpace, workspace, n
                     "executable": true,
                     "test_runner": {
                         "type": "executor",
-                        "id": yield getTestRunnerId(octaneConnection, sharedSpace, workspace)
+                        "id": yield getTestRunnerId(octaneConnection, url)
                     }
                 }
             ]
         };
-        yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+        yield octaneConnection.executeCustomRequest(`${url}tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
     }
     catch (error) {
         LOGGER.error("Error occurred while sending create test event to Octane: " + typeof error === 'string' ? error : error.message);
@@ -40889,40 +40801,47 @@ const sendCreateTestEventToOctane = (octaneConnection, sharedSpace, workspace, n
 });
 exports.sendCreateTestEventToOctane = sendCreateTestEventToOctane;
 const sendUpdateTestEventToOctane = (octaneConnection, sharedSpace, workspace, testId, name, packageName, description, className) => __awaiter(void 0, void 0, void 0, function* () {
-    const body = {
-        "data": [
-            {
-                "subtype": "test_automated",
-                "id": testId,
-                "name": name,
-                "package": packageName,
-                "description": description,
-                "class_name": className
-            }
-        ]
-    };
-    yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+    try {
+        const body = {
+            "data": [
+                {
+                    "subtype": "test_automated",
+                    "id": testId,
+                    "name": name,
+                    "package": packageName,
+                    "description": description,
+                    "class_name": className
+                }
+            ]
+        };
+        yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+    }
+    catch (error) {
+        LOGGER.error("Error occurred while sending update test event to Octane: " + error.message);
+    }
 });
 exports.sendUpdateTestEventToOctane = sendUpdateTestEventToOctane;
 const makeTestNotExecutableInOctane = (octaneConnection, sharedSpace, workspace, testId) => __awaiter(void 0, void 0, void 0, function* () {
-    const body = {
-        "data": [{
-                "id": testId,
-                "executable": false
-            }]
-    };
-    yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+    try {
+        const body = {
+            "data": [{
+                    "id": testId,
+                    "executable": false
+                }]
+        };
+        yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+    }
+    catch (error) {
+        LOGGER.error("Error occurred while making test not executable in Octane: " + error.message);
+    }
 });
 exports.makeTestNotExecutableInOctane = makeTestNotExecutableInOctane;
-const formatValueForQuery = (value) => {
-    return value.replace(/[(){}[\]^\\;]/g, "\\$&");
-};
-const getModifiedTests = (octaneConnection, sharedSpace, workspace, name, packageName, className, repoId) => __awaiter(void 0, void 0, void 0, function* () {
+const checkIfTestExists = (octaneConnection, sharedSpace, workspace, name, packageName, className) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let modifiedTest;
-        name = formatValueForQuery(name);
-        className = formatValueForQuery(className);
-        packageName = formatValueForQuery(packageName);
+        name = (0, utils_1.formatValueForQuery)(name);
+        className = (0, utils_1.formatValueForQuery)(className);
+        packageName = (0, utils_1.formatValueForQuery)(packageName);
         LOGGER.info("The formatted values are - name: " + name + ", packageName: " + packageName + ", className: " + className);
         if (!packageName) {
             modifiedTest = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"name EQ ^${name}^;package EQ null;class_name EQ ^${className}^\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
@@ -40937,72 +40856,73 @@ const getModifiedTests = (octaneConnection, sharedSpace, workspace, name, packag
         LOGGER.error("Error occurred while getting modified test from Octane: " + error.message);
     }
 });
-exports.getModifiedTests = getModifiedTests;
-const getExistingTestsFromOctane = (octaneConnection, sharedSpace, workspace, scmRepoId) => __awaiter(void 0, void 0, void 0, function* () {
-    const response = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"scm_repository EQ {id EQ ^${scmRepoId}^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-    LOGGER.info("The existing tests from octane are: " + JSON.stringify(response.data));
-    let existingTests = [];
-    for (const testData of response.data) {
-        const test = {
-            id: testData.id,
-            name: testData.name,
-            packageName: testData.package,
-            className: testData.class_name,
-            isExecutable: testData.executable
-        };
-        existingTests.push(test);
-    }
-    LOGGER.info("the existing tests array is: " + JSON.stringify(existingTests));
-    return existingTests;
-});
-exports.getExistingTestsFromOctane = getExistingTestsFromOctane;
+exports.checkIfTestExists = checkIfTestExists;
 const createScmResourceFile = (octaneConnection, sharedSpace, workspace, name, relativePath, scmRepoId) => __awaiter(void 0, void 0, void 0, function* () {
-    const body = {
-        "data": [{
-                "name": name,
-                "relative_path": relativePath,
-                "scm_repository": {
-                    "type": "scm_repository",
-                    "id": scmRepoId
-                }
-            }]
-    };
-    yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+    try {
+        const body = {
+            "data": [{
+                    "name": name,
+                    "relative_path": relativePath,
+                    "scm_repository": {
+                        "type": "scm_repository",
+                        "id": scmRepoId
+                    }
+                }]
+        };
+        yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
+    }
+    catch (error) {
+        LOGGER.error("Error occurred while creating scm resource file in Octane: " + error.message);
+    }
 });
 exports.createScmResourceFile = createScmResourceFile;
 const updateScmResourceFile = (octaneConnection, sharedSpace, workspace, scmResourceFileId, name, relativePath) => __awaiter(void 0, void 0, void 0, function* () {
-    const body = {
-        "data": [{
-                "id": scmResourceFileId,
-                "name": name,
-                "relative_path": relativePath
-            }]
-    };
-    yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+    try {
+        const body = {
+            "data": [{
+                    "id": scmResourceFileId,
+                    "name": name,
+                    "relative_path": relativePath
+                }]
+        };
+        yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
+    }
+    catch (error) {
+        LOGGER.error("Error occurred while updating scm resource file in Octane: " + error.message);
+    }
 });
 exports.updateScmResourceFile = updateScmResourceFile;
 const deleteScmResourceFile = (octaneConnection, sharedSpace, workspace, scmResourceFileId) => __awaiter(void 0, void 0, void 0, function* () {
-    yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files/${scmResourceFileId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
+    try {
+        yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files/${scmResourceFileId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
+    }
+    catch (error) {
+        LOGGER.error("Error occurred while deleting scm resource file in Octane: " + error.message);
+    }
 });
 exports.deleteScmResourceFile = deleteScmResourceFile;
 const getScmResourceFilesFromOctane = (octaneConnection, sharedSpace, workspace, repoId) => __awaiter(void 0, void 0, void 0, function* () {
-    const resourceFiles = [];
-    const allResourceFiles = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files?/?query=\"scm_repository EQ {id EQ ^${repoId}^}\"&fields=name,relative_path,scm_repository`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-    LOGGER.info("The all scm resource files from octane are: " + JSON.stringify(allResourceFiles));
-    for (const fileData of allResourceFiles.data) {
-        LOGGER.info("The scm repository id of file " + fileData.name + " is: " + fileData.scm_repository.id);
-        //if (fileData.scm_repository.id === repoId) {
-        const scmResourceFile = {
-            id: fileData.id,
-            name: fileData.name,
-            relativePath: fileData.relative_path,
-            scmRepositoryId: fileData.scm_repository.id
-        };
-        resourceFiles.push(scmResourceFile);
-        //}
+    try {
+        const resourceFiles = [];
+        const allResourceFiles = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files?/?query=\"scm_repository EQ {id EQ ^${repoId}^}\"&fields=name,relative_path,scm_repository`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        LOGGER.info("The all scm resource files from octane are: " + JSON.stringify(allResourceFiles));
+        for (const fileData of allResourceFiles.data) {
+            LOGGER.info("The scm repository id of file " + fileData.name + " is: " + fileData.scm_repository.id);
+            const scmResourceFile = {
+                id: fileData.id,
+                name: fileData.name,
+                relativePath: fileData.relative_path,
+                scmRepositoryId: fileData.scm_repository.id
+            };
+            resourceFiles.push(scmResourceFile);
+        }
+        LOGGER.info("The existing scm resource files are: " + JSON.stringify(resourceFiles));
+        return resourceFiles;
     }
-    LOGGER.info("The existing scm resource files are: " + JSON.stringify(resourceFiles));
-    return resourceFiles;
+    catch (error) {
+        LOGGER.error("Error occurred while getting scm resource files from Octane: " + error.message);
+        return [];
+    }
 });
 exports.getScmResourceFilesFromOctane = getScmResourceFilesFromOctane;
 
@@ -41607,7 +41527,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPackageName = exports.getClassName = exports.getDescriptionForAPITest = exports.getAPITestDoc = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
+exports.formatValueForQuery = exports.getPackageName = exports.getClassName = exports.getDescriptionForAPITest = exports.getAPITestDoc = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
 const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(1943);
 const logger_1 = __nccwpck_require__(7893);
@@ -41805,6 +41725,10 @@ const getPackageName = (pathToTest, testName) => {
     return path.dirname(withoutFile);
 };
 exports.getPackageName = getPackageName;
+const formatValueForQuery = (value) => {
+    return value.replace(/[(){}[\]^\\;]/g, "\\$&");
+};
+exports.formatValueForQuery = formatValueForQuery;
 
 
 /***/ }),
