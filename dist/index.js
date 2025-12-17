@@ -40710,6 +40710,7 @@ const getPackageName = (pathToTest, testName) => {
     // const startIndex = parts.indexOf("s");
     // const endIndex = parts.lastIndexOf(testName);
     // packageName = parts.slice(startIndex + 1, endIndex).join("/");
+    LOGGER.info("The path to test is: " + pathToTest);
     const relativePath = path.relative(ROOT_TESTS_DIR, pathToTest);
     const parts = relativePath.split(path.sep);
     packageName = parts.splice(0, -2).join("/");
