@@ -40914,9 +40914,16 @@ const makeTestNotExecutableInOctane = (octaneConnection, sharedSpace, workspace,
     yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.update, body);
 });
 exports.makeTestNotExecutableInOctane = makeTestNotExecutableInOctane;
+const formatValueForQuery = (value) => {
+    return value.replace(/[(){}[\]^\\;]/g, "\\$&");
+};
 const getModifiedTests = (octaneConnection, sharedSpace, workspace, name, packageName, className, repoId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let modifiedTest;
+        name = formatValueForQuery(name);
+        className = formatValueForQuery(className);
+        packageName = formatValueForQuery(packageName);
+        LOGGER.info("The formatted values are - name: " + name + ", packageName: " + packageName + ", className: " + className);
         if (!packageName) {
             modifiedTest = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"name EQ ^${name}^;package EQ null;class_name EQ ^${className}^\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
         }
