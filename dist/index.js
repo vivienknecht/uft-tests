@@ -40916,7 +40916,13 @@ const makeTestNotExecutableInOctane = (octaneConnection, sharedSpace, workspace,
 exports.makeTestNotExecutableInOctane = makeTestNotExecutableInOctane;
 const getModifiedTests = (octaneConnection, sharedSpace, workspace, name, packageName, className, repoId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const modifiedTest = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"name EQ ^${name}^;package EQ ^${packageName}^;class_name EQ ^${className}^;scm_repository EQ {id EQ ^${repoId}^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        let modifiedTest;
+        if (!packageName) {
+            modifiedTest = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"name EQ ^${name}^;package EQ ^null^;class_name EQ ^${className}^\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        }
+        else {
+            modifiedTest = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"name EQ ^${name}^;package EQ ^${packageName}^;class_name EQ ^${className}^\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        }
         LOGGER.info("The modified test from octane is: " + JSON.stringify(modifiedTest));
         return modifiedTest.data[0];
     }
