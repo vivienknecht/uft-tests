@@ -40229,7 +40229,7 @@ exports.createAutomatedTestFromAPI = createAutomatedTestFromAPI;
 const createTest = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
     const testName = path.basename(pathToTest);
     const className = getClassName(pathToTest);
-    const packageName = getPackageName(pathToTest);
+    const packageName = getPackageName(className);
     const test = {
         name: testName,
         packageName: packageName,
