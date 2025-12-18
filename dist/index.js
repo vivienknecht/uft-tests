@@ -40245,7 +40245,8 @@ const getClassName = (pathToTest) => {
     // const startIndex = parts.indexOf("s");
     // className = parts.slice(startIndex + 1).join("/");
     className = path.relative(ROOT_TESTS_DIR, pathToTest);
-    className = className.replace("\\", "/");
+    const parts = className.split(path.sep);
+    className = parts.join("/");
     LOGGER.info("The class name is: " + className);
     return className;
 };
