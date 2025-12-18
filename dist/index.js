@@ -40229,7 +40229,7 @@ exports.createAutomatedTestFromAPI = createAutomatedTestFromAPI;
 const createTest = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
     const testName = path.basename(pathToTest);
     const className = getClassName(pathToTest);
-    const packageName = getPackageName(pathToTest, testName, className);
+    const packageName = getPackageName(pathToTest);
     const test = {
         name: testName,
         packageName: packageName,
@@ -40241,29 +40241,17 @@ const createTest = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, f
 });
 const getClassName = (pathToTest) => {
     let className;
-    // const parts = pathToTest.split(path.sep);
-    // const startIndex = parts.indexOf("s");
-    // className = parts.slice(startIndex + 1).join("/");
     className = path.relative(ROOT_TESTS_DIR, pathToTest);
     const parts = className.split(path.sep);
     className = parts.join("/");
     LOGGER.info("The class name is: " + className);
     return className;
 };
-const getPackageName = (pathToTest, testName, className) => {
+const getPackageName = (className) => {
     let packageName;
-    // const parts = pathToTest.split(path.sep);
-    // const startIndex = parts.indexOf("s");
-    // const endIndex = parts.lastIndexOf(testName);
-    // packageName = parts.slice(startIndex + 1, endIndex).join("/");
-    LOGGER.info("The path to test is: " + pathToTest + "the root tests dir is: " + ROOT_TESTS_DIR);
-    // const relativePath = path.relative(ROOT_TESTS_DIR, pathToTest);
-    // const parts = relativePath.split(path.sep);
-    // packageName = parts.splice(0, -2).join("/");
     const parts = className.split("/");
     parts.pop();
     packageName = parts.join("/");
-    // packageName = parts.slice(0, -1).join("/");
     LOGGER.info("The package name is: " + packageName);
     return packageName;
 };
@@ -40296,6 +40284,8 @@ const CreateAutomatedTests_1 = __nccwpck_require__(111);
 const LOGGER = new logger_1.default("Discovery.ts");
 class Discovery {
     constructor(octaneUrl, sharedSpace, workspace, clientId, clientSecret) {
+        this.GUI_TEST_TYPE = "GUI";
+        this.API_TEST_TYPE = "API";
         this.octaneUrl = octaneUrl;
         this.sharedSpace = sharedSpace;
         this.workspace = workspace;
@@ -40431,14 +40421,14 @@ class Discovery {
                     const newPath = (_b = modifiedFilesArray[i++]) !== null && _b !== void 0 ? _b : "";
                     if ((oldPath && oldPath.match(/\.(st|tsp)$/)) || (newPath && newPath.match(/\.(st|tsp)$/))) {
                         const oldTest = {
-                            name: path.basename(path.dirname(oldPath)),
-                            packageName: (0, utils_1.getPackageName)(oldPath, path.basename(path.dirname(oldPath))),
-                            className: path.dirname(oldPath)
+                            name: (0, utils_1.getTestNameAtSync)(oldPath),
+                            packageName: (0, utils_1.getPackageNameAtSync)((0, utils_1.getTestNameAtSync)(oldPath)),
+                            className: (0, utils_1.getClassNameAtSync)(oldPath)
                         };
                         const newTest = {
-                            name: path.basename(path.dirname(newPath)),
-                            packageName: (0, utils_1.getPackageName)(newPath, path.basename(path.dirname(newPath))),
-                            className: path.dirname(newPath)
+                            name: (0, utils_1.getTestNameAtSync)(newPath),
+                            packageName: (0, utils_1.getPackageNameAtSync)((0, utils_1.getClassNameAtSync)(newPath)),
+                            className: (0, utils_1.getClassNameAtSync)(newPath)
                         };
                         modifiedTestsMap.push({ oldValue: oldTest, newValue: newTest });
                         LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
@@ -40455,15 +40445,10 @@ class Discovery {
                 if (status === "D") {
                     const deletedFile = (_c = modifiedFilesArray[i++]) !== null && _c !== void 0 ? _c : "";
                     if (deletedFile && deletedFile.match(/\.(st|tsp)$/)) {
-                        const testToDeleteName = path.basename(path.dirname(deletedFile));
-                        const packageName = (0, utils_1.getPackageName)(deletedFile, testToDeleteName);
-                        LOGGER.info("The package name of the deleted test is: " + packageName);
-                        const className = path.dirname(deletedFile);
-                        LOGGER.info("The class name of the deleted test is: " + className);
                         const testToDelete = {
-                            name: testToDeleteName,
-                            packageName: packageName,
-                            className: className,
+                            name: (0, utils_1.getTestNameAtSync)(deletedFile),
+                            packageName: (0, utils_1.getPackageNameAtSync)((0, utils_1.getClassNameAtSync)(deletedFile)),
+                            className: (0, utils_1.getClassNameAtSync)(deletedFile),
                             isExecutable: false
                         };
                         testsToDelete.push(testToDelete);
@@ -40479,12 +40464,12 @@ class Discovery {
                     if (addedFile && addedFile.match(/\.(st|tsp)$/)) {
                         const addedFileRenamed = rootFolder + "\\" + addedFile.replace("/", "\\");
                         if (addedFile.endsWith(".tsp")) {
-                            const addGUITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, "GUI");
+                            const addGUITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, this.GUI_TEST_TYPE);
                             LOGGER.info("The added GUI test is: " + JSON.stringify(addGUITest));
                             addedTests.push(addGUITest);
                         }
                         else if (addedFile.endsWith(".st")) {
-                            const addAPITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, "API");
+                            const addAPITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, this.API_TEST_TYPE);
                             LOGGER.info("The added API test is: " + JSON.stringify(addAPITest));
                             addedTests.push(addAPITest);
                         }
@@ -40536,6 +40521,7 @@ class Discovery {
                     LOGGER.info("The test already exists " + test.name);
                 }
             }
+            LOGGER.info("The changed data tables are: " + JSON.stringify(modifiedDataTables));
             yield this.getModifiedScmResourceFiles(removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
             return changedTests;
         });
@@ -41533,7 +41519,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.formatValueForQuery = exports.getPackageName = exports.getClassName = exports.getDescriptionForAPITest = exports.getAPITestDoc = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
+exports.formatValueForQuery = exports.getPackageNameAtSync = exports.getClassNameAtSync = exports.getTestNameAtSync = exports.getDescriptionForAPITest = exports.getAPITestDoc = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
 const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(1943);
 const logger_1 = __nccwpck_require__(7893);
@@ -41718,19 +41704,20 @@ const getDescriptionForAPITest = (doc) => {
     return null;
 };
 exports.getDescriptionForAPITest = getDescriptionForAPITest;
-const getClassName = (pathToTest) => {
-    let className;
-    const parts = pathToTest.split(path.sep);
-    const startIndex = parts.indexOf("s");
-    className = parts.slice(startIndex + 1).join("/");
-    return className;
+const getTestNameAtSync = (pathToTest) => {
+    return path.basename(path.dirname(pathToTest));
 };
-exports.getClassName = getClassName;
-const getPackageName = (pathToTest, testName) => {
-    const withoutFile = path.dirname(pathToTest);
-    return path.dirname(withoutFile);
+exports.getTestNameAtSync = getTestNameAtSync;
+const getClassNameAtSync = (pathToTest) => {
+    return path.dirname(pathToTest);
 };
-exports.getPackageName = getPackageName;
+exports.getClassNameAtSync = getClassNameAtSync;
+const getPackageNameAtSync = (className) => {
+    const parts = className.split(path.sep);
+    parts.pop();
+    return parts.join("/");
+};
+exports.getPackageNameAtSync = getPackageNameAtSync;
 const formatValueForQuery = (value) => {
     return value.replace(/[(){}[\]^\\;]/g, "\\$&");
 };
