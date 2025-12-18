@@ -40259,8 +40259,10 @@ const getPackageName = (pathToTest, testName, className) => {
     // const relativePath = path.relative(ROOT_TESTS_DIR, pathToTest);
     // const parts = relativePath.split(path.sep);
     // packageName = parts.splice(0, -2).join("/");
-    const parts = className.split(path.sep);
-    packageName = parts.slice(0, -1).join("/");
+    const parts = className.split("/");
+    parts.pop();
+    packageName = parts.join("/");
+    // packageName = parts.slice(0, -1).join("/");
     LOGGER.info("The package name is: " + packageName);
     return packageName;
 };
