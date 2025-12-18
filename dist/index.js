@@ -40255,12 +40255,12 @@ const getPackageName = (pathToTest, testName, className) => {
     // const startIndex = parts.indexOf("s");
     // const endIndex = parts.lastIndexOf(testName);
     // packageName = parts.slice(startIndex + 1, endIndex).join("/");
-    LOGGER.info("The path to test is: " + pathToTest);
-    // const relativePath = path.relative(ROOT_TESTS_DIR, pathToTest);
-    // const parts = relativePath.split(path.sep);
-    // packageName = parts.splice(0, -2).join("/");
-    const parts = className.split(path.sep);
-    packageName = parts.slice(0, -1).join("/");
+    LOGGER.info("The path to test is: " + pathToTest + "the root tests dir is: " + ROOT_TESTS_DIR);
+    const relativePath = path.relative(ROOT_TESTS_DIR, pathToTest);
+    const parts = relativePath.split(path.sep);
+    packageName = parts.splice(0, -2).join("/");
+    // const parts = className.split(path.sep);
+    // packageName = parts.slice(0, -1).join("/");
     LOGGER.info("The package name is: " + packageName);
     return packageName;
 };
