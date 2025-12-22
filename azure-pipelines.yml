@@ -38,7 +38,7 @@ steps:
   
 - powershell: |
     Write-Host "===== DEBUG: Pipeline Variable testsToRunConverted ====="
-    $testsToRunConverted
+    $testsToRunConverted = $env:testsToRunConverted
 
 - powershell: |
     Write-Host "Current Directory:"
