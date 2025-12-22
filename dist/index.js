@@ -40423,7 +40423,7 @@ class Discovery {
                     if ((oldPath && oldPath.match(/\.(st|tsp)$/)) || (newPath && newPath.match(/\.(st|tsp)$/))) {
                         const oldTest = {
                             name: (0, utils_1.getTestNameAtSync)(oldPath),
-                            packageName: (0, utils_1.getPackageNameAtSync)((0, utils_1.getTestNameAtSync)(oldPath)),
+                            packageName: (0, utils_1.getPackageNameAtSync)((0, utils_1.getClassNameAtSync)(oldPath)),
                             className: (0, utils_1.getClassNameAtSync)(oldPath)
                         };
                         const newTest = {
