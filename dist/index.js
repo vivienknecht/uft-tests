@@ -40464,6 +40464,10 @@ class Discovery {
                             relativePath: newPath
                         };
                         const filteredModifiedDataTables = yield this.removeFalsePositiveDataTablesAtUpdate(discoveredTests, [newDataTable]);
+                        if (filteredModifiedDataTables.length === 0) {
+                            LOGGER.info("The modified data table is a false positive. " + newDataTable.name);
+                            continue;
+                        }
                         LOGGER.info("The filtered modified data tables are: " + JSON.stringify(filteredModifiedDataTables));
                         modifiedDataTables.push({
                             oldValue: oldDataTable,
