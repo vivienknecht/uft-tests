@@ -41105,8 +41105,9 @@ const convertTests = () => {
         LOGGER.error("No tests to run have been found.");
         return;
     }
-    const convertedTestsToRun = (0, testsToRunConverter_1.default)(parsedTestsToRun);
-    console.log(convertedTestsToRun);
+    const convertedTests = (0, testsToRunConverter_1.default)(parsedTestsToRun);
+    tl.setVariable("testsToRunConverted", convertedTests);
+    //console.log("The converted tests ", convertedTests);
 };
 const loadArguments = () => {
     args = (0, yargs_1.default)((0, helpers_1.hideBin)(process.argv))
@@ -41285,28 +41286,56 @@ const convertCucumberBDDTestsToRun = (testsToRun) => {
 };
 const convertUftTestsToRun = (testsToRun) => {
     LOGGER.info(`Converting testsToRun to UFT One format...`);
+    const rootDirectory = process.env.BUILD_SOURCESDIRECTORY;
+    LOGGER.info("Root directory is: " + rootDirectory);
     const uftTestsToRun = testsToRun.map((testToRun) => {
         let parameters = [];
+        let externalDataTable;
         if (testToRun.parameters) {
             Object.entries(testToRun.parameters).forEach(([key, value]) => {
-                parameters.push({
-                    _attributes: {
-                        name: key,
-                        value: value,
-                        type: "string",
-                    },
-                });
+                if (key === "dataTable") {
+                    LOGGER.info("The key is dataTable and the value is: " + value);
+                    value = value.replace("/", "\\");
+                    externalDataTable = {
+                        _attributes: {
+                            path: rootDirectory + "\\" + value,
+                        }
+                    };
+                }
+                else {
+                    parameters.push({
+                        _attributes: {
+                            name: key,
+                            value: value,
+                            type: "string",
+                        },
+                    });
+                }
             });
         }
-        return {
+        LOGGER.info("The parameters are: " + JSON.stringify(parameters));
+        LOGGER.info("The externalDataTable is: " + JSON.stringify(externalDataTable));
+        const convertedTests = {
             _attributes: {
                 name: testToRun.testName,
-                path: testToRun.className.replace("file:///", "") +
-                    "/" +
-                    testToRun.testName,
+                path: rootDirectory + "\\" + testToRun.className.replace("/", "\\")
             },
             parameter: parameters,
         };
+        if (externalDataTable) {
+            convertedTests.DataTable = externalDataTable;
+        }
+        return convertedTests;
+        // return {
+        //   _attributes: {
+        //     name: testToRun.testName,
+        //     path:
+        //       testToRun.className.replace("file:///", "") +
+        //       "/" +
+        //       testToRun.testName,
+        //   },
+        //   parameter: parameters,
+        // };
     });
     const convertedTestsToRun = (0, xml_js_1.js2xml)({
         mtbx: {
