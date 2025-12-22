@@ -40963,7 +40963,7 @@ const updateScmResourceFile = (octaneConnection, sharedSpace, workspace, scmReso
 exports.updateScmResourceFile = updateScmResourceFile;
 const deleteScmResourceFile = (octaneConnection, sharedSpace, workspace, scmResourceFileId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files/${scmResourceFileId}?delete=true`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
+        yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files/?query=\"(id=^${scmResourceFileId}^)\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.delete);
     }
     catch (error) {
         LOGGER.error("Error occurred while deleting scm resource file in Octane: " + error.message);
@@ -41804,7 +41804,8 @@ const getClassNameAtSync = (pathToTest) => {
 };
 exports.getClassNameAtSync = getClassNameAtSync;
 const getPackageNameAtSync = (className) => {
-    return path.dirname(className);
+    let packageName;
+    return packageName = path.dirname(className) === '.' ? '' : path.dirname(className);
 };
 exports.getPackageNameAtSync = getPackageNameAtSync;
 const formatValueForQuery = (value) => {
