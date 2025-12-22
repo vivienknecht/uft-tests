@@ -43,7 +43,7 @@ steps:
     mkdir build
     $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
     $content = @"
-    $(testsToRunConverted)
+    $testsToRunConverted
     "@
     Set-Content -Path "./build/testsToRun.mtbx" -Value $content -Encoding UTF8
     Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
