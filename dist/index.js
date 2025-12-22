@@ -40421,15 +40421,19 @@ class Discovery {
                     const oldPath = (_a = modifiedFilesArray[i++]) !== null && _a !== void 0 ? _a : "";
                     const newPath = (_b = modifiedFilesArray[i++]) !== null && _b !== void 0 ? _b : "";
                     if ((oldPath && oldPath.match(/\.(st|tsp)$/)) || (newPath && newPath.match(/\.(st|tsp)$/))) {
+                        const classNameOld = (0, utils_1.getClassNameAtSync)(oldPath);
+                        LOGGER.info("The old class name is: " + classNameOld);
                         const oldTest = {
                             name: (0, utils_1.getTestNameAtSync)(oldPath),
-                            packageName: (0, utils_1.getPackageNameAtSync)((0, utils_1.getClassNameAtSync)(oldPath)),
-                            className: (0, utils_1.getClassNameAtSync)(oldPath)
+                            packageName: (0, utils_1.getPackageNameAtSync)(classNameOld),
+                            className: classNameOld
                         };
+                        const classNameNew = (0, utils_1.getClassNameAtSync)(newPath);
+                        LOGGER.info("The new class name is: " + classNameNew);
                         const newTest = {
                             name: (0, utils_1.getTestNameAtSync)(newPath),
-                            packageName: (0, utils_1.getPackageNameAtSync)((0, utils_1.getClassNameAtSync)(newPath)),
-                            className: (0, utils_1.getClassNameAtSync)(newPath)
+                            packageName: (0, utils_1.getPackageNameAtSync)(classNameNew),
+                            className: classNameNew
                         };
                         modifiedTestsMap.push({ oldValue: oldTest, newValue: newTest });
                         LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
