@@ -40607,7 +40607,7 @@ class Discovery {
             // for (const pair of modifiedDataTablePairs) {
             //     changedDataTables.push({...pair.new, id: pair.old?.id || "", name: pair.new?.name || "", relativePath: pair.new?.relativePath || "",changeType: "modified"});
             // }
-            LOGGER.info("The changed data tables are: " + JSON.stringify(changedDataTables));
+            LOGGER.info("The changed data tables are final: " + JSON.stringify(changedDataTables));
             const repoRootID = yield (0, octaneClient_1.getScmRepo)(this.octaneSDKConnection, this.sharedSpace, this.workspace);
             yield this.sendDataTableEventsToOctane(changedDataTables, repoRootID);
         });
