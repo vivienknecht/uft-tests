@@ -40458,10 +40458,12 @@ class Discovery {
                 if (status === "D") {
                     const deletedFile = (_c = modifiedFilesArray[i++]) !== null && _c !== void 0 ? _c : "";
                     if (deletedFile && deletedFile.match(/\.(st|tsp)$/)) {
+                        const className = (0, utils_1.getClassNameAtSync)(deletedFile);
+                        LOGGER.info("The class name of deleted test is: " + className);
                         const testToDelete = {
                             name: (0, utils_1.getTestNameAtSync)(deletedFile),
-                            packageName: (0, utils_1.getPackageNameAtSync)((0, utils_1.getClassNameAtSync)(deletedFile)),
-                            className: (0, utils_1.getClassNameAtSync)(deletedFile),
+                            packageName: (0, utils_1.getPackageNameAtSync)(className),
+                            className: className,
                             isExecutable: false
                         };
                         testsToDelete.push(testToDelete);
@@ -41780,9 +41782,7 @@ const getClassNameAtSync = (pathToTest) => {
 };
 exports.getClassNameAtSync = getClassNameAtSync;
 const getPackageNameAtSync = (className) => {
-    const parts = className.split(path.sep);
-    parts.pop();
-    return parts.join("/");
+    return path.dirname(className);
 };
 exports.getPackageNameAtSync = getPackageNameAtSync;
 const formatValueForQuery = (value) => {
