@@ -40585,7 +40585,7 @@ class Discovery {
             for (const dataTable of deletedDataTables) {
                 const deletedDataTable = yield (0, octaneClient_1.checkIfScmResourceFileExists)(this.octaneSDKConnection, this.sharedSpace, this.workspace, dataTable.name, dataTable.relativePath);
                 if (deletedDataTable) {
-                    changedDataTables.push(Object.assign(Object.assign({}, dataTable), { changeType: "deleted" }));
+                    changedDataTables.push(Object.assign(Object.assign({}, dataTable), { id: deletedDataTable.id, changeType: "deleted" }));
                 }
             }
             for (const dataTable of modifiedDataTables) {
