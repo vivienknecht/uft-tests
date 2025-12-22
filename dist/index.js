@@ -40447,6 +40447,8 @@ class Discovery {
                             name: path.basename(newPath),
                             relativePath: newPath
                         };
+                        const filteredModifiedDataTables = yield this.removeFalsePositiveDataTables(discoveredTests, [newDataTable]);
+                        LOGGER.info("The filtered modified data tables are: " + JSON.stringify(filteredModifiedDataTables));
                         modifiedDataTables.push({
                             oldValue: oldDataTable,
                             newValue: newDataTable,
