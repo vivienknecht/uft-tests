@@ -40412,6 +40412,7 @@ class Discovery {
             const addedTests = [];
             const removedDataTables = [];
             const modifiedDataTables = [];
+            const addedDataTables = [];
             for (let i = 0; i < modifiedFilesArray.length;) {
                 const status = modifiedFilesArray[i++];
                 if (!status)
@@ -40434,9 +40435,17 @@ class Discovery {
                         LOGGER.info(`Mapped: ${oldPath} → ${newPath}`);
                     }
                     else if ((oldPath && oldPath.match(/\.(xlsx|xls)$/)) || (newPath && newPath.match(/\.(xlsx|xls)$/))) {
+                        const oldDataTable = {
+                            name: path.basename(oldPath),
+                            relativePath: oldPath
+                        };
+                        const newDataTable = {
+                            name: path.basename(newPath),
+                            relativePath: newPath
+                        };
                         modifiedDataTables.push({
-                            oldValue: path.basename(oldPath),
-                            newValue: path.basename(newPath),
+                            oldValue: oldDataTable,
+                            newValue: newDataTable,
                         });
                         LOGGER.info(`Mapped data table: ${oldPath} → ${newPath}`);
                     }
@@ -40454,8 +40463,11 @@ class Discovery {
                         testsToDelete.push(testToDelete);
                     }
                     else if (deletedFile && deletedFile.match(/\.(xlsx|xls)$/)) {
-                        const deletedDataTableName = path.basename(deletedFile);
-                        removedDataTables.push(deletedDataTableName);
+                        const deletedDataTable = {
+                            name: path.basename(deletedFile),
+                            relativePath: deletedFile
+                        };
+                        removedDataTables.push(deletedDataTable);
                     }
                     continue;
                 }
@@ -40473,6 +40485,13 @@ class Discovery {
                             LOGGER.info("The added API test is: " + JSON.stringify(addAPITest));
                             addedTests.push(addAPITest);
                         }
+                    }
+                    else if (addedFile && addedFile.match(/\.(xlsx|xls)$/)) {
+                        const newDataTable = {
+                            name: path.basename(addedFile),
+                            relativePath: addedFile
+                        };
+                        addedDataTables.push(newDataTable);
                     }
                 }
             }
@@ -40498,6 +40517,7 @@ class Discovery {
                     changedTests.push(Object.assign(Object.assign({}, pair.newValue), { changeType: "added" }));
                 }
             }
+            /// todo check for false positive data tables
             for (const test of discoveredTests) {
                 const existsInAdded = addedTests.some(addedTest => addedTest.name === test.name &&
                     addedTest.className === test.className &&
@@ -40522,42 +40542,71 @@ class Discovery {
                 }
             }
             LOGGER.info("The changed data tables are: " + JSON.stringify(modifiedDataTables));
-            yield this.getModifiedScmResourceFiles(removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
+            yield this.getModifiedScmResourceFiles(addedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles, existingScmResourceFiles);
             return changedTests;
         });
     }
-    getModifiedScmResourceFiles(deletedDataTables, modifiedDataTables, discoveredDataTables, existingDataTables) {
+    getModifiedScmResourceFiles(addedDataTables, deletedDataTables, modifiedDataTables, discoveredDataTables, existingDataTables) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c;
             const changedDataTables = [];
             const existingByName = new Map(existingDataTables.map(dataTable => [dataTable.name, dataTable]));
             const currentByName = new Map(discoveredDataTables.map(dataTable => [dataTable.name, dataTable]));
-            for (const dataTable of discoveredDataTables) {
-                const existingDataTable = existingByName.get(dataTable.name);
+            for (const dataTable of addedDataTables) {
+                changedDataTables.push(Object.assign(Object.assign({}, dataTable), { changeType: "added" }));
+            }
+            for (const dataTable of deletedDataTables) {
+                const deletedDataTable = yield (0, octaneClient_1.checkIfScmResourceFileExists)(this.octaneSDKConnection, this.sharedSpace, this.workspace, dataTable.name, dataTable.relativePath);
+                if (deletedDataTable) {
+                    changedDataTables.push(Object.assign(Object.assign({}, dataTable), { changeType: "deleted" }));
+                }
+            }
+            for (const dataTable of modifiedDataTables) {
+                const existingDataTable = yield (0, octaneClient_1.checkIfScmResourceFileExists)(this.octaneSDKConnection, this.sharedSpace, this.workspace, dataTable.oldValue.name, dataTable.oldValue.relativePath);
                 if (existingDataTable) {
-                    LOGGER.info("Data table already exists in Octane: " + dataTable.name);
-                    continue; // No changes
+                    changedDataTables.push(Object.assign(Object.assign({}, dataTable.newValue), { id: existingDataTable.id, changeType: "modified" }));
                 }
-                const existsInModified = modifiedDataTables.some(pair => pair.oldValue === dataTable.name || pair.newValue === dataTable.name);
-                if (!existsInModified) {
+                else {
+                    changedDataTables.push(Object.assign(Object.assign({}, dataTable.newValue), { changeType: "added" }));
+                }
+            }
+            for (const dataTable of discoveredDataTables) {
+                // const existingDataTable = existingByName.get(dataTable.name);
+                // if (existingDataTable) {
+                //     LOGGER.info("Data table already exists in Octane: " + dataTable.name);
+                //     continue; // No changes
+                // }
+                const existsInAdded = addedDataTables.some(addedDataTable => addedDataTable.name === dataTable.name && addedDataTable.relativePath === dataTable.relativePath);
+                if (existsInAdded) {
+                    LOGGER.info("The data table was already added. " + dataTable.name);
+                    continue;
+                }
+                const existsInModified = modifiedDataTables.some(pair => (pair.oldValue.name === dataTable.name && pair.oldValue.relativePath === dataTable.relativePath)
+                    || (pair.newValue.name === dataTable.name && pair.newValue.relativePath === dataTable.relativePath));
+                const dataTableExists = (0, octaneClient_1.checkIfScmResourceFileExists)(this.octaneSDKConnection, this.sharedSpace, this.workspace, dataTable.name, dataTable.relativePath);
+                if (!existsInModified && !dataTableExists) {
                     changedDataTables.push(Object.assign(Object.assign({}, dataTable), { changeType: "added" }));
+                    LOGGER.info("This is a new data table: " + dataTable.name);
+                }
+                else {
+                    LOGGER.info("The data table already exists " + dataTable.name);
                 }
             }
-            for (const dataTableName of deletedDataTables) {
-                const dataTableToDelete = existingByName.get(dataTableName);
-                if (dataTableToDelete) {
-                    changedDataTables.push(Object.assign(Object.assign({}, dataTableToDelete), { changeType: "deleted" }));
-                }
-            }
-            const modifiedDataTablePairs = [];
-            for (const entry of modifiedDataTables) {
-                const oldDataTableValue = existingByName.get(entry.oldValue);
-                const newDataTableValue = currentByName.get(entry.newValue);
-                modifiedDataTablePairs.push({ old: oldDataTableValue, new: newDataTableValue });
-            }
-            for (const pair of modifiedDataTablePairs) {
-                changedDataTables.push(Object.assign(Object.assign({}, pair.new), { id: ((_a = pair.old) === null || _a === void 0 ? void 0 : _a.id) || "", name: ((_b = pair.new) === null || _b === void 0 ? void 0 : _b.name) || "", relativePath: ((_c = pair.new) === null || _c === void 0 ? void 0 : _c.relativePath) || "", changeType: "modified" }));
-            }
+            // for (const dataTableName of deletedDataTables) {
+            //     const dataTableToDelete = existingByName.get(dataTableName);
+            //     if (dataTableToDelete) {
+            //         changedDataTables.push({...dataTableToDelete, changeType: "deleted"});
+            //     }
+            // }
+            // const modifiedDataTablePairs = [];
+            // for (const entry of modifiedDataTables) {
+            //     const oldDataTableValue = existingByName.get(entry.oldValue);
+            //     const newDataTableValue = currentByName.get(entry.newValue);
+            //     modifiedDataTablePairs.push({old: oldDataTableValue, new: newDataTableValue});
+            // }
+            //
+            // for (const pair of modifiedDataTablePairs) {
+            //     changedDataTables.push({...pair.new, id: pair.old?.id || "", name: pair.new?.name || "", relativePath: pair.new?.relativePath || "",changeType: "modified"});
+            // }
             LOGGER.info("The changed data tables are: " + JSON.stringify(changedDataTables));
             const repoRootID = yield (0, octaneClient_1.getScmRepo)(this.octaneSDKConnection, this.sharedSpace, this.workspace);
             yield this.sendDataTableEventsToOctane(changedDataTables, repoRootID);
@@ -40727,7 +40776,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getScmResourceFilesFromOctane = exports.deleteScmResourceFile = exports.updateScmResourceFile = exports.createScmResourceFile = exports.checkIfTestExists = exports.makeTestNotExecutableInOctane = exports.sendUpdateTestEventToOctane = exports.sendCreateTestEventToOctane = exports.getScmRepo = exports.getTestRunnerId = void 0;
+exports.checkIfScmResourceFileExists = exports.getScmResourceFilesFromOctane = exports.deleteScmResourceFile = exports.updateScmResourceFile = exports.createScmResourceFile = exports.checkIfTestExists = exports.makeTestNotExecutableInOctane = exports.sendUpdateTestEventToOctane = exports.sendCreateTestEventToOctane = exports.getScmRepo = exports.getTestRunnerId = void 0;
 const alm_octane_js_rest_sdk_1 = __nccwpck_require__(3967);
 const logger_1 = __nccwpck_require__(7893);
 const utils_1 = __nccwpck_require__(5268);
@@ -40917,6 +40966,20 @@ const getScmResourceFilesFromOctane = (octaneConnection, sharedSpace, workspace,
     }
 });
 exports.getScmResourceFilesFromOctane = getScmResourceFilesFromOctane;
+const checkIfScmResourceFileExists = (octaneConnection, sharedSpace, workspace, name, relativePath) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        name = (0, utils_1.formatValueForQuery)(name);
+        relativePath = (0, utils_1.formatValueForQuery)(relativePath);
+        LOGGER.info("The formatted values are - name: " + name + ", relativePath: " + relativePath);
+        const scmResourceFile = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/scm_resource_files/?query=\"name EQ ^${name}^;relative_path EQ ^${relativePath}^\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        LOGGER.info("The scm resource file from octane is: " + JSON.stringify(scmResourceFile));
+        return scmResourceFile.data[0];
+    }
+    catch (error) {
+        LOGGER.error("Error occurred while getting scm resource file from Octane: " + error.message);
+    }
+});
+exports.checkIfScmResourceFileExists = checkIfScmResourceFileExists;
 
 
 /***/ }),
