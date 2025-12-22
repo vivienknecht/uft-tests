@@ -40324,6 +40324,22 @@ class Discovery {
             return scmResourceFiles;
         });
     }
+    removeFalsePositiveDataTablesAtUpdate(tests, scmResourceFiles) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const classNames = new Set(tests.map(t => t.className));
+            scmResourceFiles = scmResourceFiles.filter(file => {
+                const relativeDir = path.dirname(file.relativePath);
+                LOGGER.info("The relative dir of data table is: " + relativeDir);
+                if (classNames.has(relativeDir)) {
+                    return false;
+                }
+                const startsWithClasName = [...classNames].some(className => relativeDir.startsWith(className));
+                return !startsWithClasName;
+            });
+            LOGGER.info("The filtered data tables are: " + JSON.stringify(scmResourceFiles));
+            return scmResourceFiles;
+        });
+    }
     startDiscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initializeOctaneConnection();
@@ -40447,7 +40463,7 @@ class Discovery {
                             name: path.basename(newPath),
                             relativePath: newPath
                         };
-                        const filteredModifiedDataTables = yield this.removeFalsePositiveDataTables(discoveredTests, [newDataTable]);
+                        const filteredModifiedDataTables = yield this.removeFalsePositiveDataTablesAtUpdate(discoveredTests, [newDataTable]);
                         LOGGER.info("The filtered modified data tables are: " + JSON.stringify(filteredModifiedDataTables));
                         modifiedDataTables.push({
                             oldValue: oldDataTable,
