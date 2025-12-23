@@ -32,14 +32,14 @@ steps:
     Framework: 'uft'
     GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
 
-- powershell: |
-      node dist/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1  
-  displayName: TestConversion
+# - powershell: |
+#       node dist/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1  
+#   displayName: TestConversion
   
-- powershell: |
-    Write-Host "===== DEBUG: Pipeline Variable testsToRunConverted ====="
-    $testsToRunConverted = $env:testsToRunConverted
-    Write-Host $testsToRunConverted
+# - powershell: |
+#     Write-Host "===== DEBUG: Pipeline Variable testsToRunConverted ====="
+#     $testsToRunConverted = $env:testsToRunConverted
+#     Write-Host $testsToRunConverted
 
 # - powershell: |
 #     Write-Host "Current Directory:"
