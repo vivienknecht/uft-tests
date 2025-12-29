@@ -39,46 +39,46 @@ steps:
   - checkout: self
     fetchDepth: 0
 
-  - task: DownloadPipelineArtifact@2
-    displayName: "Download last successful commit SHA"
-    inputs:
-      buildType: "specific"
-      project: "$(System.TeamProjectId)"
-      definition: "$(System.DefinitionId)"
-      buildVersionToDownload: "latestFromBranch"
-      branchName: "$(Build.SourceBranch)"
-      artifactName: "last-successful"
-      downloadPath: "$(Pipeline.Workspace)/last-successful"
-    continueOnError: true
+  # - task: DownloadPipelineArtifact@2
+  #   displayName: "Download last successful commit SHA"
+  #   inputs:
+  #     buildType: "specific"
+  #     project: "$(System.TeamProjectId)"
+  #     definition: "$(System.DefinitionId)"
+  #     buildVersionToDownload: "latestFromBranch"
+  #     branchName: "$(Build.SourceBranch)"
+  #     artifactName: "last-successful"
+  #     downloadPath: "$(Pipeline.Workspace)/last-successful"
+  #   continueOnError: true
 
-  - powershell: |
-      $artifactPath = "$(Pipeline.Workspace)/last-successful/last_successful_commit.txt"
+  # - powershell: |
+  #     $artifactPath = "$(Pipeline.Workspace)/last-successful/last_successful_commit.txt"
 
-      if (Test-Path $artifactPath) {
-        $last = Get-Content $artifactPath
-        Write-Host "Found last successful commit: $last"
-      }
-      #Necessary for first run or when no artifacts can be found
-      else {
-        $last = "$(Build.SourceVersion)^"
-        Write-Host "No previous successful run found. Using fallback commit: $last"
-      }
-      Write-Host "##vso[task.setvariable variable=LAST_SUCCESSFUL_COMMIT]$last"
-    displayName: "Resolve last successful commit"
+  #     if (Test-Path $artifactPath) {
+  #       $last = Get-Content $artifactPath
+  #       Write-Host "Found last successful commit: $last"
+  #     }
+  #     #Necessary for first run or when no artifacts can be found
+  #     else {
+  #       $last = "$(Build.SourceVersion)^"
+  #       Write-Host "No previous successful run found. Using fallback commit: $last"
+  #     }
+  #     Write-Host "##vso[task.setvariable variable=LAST_SUCCESSFUL_COMMIT]$last"
+  #   displayName: "Resolve last successful commit"
 
-  - task: PowerShell@2
-    name: GetFiles
-    inputs:
-      targetType: inline
-      script: |
-        git fetch --all
-        Write-Host "Diff from $Env:LAST_SUCCESSFUL_COMMIT to HEAD"
-        $files = git diff --name-status -M -z $Env:LAST_SUCCESSFUL_COMMIT HEAD | Out-String
-        if (-not $files) { $files = "" }
-        $encoded = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($files))
-        Write-Host "Modified files: $files"
-        Write-Host "##vso[task.setvariable variable=MODIFIED_FILES]$encoded"
-    displayName: "Get changed files since last successful run"
+  # - task: PowerShell@2
+  #   name: GetFiles
+  #   inputs:
+  #     targetType: inline
+  #     script: |
+  #       git fetch --all
+  #       Write-Host "Diff from $Env:LAST_SUCCESSFUL_COMMIT to HEAD"
+  #       $files = git diff --name-status -M -z $Env:LAST_SUCCESSFUL_COMMIT HEAD | Out-String
+  #       if (-not $files) { $files = "" }
+  #       $encoded = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($files))
+  #       Write-Host "Modified files: $files"
+  #       Write-Host "##vso[task.setvariable variable=MODIFIED_FILES]$encoded"
+  #   displayName: "Get changed files since last successful run"
 
   - powershell: |
       node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="http://localhost:8080/dev" --sharedSpace="$env:SHAREDSPACE" --workspace="$env:WORKSPACE" --clientSecret="$env:CLIENTSECRE" --clientId="$env:CLIENTID" --logLevel=1
@@ -89,13 +89,13 @@ steps:
       REPOURL: $(Build.Repository.Uri)
     displayName: Discovery
 
-  - powershell: |
-      echo $(Build.SourceVersion) > last_successful_commit.txt
-    displayName: "Store current commit SHA"
+  # - powershell: |
+  #     echo $(Build.SourceVersion) > last_successful_commit.txt
+  #   displayName: "Store current commit SHA"
 
-  - publish: last_successful_commit.txt
-    artifact: last-successful
-    displayName: "Publish last successful commit SHA"
+  # - publish: last_successful_commit.txt
+  #   artifact: last-successful
+  #   displayName: "Publish last successful commit SHA"
 
   - powershell: |
       Write-Host "Current Directory:"
