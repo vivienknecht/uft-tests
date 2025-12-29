@@ -33,27 +33,27 @@ steps:
       GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
 
   - powershell: |
-      node dist/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1  
+      node dist/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
     displayName: TestConversion
 
   - checkout: self
     fetchDepth: 0
 
+  - task: DownloadPipelineArtifact@2
+    displayName: "Download last successful commit SHA"
+    inputs:
+      buildType: "specific"
+      project: "$(System.TeamProjectId)"
+      definition: "$(System.DefinitionId)"
+      buildVersionToDownload: "latestFromBranch"
+      branchName: "$(Build.SourceBranch)"
+      artifactName: "last-successful"
+      downloadPath: "$(Pipeline.Workspace)/last-successful"
+    continueOnError: true
+
   - powershell: |
       ./eng/detect-changed-files.ps1
-    displayName: Detect changed files since last successful run  
-
-  # - task: DownloadPipelineArtifact@2
-  #   displayName: "Download last successful commit SHA"
-  #   inputs:
-  #     buildType: "specific"
-  #     project: "$(System.TeamProjectId)"
-  #     definition: "$(System.DefinitionId)"
-  #     buildVersionToDownload: "latestFromBranch"
-  #     branchName: "$(Build.SourceBranch)"
-  #     artifactName: "last-successful"
-  #     downloadPath: "$(Pipeline.Workspace)/last-successful"
-  #   continueOnError: true
+    displayName: Detect changed files since last successful run
 
   # - powershell: |
   #     $artifactPath = "$(Pipeline.Workspace)/last-successful/last_successful_commit.txt"
@@ -97,9 +97,9 @@ steps:
   #     echo $(Build.SourceVersion) > last_successful_commit.txt
   #   displayName: "Store current commit SHA"
 
-  # - publish: last_successful_commit.txt
-  #   artifact: last-successful
-  #   displayName: "Publish last successful commit SHA"
+  - publish: last_successful_commit.txt
+    artifact: last-successful
+    displayName: "Publish last successful commit SHA"
 
   - powershell: |
       Write-Host "Current Directory:"
