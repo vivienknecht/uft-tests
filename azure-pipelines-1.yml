@@ -39,6 +39,10 @@ steps:
   - checkout: self
     fetchDepth: 0
 
+  - powershell: |
+      ./eng/detect-changed-files.ps1
+    displayName: Detect changed files since last successful run  
+
   # - task: DownloadPipelineArtifact@2
   #   displayName: "Download last successful commit SHA"
   #   inputs:
