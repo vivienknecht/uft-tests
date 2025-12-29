@@ -1,14 +1,14 @@
 Write-Host "=== Detect changed files since last successful run ==="
 
 $workspace     = $env:PIPELINE_WORKSPACE
-$currentCommit = $env:BUILD_SOURCEVERSION
+$currentCommit = $env:BUILD_SOURCEVERSION.Trim()  # Trim whitespace
 
 $artifactPath = Join-Path $workspace "last-successful"
 $commitFile   = Join-Path $artifactPath "last_successful_commit.txt"
 
 # Resolve baseline commit
 if (Test-Path $commitFile) {
-    $lastCommit = Get-Content $commitFile -Raw
+    $lastCommit = (Get-Content $commitFile -Raw).Trim()  # Trim whitespace/newlines
     Write-Host "Found last successful commit: $lastCommit"
 }
 else {
