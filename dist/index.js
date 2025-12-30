@@ -40343,7 +40343,6 @@ class Discovery {
     startDiscovery(path) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initializeOctaneConnection();
-            yield (0, utils_1.getSyncedCommitSHA)();
             const repoID = yield (0, octaneClient_1.getScmRepo)(this.octaneSDKConnection, this.sharedSpace, this.workspace);
             const scanner = new ScanRepo_1.default(path);
             const discovery = yield scanner.scanRepo(path);
@@ -41677,7 +41676,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.formatValueForQuery = exports.getPackageNameAtSync = exports.getClassNameAtSync = exports.getTestNameAtSync = exports.getDescriptionForAPITest = exports.getAPITestDoc = exports.customDOMParser = exports.convertToXml = exports.checkIfFileExists = exports.convertToHtml = exports.getDescriptionForGUITest = exports.getGUITestDoc = void 0;
-exports.getSyncedCommitSHA = getSyncedCommitSHA;
 const path = __nccwpck_require__(6928);
 const fs = __nccwpck_require__(1943);
 const logger_1 = __nccwpck_require__(7893);
@@ -41879,24 +41877,6 @@ const formatValueForQuery = (value) => {
     return value.replace(/[(){}[\]^\\;]/g, "\\$&");
 };
 exports.formatValueForQuery = formatValueForQuery;
-const SYNCED_COMMIT_SHA = path.join(process.cwd(), '.synced-commit-sha');
-function getSyncedCommitSHA() {
-    return __awaiter(this, arguments, void 0, function* (fallbackSHA = 'HEAD^') {
-        try {
-            // Use fs.access to check if file exists
-            yield fs.access(SYNCED_COMMIT_SHA);
-            const lastCommit = (yield fs.readFile(SYNCED_COMMIT_SHA, 'utf8')).trim();
-            console.log(`Found last synced commit: ${lastCommit}`);
-            return lastCommit;
-        }
-        catch (_a) {
-            // File doesn't exist
-            yield fs.writeFile(SYNCED_COMMIT_SHA, fallbackSHA, 'utf8');
-            console.log(`No synced commit found. Using fallback: ${fallbackSHA}`);
-            return fallbackSHA;
-        }
-    });
-}
 
 
 /***/ }),
