@@ -40384,7 +40384,7 @@ class Discovery {
                 else if (test.changeType === 'modified') {
                     LOGGER.info("the test to update id is: " + test.id);
                     if (test.id) {
-                        yield (0, octaneClient_1.sendUpdateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.id, test.name, test.packageName, test.description, test.className);
+                        yield (0, octaneClient_1.sendUpdateTestEventToOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.id, test.name, test.packageName, test.description, test.className, test.isExecutable);
                     }
                 }
                 else {
@@ -40932,7 +40932,7 @@ const sendCreateTestEventToOctane = (octaneConnection, url, name, packageName, c
     }
 });
 exports.sendCreateTestEventToOctane = sendCreateTestEventToOctane;
-const sendUpdateTestEventToOctane = (octaneConnection, sharedSpace, workspace, testId, name, packageName, description, className) => __awaiter(void 0, void 0, void 0, function* () {
+const sendUpdateTestEventToOctane = (octaneConnection, sharedSpace, workspace, testId, name, packageName, description, className, isExecutable) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const body = {
             "data": [
@@ -40942,7 +40942,8 @@ const sendUpdateTestEventToOctane = (octaneConnection, sharedSpace, workspace, t
                     "name": name,
                     "package": packageName,
                     "description": description,
-                    "class_name": className
+                    "class_name": className,
+                    "executable": isExecutable
                 }
             ]
         };
