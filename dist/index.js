@@ -40574,6 +40574,10 @@ class Discovery {
                     (pair.newValue.name === test.name &&
                         pair.newValue.className === test.className &&
                         pair.newValue.packageName === test.packageName));
+                if (existsInModified) {
+                    LOGGER.info("The test was already modified. " + test.name);
+                    continue;
+                }
                 //const testExists = await checkIfTestExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className);
                 const testExists = existingTestsMap.get(test.name);
                 if (testExists && testExists.isExecutable === false) {
@@ -40581,13 +40585,19 @@ class Discovery {
                     LOGGER.info("The test exists but is not executable. Making it executable: " + test.name);
                     continue;
                 }
-                if (!existsInModified && !testExists) {
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
-                    LOGGER.warn(`This is a new test: ${test.name}`);
+                if (testExists) {
+                    LOGGER.info("The test already exists in Octane: " + test.name);
                 }
                 else {
-                    LOGGER.info("The test already exists " + test.name);
+                    LOGGER.info("The test does not exist in Octane: " + test.name);
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                 }
+                // if (!existsInModified && !testExists) {
+                //     changedTests.push({...test, changeType: "added"});
+                //     LOGGER.warn(`This is a new test: ${test.name}`);
+                // } else {
+                //     LOGGER.info("The test already exists " + test.name);
+                // }
             }
             LOGGER.info("The changed data tables are: " + JSON.stringify(modifiedDataTables));
             const filteredAddedDataTables = yield this.removeFalsePositiveDataTablesAtUpdate(discoveredTests, addedDataTables);
@@ -40868,7 +40878,7 @@ exports.getScmRepo = getScmRepo;
 const getExistingTestsInScmRepo = (octaneConnection, sharedSpace, workspace, scmRepositoryId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const existingTests = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"scm_repository EQ {id EQ ^${scmRepositoryId}^}\"&fields=executable`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-        LOGGER.info("The existing tests in scm repository are: " + JSON.stringify(existingTests));
+        LOGGER.info("The existing tests in scm repository are: " + JSON.stringify(existingTests.data[0]));
         const automatedTests = [];
         for (const testData of existingTests.data) {
             const automatedTest = {
