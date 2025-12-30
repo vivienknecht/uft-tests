@@ -40526,10 +40526,19 @@ class Discovery {
                     }
                 }
             }
+            const existingTestsMap = new Map(existingTestsInRepo.map(test => [test.name, test]));
             for (const addedTest of addedTests) {
+                const testExists = existingTestsMap.get(addedTest.name);
+                if (testExists && testExists.isExecutable === false) {
+                    LOGGER.info("The added test already exists in Octan but is not executable: " + addedTest.name);
+                    changedTests.push(Object.assign(Object.assign({}, addedTest), { changeType: 'modified', id: testExists.id, isExecutable: true }));
+                }
+                else if (testExists) {
+                    LOGGER.info("The added test already exists in Octane: " + addedTest.name);
+                    continue;
+                }
                 changedTests.push(Object.assign(Object.assign({}, addedTest), { changeType: 'added' }));
             }
-            const existingTestsMap = new Map(existingTestsInRepo.map(test => [test.name, test]));
             for (const test of testsToDelete) {
                 const testToDelete = existingTestsMap.get(test.name);
                 ///const testToDelete = await checkIfTestExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className);
