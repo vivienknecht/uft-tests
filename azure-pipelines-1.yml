@@ -48,7 +48,7 @@ steps:
       buildVersionToDownload: "latestFromBranch"
       branchName: "$(Build.SourceBranch)"
       artifactName: "last-successful"
-      downloadPath: "$(Pipeline.Workspace)/last-successful/last-successful.txt"
+      downloadPath: "$(Pipeline.Workspace)\\last-successful"
     continueOnError: true
 
   # - task: DetectChangedFiles@1
