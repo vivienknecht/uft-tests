@@ -39,17 +39,17 @@ steps:
   - checkout: self
     fetchDepth: 0
 
-  # - task: DownloadPipelineArtifact@2
-  #   displayName: "Download last successful commit SHA"
-  #   inputs:
-  #     buildType: "specific"
-  #     project: "$(System.TeamProjectId)"
-  #     definition: "$(System.DefinitionId)"
-  #     buildVersionToDownload: "latestFromBranch"
-  #     branchName: "$(Build.SourceBranch)"
-  #     artifactName: "last-successful"
-  #     downloadPath: "$(Pipeline.Workspace)\\last-successful"
-  #   continueOnError: true
+  - task: DownloadPipelineArtifact@2
+    displayName: "Download last successful commit SHA"
+    inputs:
+      buildType: "specific"
+      project: "$(System.TeamProjectId)"
+      definition: "$(System.DefinitionId)"
+      buildVersionToDownload: "latestFromBranch"
+      branchName: "$(Build.SourceBranch)"
+      artifactName: "last-successful"
+      downloadPath: "$(Pipeline.Workspace)\\last-successful"
+    continueOnError: true
 
   # - task: DetectChangedFiles@1
   #   inputs:
