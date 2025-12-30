@@ -40506,7 +40506,7 @@ class Discovery {
                 if (status === "A") {
                     const addedFile = modifiedFilesArray[i++];
                     if (addedFile && addedFile.match(/\.(st|tsp)$/)) {
-                        const addedFileRenamed = rootFolder + "\\" + addedFile.replace("/", "\\");
+                        const addedFileRenamed = rootFolder + "\\" + addedFile.replace(/\//g, "\\");
                         if (addedFile.endsWith(".tsp")) {
                             const addGUITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, this.GUI_TEST_TYPE);
                             LOGGER.info("The added GUI test is: " + JSON.stringify(addGUITest));
