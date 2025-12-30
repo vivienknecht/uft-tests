@@ -40571,6 +40571,10 @@ class Discovery {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                     LOGGER.warn(`This is a new test: ${test.name}`);
                 }
+                else if (testExists && testExists.isExecutable === false) {
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "modified", id: testExists.id, isExecutable: true }));
+                    LOGGER.info("The test exists but is not executable. Making it executable: " + test.name);
+                }
                 else {
                     LOGGER.info("The test already exists " + test.name);
                 }
@@ -40862,7 +40866,8 @@ const getExistingTestsInScmRepo = (octaneConnection, sharedSpace, workspace, scm
                 name: testData.name,
                 packageName: testData.package,
                 className: testData.class_name,
-                description: testData.description
+                description: testData.description,
+                isExecutable: testData.executable
             };
             automatedTests.push(automatedTest);
         }
