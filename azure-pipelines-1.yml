@@ -19,16 +19,16 @@ steps:
       versionSpec: "22.x"
     displayName: "Use Node.js"
 
-  - task: octane-start-task-private@1
-    inputs:
-      OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "16001"
-      CreatePipelineCheckbox: true
+  # - task: octane-start-task-private@1
+  #   inputs:
+  #     OctaneServiceConnection: "octaneConnectionForDiscovery"
+  #     WorkspaceList: "1002"
+  #     CreatePipelineCheckbox: true
 
   - task: octane-test-runner-start-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "16001"
+      WorkspaceList: "1002"
       Framework: "uft"
       GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
 
@@ -133,10 +133,10 @@ steps:
       Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
       echo "Please check the [$PWD\build\Results.xml] file."
 
-  - task: octane-end-task-private@1
-    inputs:
-      OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "16001"
-      Framework: "uft"
-    env:
-      UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
+  # - task: octane-end-task-private@1
+  #   inputs:
+  #     OctaneServiceConnection: "octaneConnectionForDiscovery"
+  #     WorkspaceList: "1002"
+  #     Framework: "uft"
+  #   env:
+  #     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
