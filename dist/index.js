@@ -40576,13 +40576,14 @@ class Discovery {
                         pair.newValue.packageName === test.packageName));
                 //const testExists = await checkIfTestExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className);
                 const testExists = existingTestsMap.get(test.name);
+                if (testExists && testExists.isExecutable === false) {
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "modified", id: testExists.id, isExecutable: true }));
+                    LOGGER.info("The test exists but is not executable. Making it executable: " + test.name);
+                    continue;
+                }
                 if (!existsInModified && !testExists) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
                     LOGGER.warn(`This is a new test: ${test.name}`);
-                }
-                else if (testExists && testExists.isExecutable === false) {
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "modified", id: testExists.id, isExecutable: true }));
-                    LOGGER.info("The test exists but is not executable. Making it executable: " + test.name);
                 }
                 else {
                     LOGGER.info("The test already exists " + test.name);
