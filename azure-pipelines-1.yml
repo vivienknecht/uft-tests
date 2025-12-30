@@ -99,13 +99,13 @@ steps:
       REPOURL: $(Build.Repository.Uri)
     displayName: Discovery
 
-  # - powershell: |
-  #     echo $(Build.SourceVersion) > last_successful_commit.txt
-  #   displayName: "Store current commit SHA"
+  - powershell: |
+      echo $(Build.SourceVersion) > last_successful_commit.txt
+    displayName: "Store current commit SHA"
 
-  # - publish: last_successful_commit.txt
-  #   artifact: last-successful
-  #   displayName: "Publish last successful commit SHA"
+  - publish: last_successful_commit.txt
+    artifact: last-successful
+    displayName: "Publish last successful commit SHA"
 
   - powershell: |
       Write-Host "Current Directory:"
