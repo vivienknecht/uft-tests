@@ -1,1 +1,0 @@
-﻿var __testDataSource={items:[{dataFilePath:'Default.xlsx',dataFileFormat:'excel',dataFileFolder:'C:\\dev\\uft-tests\\browsers\\TestWDataTable\\Res6',namePairs:[]}]};
