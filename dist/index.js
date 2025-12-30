@@ -40508,12 +40508,12 @@ class Discovery {
                     if (addedFile && addedFile.match(/\.(st|tsp)$/)) {
                         const addedFileRenamed = rootFolder + "\\" + addedFile.replace(/\//g, "\\");
                         if (addedFile.endsWith(".tsp")) {
-                            const addGUITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, this.GUI_TEST_TYPE);
+                            const addGUITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(path.dirname(addedFileRenamed), this.GUI_TEST_TYPE);
                             LOGGER.info("The added GUI test is: " + JSON.stringify(addGUITest));
                             addedTests.push(addGUITest);
                         }
                         else if (addedFile.endsWith(".st")) {
-                            const addAPITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(addedFileRenamed, this.API_TEST_TYPE);
+                            const addAPITest = yield (0, CreateAutomatedTests_1.createAutomatedTestsFromGUI)(path.dirname(addedFileRenamed), this.API_TEST_TYPE);
                             LOGGER.info("The added API test is: " + JSON.stringify(addAPITest));
                             addedTests.push(addAPITest);
                         }
