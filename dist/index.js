@@ -40576,7 +40576,9 @@ class Discovery {
                 }
             }
             LOGGER.info("The changed data tables are: " + JSON.stringify(modifiedDataTables));
-            yield this.getModifiedScmResourceFiles(addedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles);
+            const filteredAddedDataTables = yield this.removeFalsePositiveDataTablesAtUpdate(discoveredTests, addedDataTables);
+            LOGGER.info("The filtered added data tables are: " + JSON.stringify(filteredAddedDataTables));
+            yield this.getModifiedScmResourceFiles(filteredAddedDataTables, removedDataTables, modifiedDataTables, discoveredScmResourceFiles);
             return changedTests;
         });
     }
