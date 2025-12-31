@@ -40599,7 +40599,7 @@ class Discovery {
                 }
                 let testId = "";
                 let isExecutable = true;
-                const foundTest = existingTestsInRepo.some(testE => {
+                const foundTest = existingTestsInRepo.find(testE => {
                     if (testE.name === test.name && testE.className === test.className && (testE.packageName === test.packageName || testE.packageName === null)) {
                         if (testE.isExecutable === false) {
                             isExecutable = false;
