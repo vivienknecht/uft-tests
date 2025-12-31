@@ -40597,22 +40597,15 @@ class Discovery {
                     LOGGER.info("The test was already modified. " + test.name);
                     continue;
                 }
-                let testId = "";
-                let isExecutable = true;
-                const foundTest = existingTestsInRepo.find(testE => {
-                    if (testE.name === test.name && testE.className === test.className && (testE.packageName === test.packageName || testE.packageName === null)) {
-                        if (testE.isExecutable === false) {
-                            isExecutable = false;
-                            testId = testE.id;
-                        }
-                    }
-                });
+                const foundTest = existingTestsInRepo.find(testE => testE.name === test.name &&
+                    testE.className === test.className &&
+                    (testE.packageName === test.packageName || testE.packageName === null));
                 if (foundTest) {
-                    if (isExecutable) {
-                        LOGGER.info("The test already exists in Octane: " + test.name);
+                    if (!foundTest.isExecutable) {
+                        changedTests.push(Object.assign(Object.assign({}, test), { changeType: "modified", id: foundTest.id, isExecutable: true }));
                     }
-                    else if (!isExecutable) {
-                        changedTests.push(Object.assign(Object.assign({}, test), { changeType: "modified", id: testId, isExecutable: true }));
+                    else {
+                        LOGGER.info("The test already exists in Octane: " + test.name);
                     }
                 }
                 else {
