@@ -40526,23 +40526,23 @@ class Discovery {
                     }
                 }
             }
-            const existingTestsMap = new Map(existingTestsInRepo.map(test => [test.name, test]));
+            const existingTestsMapByName = new Map(existingTestsInRepo.map(test => [test.name, test]));
             for (const addedTest of addedTests) {
-                const testExists = existingTestsMap.get(addedTest.name);
-                if (testExists && testExists.isExecutable === false) {
+                const testExists = existingTestsMapByName.get(addedTest.name); ////////todo more checks more tests can have the same name
+                if (testExists && testExists.isExecutable === false && testExists.packageName === addedTest.packageName && testExists.className === addedTest.className) {
                     LOGGER.info("The added test already exists in Octan but is not executable: " + addedTest.name);
                     changedTests.push(Object.assign(Object.assign({}, addedTest), { changeType: 'modified', id: testExists.id, isExecutable: true }));
                 }
-                else if (testExists) {
+                else if (testExists && testExists.packageName === addedTest.packageName && testExists.className === addedTest.className) {
                     LOGGER.info("The added test already exists in Octane: " + addedTest.name);
                     continue;
                 }
                 changedTests.push(Object.assign(Object.assign({}, addedTest), { changeType: 'added' }));
             }
             for (const test of testsToDelete) {
-                const testToDelete = existingTestsMap.get(test.name);
+                const testToDelete = existingTestsMapByName.get(test.name);
                 ///const testToDelete = await checkIfTestExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className);
-                if (testToDelete) {
+                if (testToDelete && testToDelete.packageName === test.packageName && testToDelete.className === test.className) {
                     changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete.id, isExecutable: false }));
                 }
                 else {
@@ -40550,9 +40550,9 @@ class Discovery {
                 }
             }
             for (const pair of modifiedTestsMap) {
-                const oldTest = existingTestsMap.get(pair.oldValue.name);
+                const oldTest = existingTestsMapByName.get(pair.oldValue.name);
                 //const oldTest = await checkIfTestExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.oldValue.name, pair.oldValue.packageName, pair.oldValue.className);
-                if (oldTest) {
+                if (oldTest && oldTest.packageName === pair.oldValue.packageName && oldTest.className === pair.oldValue.className) {
                     changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: pair.newValue.name, packageName: pair.newValue.packageName, className: pair.newValue.className, description: pair.newValue.description, changeType: "modified", id: oldTest.id, isExecutable: true }));
                 }
                 else {
@@ -40579,13 +40579,13 @@ class Discovery {
                     continue;
                 }
                 //const testExists = await checkIfTestExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className);
-                const testExists = existingTestsMap.get(test.name);
-                if (testExists && testExists.isExecutable === false) {
+                const testExists = existingTestsMapByName.get(test.name);
+                if (testExists && testExists.isExecutable === false && testExists.packageName === test.packageName && testExists.className === test.className) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: "modified", id: testExists.id, isExecutable: true }));
                     LOGGER.info("The test exists but is not executable. Making it executable: " + test.name);
                     continue;
                 }
-                if (testExists) {
+                if (testExists && testExists.packageName === test.packageName && testExists.className === test.className) {
                     LOGGER.info("The test already exists in Octane: " + test.name);
                 }
                 else {
