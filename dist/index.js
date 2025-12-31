@@ -40526,26 +40526,27 @@ class Discovery {
                     }
                 }
             }
-            const existingTestsMapByName = new Map(existingTestsInRepo.map(test => [test.name, test]));
             for (const addedTest of addedTests) {
                 let isExecutable = true;
-                let testId = "";
+                let testId;
                 const testExists = existingTestsInRepo.some(test => {
-                    if (test.name === addedTest.name
-                        && test.className === addedTest.className
-                        && (test.packageName === addedTest.packageName || test.packageName === null)) {
-                        if (test.isExecutable === false) {
+                    if (test.name === addedTest.name &&
+                        test.className === addedTest.className &&
+                        (test.packageName === addedTest.packageName || test.packageName === null)) {
+                        if (!test.isExecutable) {
                             isExecutable = false;
                             testId = test.id;
                         }
+                        return true;
                     }
+                    return false;
                 });
                 if (testExists) {
                     if (isExecutable) {
                         LOGGER.info("The added test already exists in Octane: " + addedTest.name);
                     }
                     else {
-                        LOGGER.info("The added test already exists in Octan but is not executable: " + addedTest.name);
+                        LOGGER.info("The added test already exists in Octane but is not executable: " + addedTest.name);
                         changedTests.push(Object.assign(Object.assign({}, addedTest), { changeType: 'modified', id: testId, isExecutable: true }));
                     }
                 }
@@ -40554,11 +40555,15 @@ class Discovery {
                 }
             }
             for (const test of testsToDelete) {
-                let testId = "";
+                let testId;
                 const foundTest = existingTestsInRepo.some(testE => {
-                    if (testE.name === test.name && testE.className === test.className && (testE.packageName === test.packageName || testE.packageName === null)) {
+                    if (testE.name === test.name &&
+                        testE.className === test.className &&
+                        (testE.packageName === test.packageName || testE.packageName === null)) {
                         testId = testE.id;
+                        return true;
                     }
+                    return false;
                 });
                 if (foundTest) {
                     changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'deleted', id: testId }));
