@@ -40581,18 +40581,25 @@ class Discovery {
                 //const testExists = await checkIfTestExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className);
                 const testExists = existingTestsMapByName.get(test.name);
                 LOGGER.info("The test exists check result is: " + JSON.stringify(testExists) + " for test name: " + test.name + ", class name: " + test.className + ", package name: " + test.packageName);
-                if (testExists && testExists.isExecutable === false && testExists.packageName === test.packageName && testExists.className === test.className) {
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "modified", id: testExists.id, isExecutable: true }));
-                    LOGGER.info("The test exists but is not executable. Making it executable: " + test.name);
+                const testE = existingTestsInRepo.some(testE => testE.name === test.name && testE.className === test.className && testE.packageName === test.packageName);
+                if (testE) {
+                    LOGGER.info("The test exists in Octane by all parameters: " + test.name);
                     continue;
                 }
-                if (testExists && testExists.packageName === test.packageName && testExists.className === test.className && testExists.isExecutable === true) {
-                    LOGGER.info("The test already exists in Octane: " + test.name);
-                }
-                else {
-                    LOGGER.info("The test does not exist in Octane: " + test.name);
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
-                }
+                changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
+                //
+                // if (testExists && testExists.isExecutable === false && testExists.packageName === test.packageName && testExists.className === test.className) {
+                //     changedTests.push({...test, changeType: "modified", id: testExists.id, isExecutable: true});
+                //     LOGGER.info("The test exists but is not executable. Making it executable: " + test.name);
+                //     continue;
+                // }
+                //
+                // if (testExists && testExists.packageName === test.packageName && testExists.className === test.className && testExists.isExecutable === true) {
+                //     LOGGER.info("The test already exists in Octane: " + test.name);
+                // } else {
+                //     LOGGER.info("The test does not exist in Octane: " + test.name);
+                //     changedTests.push({...test, changeType: "added"});
+                // }
                 // if (!existsInModified && !testExists) {
                 //     changedTests.push({...test, changeType: "added"});
                 //     LOGGER.warn(`This is a new test: ${test.name}`);
