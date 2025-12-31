@@ -40585,7 +40585,7 @@ class Discovery {
                     LOGGER.info("The test exists but is not executable. Making it executable: " + test.name);
                     continue;
                 }
-                if (testExists && testExists.packageName === test.packageName && testExists.className === test.className) {
+                if (testExists && testExists.packageName === test.packageName && testExists.className === test.className && testExists.isExecutable === true) {
                     LOGGER.info("The test already exists in Octane: " + test.name);
                 }
                 else {
