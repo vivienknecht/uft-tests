@@ -40565,11 +40565,15 @@ class Discovery {
                 }
             }
             for (const pair of modifiedTestsMap) {
-                let testId = "";
+                let testId;
                 const foundTest = existingTestsInRepo.some(testE => {
-                    if (testE.name === pair.newValue.name && testE.className === pair.newValue.className && (testE.packageName === pair.newValue.packageName || testE.packageName === null)) {
+                    if (testE.name === pair.newValue.name &&
+                        testE.className === pair.newValue.className &&
+                        (testE.packageName === pair.newValue.packageName || testE.packageName === null)) {
                         testId = testE.id;
+                        return true;
                     }
+                    return false;
                 });
                 if (foundTest) {
                     changedTests.push(Object.assign(Object.assign({}, pair.newValue), { changeType: "modified", id: testId, isExecutable: true }));
