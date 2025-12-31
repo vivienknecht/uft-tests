@@ -40528,25 +40528,26 @@ class Discovery {
             }
             const existingTestsMapByName = new Map(existingTestsInRepo.map(test => [test.name, test]));
             for (const addedTest of addedTests) {
-                const testExists = existingTestsMapByName.get(addedTest.name); ////////todo more checks more tests can have the same name
-                if (testExists && testExists.isExecutable === false && testExists.packageName === addedTest.packageName && testExists.className === addedTest.className) {
-                    LOGGER.info("The added test already exists in Octan but is not executable: " + addedTest.name);
-                    changedTests.push(Object.assign(Object.assign({}, addedTest), { changeType: 'modified', id: testExists.id, isExecutable: true }));
-                }
-                else if (testExists && testExists.packageName === addedTest.packageName && testExists.className === addedTest.className) {
-                    LOGGER.info("The added test already exists in Octane: " + addedTest.name);
-                    continue;
-                }
-                changedTests.push(Object.assign(Object.assign({}, addedTest), { changeType: 'added' }));
-            }
-            for (const test of testsToDelete) {
-                const testToDelete = existingTestsMapByName.get(test.name);
-                ///const testToDelete = await checkIfTestExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, test.name, test.packageName, test.className);
-                if (testToDelete && testToDelete.packageName === test.packageName && testToDelete.className === test.className) {
-                    changedTests.push(Object.assign(Object.assign({}, testToDelete), { changeType: 'deleted', id: testToDelete.id, isExecutable: false }));
+                const foundTest = existingTestsInRepo.find(test => test.name === addedTest.name && test.className === addedTest.className && (test.packageName === addedTest.packageName || test.packageName === null));
+                if (foundTest) {
+                    if (foundTest.isExecutable === false) {
+                        LOGGER.info("The added test already exists in Octan but is not executable: " + addedTest.name);
+                        changedTests.push(Object.assign(Object.assign({}, addedTest), { changeType: 'modified', id: foundTest.id, isExecutable: true }));
+                    }
+                    else {
+                        LOGGER.info("The added test already exists in Octane: " + addedTest.name);
+                    }
                 }
                 else {
-                    LOGGER.warn(`Could not find the existing test to delete: ${test.name}`);
+                    changedTests.push(Object.assign(Object.assign({}, addedTest), { changeType: 'added' }));
+                }
+            }
+            for (const test of testsToDelete) {
+                const foundTest = existingTestsInRepo.find(testE => testE.name === test.name
+                    && testE.className === test.className
+                    && (testE.packageName === test.packageName || testE.packageName === null));
+                if (foundTest) {
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: 'deleted', id: foundTest.id }));
                 }
             }
             for (const pair of modifiedTestsMap) {
@@ -40580,7 +40581,10 @@ class Discovery {
                 }
                 let testId = "";
                 const testIsNotExecutable = existingTestsInRepo.some(testE => {
-                    if (testE.name === test.name && testE.className === test.className && testE.packageName === test.packageName && testE.isExecutable === false) {
+                    if (testE.name === test.name
+                        && testE.className === test.className
+                        && (testE.packageName === test.packageName || testE.packageName === null)
+                        && testE.isExecutable === false) {
                         testId = testE.id;
                         return true;
                     }
