@@ -40551,10 +40551,11 @@ class Discovery {
                 }
             }
             for (const pair of modifiedTestsMap) {
-                const oldTest = existingTestsMapByName.get(pair.oldValue.name);
-                //const oldTest = await checkIfTestExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, pair.oldValue.name, pair.oldValue.packageName, pair.oldValue.className);
-                if (oldTest && oldTest.packageName === pair.oldValue.packageName && oldTest.className === pair.oldValue.className) {
-                    changedTests.push(Object.assign(Object.assign({}, pair.newValue), { name: pair.newValue.name, packageName: pair.newValue.packageName, className: pair.newValue.className, description: pair.newValue.description, changeType: "modified", id: oldTest.id, isExecutable: true }));
+                const foundTest = existingTestsInRepo.find(testE => testE.name === pair.newValue.name
+                    && testE.className === pair.newValue.className
+                    && (testE.packageName === pair.newValue.packageName || testE.packageName === null));
+                if (foundTest) {
+                    changedTests.push(Object.assign(Object.assign({}, pair.newValue), { changeType: "modified", id: foundTest.id, isExecutable: true }));
                 }
                 else {
                     LOGGER.warn(`Could not find the existing test for modification: ${pair.oldValue.name}`);
@@ -40562,14 +40563,14 @@ class Discovery {
                 }
             }
             for (const test of discoveredTests) {
-                const existsInAdded = addedTests.some(addedTest => addedTest.name === test.name &&
+                const existsInAdded = addedTests.find(addedTest => addedTest.name === test.name &&
                     addedTest.className === test.className &&
                     addedTest.packageName === test.packageName);
                 if (existsInAdded) {
                     LOGGER.info("The test was already added. " + test.name);
                     continue;
                 }
-                const existsInModified = modifiedTestsMap.some(pair => (pair.oldValue.name === test.name &&
+                const existsInModified = modifiedTestsMap.find(pair => (pair.oldValue.name === test.name &&
                     pair.oldValue.className === test.className &&
                     pair.oldValue.packageName === test.packageName) ||
                     (pair.newValue.name === test.name &&
@@ -40579,30 +40580,20 @@ class Discovery {
                     LOGGER.info("The test was already modified. " + test.name);
                     continue;
                 }
-                let testId = "";
-                const testIsNotExecutable = existingTestsInRepo.some(testE => {
-                    if (testE.name === test.name
-                        && testE.className === test.className
-                        && (testE.packageName === test.packageName || testE.packageName === null)
-                        && testE.isExecutable === false) {
-                        testId = testE.id;
-                        return true;
-                    }
-                    return false;
-                });
-                if (testIsNotExecutable) {
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "modified", id: testId, isExecutable: true }));
-                    LOGGER.info("The test exists in Octane but is not executable. Making it executable: " + test.name);
-                    continue;
-                }
-                const testE = existingTestsInRepo.some(testE => testE.name === test.name
+                const foundTest = existingTestsInRepo.find(testE => testE.name === test.name
                     && testE.className === test.className
                     && (testE.packageName === test.packageName || testE.packageName === null));
-                if (testE) {
-                    LOGGER.info("The test exists in Octane by all parameters: " + test.name);
-                    continue;
+                if (foundTest) {
+                    if (foundTest.isExecutable) {
+                        LOGGER.info("The test already exists in Octane: " + test.name);
+                    }
+                    else if (foundTest.isExecutable === false) {
+                        changedTests.push(Object.assign(Object.assign({}, test), { changeType: "modified", id: foundTest.id, isExecutable: true }));
+                    }
                 }
-                changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
+                else {
+                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
+                }
             }
             LOGGER.info("The changed data tables are: " + JSON.stringify(modifiedDataTables));
             const filteredAddedDataTables = yield this.removeFalsePositiveDataTablesAtUpdate(discoveredTests, addedDataTables);
