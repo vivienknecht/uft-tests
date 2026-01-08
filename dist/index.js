@@ -40573,9 +40573,9 @@ class Discovery {
                 let testId;
                 const foundTest = existingTestsInRepo.some(testE => {
                     LOGGER.info("Comparing with existing test: " + JSON.stringify(testE));
-                    if (testE.name === pair.newValue.name &&
-                        testE.className === pair.newValue.className &&
-                        (testE.packageName === pair.newValue.packageName || testE.packageName === null || testE.packageName === "")) {
+                    if (testE.name === pair.oldValue.name &&
+                        testE.className === pair.oldValue.className &&
+                        (testE.packageName === pair.oldValue.packageName || testE.packageName === null || testE.packageName === "")) {
                         testId = testE.id;
                         return true;
                     }
