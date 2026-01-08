@@ -40532,7 +40532,7 @@ class Discovery {
                 const testExists = existingTestsInRepo.some(test => {
                     if (test.name === addedTest.name &&
                         test.className === addedTest.className &&
-                        (test.packageName === addedTest.packageName || test.packageName === null)) {
+                        (test.packageName === addedTest.packageName || test.packageName === null || test.packageName === "")) {
                         if (!test.isExecutable) {
                             isExecutable = false;
                             testId = test.id;
@@ -40559,7 +40559,7 @@ class Discovery {
                 const foundTest = existingTestsInRepo.some(testE => {
                     if (testE.name === test.name &&
                         testE.className === test.className &&
-                        (testE.packageName === test.packageName || testE.packageName === null)) {
+                        (testE.packageName === test.packageName || testE.packageName === null || testE.packageName === "")) {
                         testId = testE.id;
                         return true;
                     }
@@ -40575,7 +40575,7 @@ class Discovery {
                     LOGGER.info("Comparing with existing test: " + JSON.stringify(testE));
                     if (testE.name === pair.newValue.name &&
                         testE.className === pair.newValue.className &&
-                        (testE.packageName === pair.newValue.packageName || testE.packageName === null)) {
+                        (testE.packageName === pair.newValue.packageName || testE.packageName === null || testE.packageName === "")) {
                         testId = testE.id;
                         return true;
                     }
@@ -40609,7 +40609,7 @@ class Discovery {
                 }
                 const foundTest = existingTestsInRepo.find(testE => testE.name === test.name &&
                     testE.className === test.className &&
-                    (testE.packageName === test.packageName || testE.packageName === null));
+                    (testE.packageName === test.packageName || testE.packageName === null || testE.packageName === ""));
                 if (foundTest) {
                     if (!foundTest.isExecutable) {
                         changedTests.push(Object.assign(Object.assign({}, test), { changeType: "modified", id: foundTest.id, isExecutable: true }));
