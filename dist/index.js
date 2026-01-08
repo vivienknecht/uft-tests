@@ -40572,6 +40572,7 @@ class Discovery {
             for (const pair of modifiedTestsMap) {
                 let testId;
                 const foundTest = existingTestsInRepo.some(testE => {
+                    LOGGER.info("Comparing with existing test: " + JSON.stringify(testE));
                     if (testE.name === pair.newValue.name &&
                         testE.className === pair.newValue.className &&
                         (testE.packageName === pair.newValue.packageName || testE.packageName === null)) {
@@ -40616,10 +40617,9 @@ class Discovery {
                     else {
                         LOGGER.info("The test already exists in Octane: " + test.name);
                     }
+                    continue;
                 }
-                else {
-                    changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
-                }
+                changedTests.push(Object.assign(Object.assign({}, test), { changeType: "added" }));
             }
             LOGGER.info("The changed data tables are: " + JSON.stringify(modifiedDataTables));
             const filteredAddedDataTables = yield this.removeFalsePositiveDataTablesAtUpdate(discoveredTests, addedDataTables);
@@ -40634,20 +40634,17 @@ class Discovery {
             const existingDataTables = yield (0, octaneClient_1.getScmResourceFilesFromOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, repoID);
             const changedDataTables = [];
             const existingByName = new Map(existingDataTables.map(dataTable => [dataTable.name, dataTable]));
-            const currentByName = new Map(discoveredDataTables.map(dataTable => [dataTable.name, dataTable]));
             for (const dataTable of addedDataTables) {
                 changedDataTables.push(Object.assign(Object.assign({}, dataTable), { changeType: "added" }));
             }
             for (const dataTable of deletedDataTables) {
                 const deletedDataTable = existingByName.get(dataTable.name);
-                //const deletedDataTable = await checkIfScmResourceFileExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, dataTable.name, dataTable.relativePath);
                 if (deletedDataTable) {
                     changedDataTables.push(Object.assign(Object.assign({}, dataTable), { id: deletedDataTable.id, changeType: "deleted" }));
                 }
             }
             for (const dataTable of modifiedDataTables) {
                 const existingDataTable = existingByName.get(dataTable.oldValue.name);
-                //const existingDataTable = await checkIfScmResourceFileExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, dataTable.oldValue.name, dataTable.oldValue.relativePath);
                 if (existingDataTable) {
                     changedDataTables.push(Object.assign(Object.assign({}, dataTable.newValue), { id: existingDataTable.id, changeType: "modified" }));
                 }
