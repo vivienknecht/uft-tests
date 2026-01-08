@@ -40633,31 +40633,39 @@ class Discovery {
             const repoID = yield (0, octaneClient_1.getScmRepo)(this.octaneSDKConnection, this.sharedSpace, this.workspace);
             const existingDataTables = yield (0, octaneClient_1.getScmResourceFilesFromOctane)(this.octaneSDKConnection, this.sharedSpace, this.workspace, repoID);
             const changedDataTables = [];
-            const existingByName = new Map(existingDataTables.map(dataTable => [dataTable.name, dataTable]));
             for (const dataTable of addedDataTables) {
                 changedDataTables.push(Object.assign(Object.assign({}, dataTable), { changeType: "added" }));
             }
             for (const dataTable of deletedDataTables) {
-                const deletedDataTable = existingByName.get(dataTable.name);
-                if (deletedDataTable) {
-                    changedDataTables.push(Object.assign(Object.assign({}, dataTable), { id: deletedDataTable.id, changeType: "deleted" }));
+                let dataTableId;
+                const dataTableToDelete = existingDataTables.some(existingDataTable => {
+                    if (existingDataTable.name === dataTable.name && existingDataTable.relativePath === dataTable.relativePath) {
+                        dataTableId = existingDataTable.id;
+                        return true;
+                    }
+                    return false;
+                });
+                if (dataTableToDelete) {
+                    changedDataTables.push(Object.assign(Object.assign({}, dataTable), { id: dataTableId, changeType: "deleted" }));
                 }
             }
             for (const dataTable of modifiedDataTables) {
-                const existingDataTable = existingByName.get(dataTable.oldValue.name);
+                let dataTableId;
+                const existingDataTable = existingDataTables.some(existingDataTable => {
+                    if (existingDataTable.name === dataTable.oldValue.name && existingDataTable.relativePath === dataTable.oldValue.relativePath) {
+                        dataTableId = existingDataTable.id;
+                        return true;
+                    }
+                    return false;
+                });
                 if (existingDataTable) {
-                    changedDataTables.push(Object.assign(Object.assign({}, dataTable.newValue), { id: existingDataTable.id, changeType: "modified" }));
+                    changedDataTables.push(Object.assign(Object.assign({}, dataTable.newValue), { id: dataTableId, changeType: "modified" }));
                 }
                 else {
                     changedDataTables.push(Object.assign(Object.assign({}, dataTable.newValue), { changeType: "added" }));
                 }
             }
             for (const dataTable of discoveredDataTables) {
-                // const existingDataTable = existingByName.get(dataTable.name);
-                // if (existingDataTable) {
-                //     LOGGER.info("Data table already exists in Octane: " + dataTable.name);
-                //     continue; // No changes
-                // }
                 const existsInAdded = addedDataTables.some(addedDataTable => addedDataTable.name === dataTable.name && addedDataTable.relativePath === dataTable.relativePath);
                 if (existsInAdded) {
                     LOGGER.info("The data table was already added. " + dataTable.name);
@@ -40665,32 +40673,17 @@ class Discovery {
                 }
                 const existsInModified = modifiedDataTables.some(pair => (pair.oldValue.name === dataTable.name && pair.oldValue.relativePath === dataTable.relativePath)
                     || (pair.newValue.name === dataTable.name && pair.newValue.relativePath === dataTable.relativePath));
-                //const dataTableExists = await checkIfScmResourceFileExists(this.octaneSDKConnection, this.sharedSpace, this.workspace, dataTable.name, dataTable.relativePath);
-                const dataTableExists = existingByName.get(dataTable.name);
-                if (!existsInModified && !dataTableExists) {
-                    changedDataTables.push(Object.assign(Object.assign({}, dataTable), { changeType: "added" }));
-                    LOGGER.info("This is a new data table: " + dataTable.name);
+                if (existsInModified) {
+                    LOGGER.info("The data table was already modified. " + dataTable.name);
+                    continue;
                 }
-                else {
-                    LOGGER.info("The data table already exists " + dataTable.name);
+                const foundDataTable = existingDataTables.find(existingDataTable => existingDataTable.name === dataTable.name && existingDataTable.relativePath === dataTable.relativePath);
+                if (foundDataTable) {
+                    LOGGER.info("The data table already exists in Octane: " + dataTable.name);
+                    continue;
                 }
+                changedDataTables.push(Object.assign(Object.assign({}, dataTable), { changeType: "added" }));
             }
-            // for (const dataTableName of deletedDataTables) {
-            //     const dataTableToDelete = existingByName.get(dataTableName);
-            //     if (dataTableToDelete) {
-            //         changedDataTables.push({...dataTableToDelete, changeType: "deleted"});
-            //     }
-            // }
-            // const modifiedDataTablePairs = [];
-            // for (const entry of modifiedDataTables) {
-            //     const oldDataTableValue = existingByName.get(entry.oldValue);
-            //     const newDataTableValue = currentByName.get(entry.newValue);
-            //     modifiedDataTablePairs.push({old: oldDataTableValue, new: newDataTableValue});
-            // }
-            //
-            // for (const pair of modifiedDataTablePairs) {
-            //     changedDataTables.push({...pair.new, id: pair.old?.id || "", name: pair.new?.name || "", relativePath: pair.new?.relativePath || "",changeType: "modified"});
-            // }
             LOGGER.info("The changed data tables are final: " + JSON.stringify(changedDataTables));
             yield this.sendDataTableEventsToOctane(changedDataTables, repoID);
         });
