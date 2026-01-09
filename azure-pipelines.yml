@@ -10,7 +10,7 @@ parameters:
   - name: unitTestResultsGlobPattern
     type: string
     # default: 'build/Results.xml'
-    default: "res/Results.xml"
+    default: "Results.xml"
 
 pool: Default
 
@@ -75,7 +75,7 @@ steps:
       Test-Path "./Props.txt" -PathType leaf
       Get-Content -Path ./Props.txt
       Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\Props.txt`"" -Wait
-      echo "Please check the [$PWD\res\Results.xml] file."
+      echo "Please check the [$PWD\Results.xml] file."
     displayName: Testing
 
   - task: octane-end-task-private@1
