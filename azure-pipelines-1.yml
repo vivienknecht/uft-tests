@@ -98,8 +98,8 @@ steps:
       node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
     env:
       MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
-      CLIENTSECRET: $(CLIENTSECRE)
-      CLIENTID: $(CLIENTID)
+      # CLIENTSECRET: $(CLIENTSECRE)
+      # CLIENTID: $(CLIENTID)
       REPOURL: $(Build.Repository.Uri)
     displayName: Discovery
 
