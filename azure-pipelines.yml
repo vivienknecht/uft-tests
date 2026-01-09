@@ -9,7 +9,7 @@ trigger:
 parameters:
   - name: unitTestResultsGlobPattern
     type: string
-    default: 'build/Results.xml'
+    default: 'Results.xml'
 
 pool: Default
 
