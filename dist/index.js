@@ -41151,8 +41151,10 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         const octaneUrl = args.octaneUrl;
         const sharedSpace = args.sharedSpace;
         const workspace = args.workspace;
-        const clientId = process.env.CLIENTID || "";
-        const clientSecret = process.env.CLIENTSECRET || "";
+        // const clientId = process.env.CLIENTID || "";
+        // const clientSecret = process.env.CLIENTSECRET || "";
+        const clientId = args.clientId;
+        const clientSecret = args.clientSecret;
         if (!actionType) {
             tl.setResult(tl.TaskResult.Failed, "You have to specify an action to execute: convertTests or discoverTests.");
         }

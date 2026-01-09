@@ -1,0 +1,5 @@
+runType=FileSystem
+resultsFilename=Results.xml
+Test1=C:\\dev\\azure-devops-integration\\agent\\_work\\7\\s\\broswers\\APITest2
+resultUnifiedTestClassname=true
+resultTestNameOnly=true
