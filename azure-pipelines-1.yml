@@ -129,13 +129,21 @@ steps:
   #     Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
   #     Get-Content -Path ./build/Props.txt
 
+  # - powershell: |
+  #     echo "Testing..."
+  #     echo $PWD
+  #     Test-Path "./build/Props.txt" -PathType leaf
+  #     Get-Content -Path ./build/Props.txt
+  #     Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
+  #     echo "Please check the [$PWD\build\Results.xml] file."
+
   - powershell: |
       echo "Testing..."
       echo $PWD
-      Test-Path "./build/Props.txt" -PathType leaf
-      Get-Content -Path ./build/Props.txt
-      Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
-      echo "Please check the [$PWD\build\Results.xml] file."
+      Test-Path "./Props.txt" -PathType leaf
+      Get-Content -Path ./Props.txt
+      Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\Props.txt`"" -Wait
+      echo "Please check the [$PWD\Results.xml] file."
 
   # - task: octane-end-task-private@1
   #   inputs:
