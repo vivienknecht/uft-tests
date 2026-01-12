@@ -32,7 +32,7 @@ steps:
   - task: octane-test-runner-start-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "2001"
+      WorkspaceList: "4001"
       Framework: "uft"
       GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
 
@@ -149,7 +149,7 @@ steps:
   - task: octane-end-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "2001"
+      WorkspaceList: "4001"
       Framework: "uft"
     env:
       UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
