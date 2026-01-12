@@ -27,7 +27,7 @@ steps:
 
   - task: octane-get-params-task@1
     inputs:
-      OctaneServiceConnection: 'octaneConnectionForDiscovery'
+      OctaneServiceConnection: "octaneConnectionForDiscovery"
 
   - task: octane-test-runner-start-task-private@1
     inputs:
@@ -97,7 +97,8 @@ steps:
   - powershell: |
       node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
     env:
-      MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
+      MODIFIED_FILES_PATH: $(Pipeline.Workspace)/modified_files.bin
+      # MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
       # CLIENTSECRET: $(CLIENTSECRE)
       # CLIENTID: $(CLIENTID)
       REPOURL: $(Build.Repository.Uri)

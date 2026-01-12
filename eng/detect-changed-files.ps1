@@ -23,12 +23,18 @@ git fetch --all --prune
 
 Write-Host "Diffing $lastCommit -> HEAD"
 
-$files = git diff --name-status -M -z $lastCommit HEAD | Out-String
-if (-not $files) { $files = "" }
+# $files = git diff --name-status -M -z $lastCommit HEAD | Out-String
+# if (-not $files) { $files = "" }
 
-$encoded = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($files))
+# $encoded = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($files))
 
-Write-Host "##vso[task.setvariable variable=MODIFIED_FILES]$encoded"
+# Write-Host "##vso[task.setvariable variable=MODIFIED_FILES]$encoded"
+$files = git diff --name-status -M -z $lastCommit HEAD
+
+$path = "$(Pipeline.Workspace)/modified_files.bin"
+[System.IO.File]::WriteAllBytes($path, [Text.Encoding]::UTF8.GetBytes($files))
+
+Write-Host "Modified files written to $path"
 
 # Persist current commit for next run
 $currentCommit | Out-File "last_successful_commit.txt" -Encoding ascii

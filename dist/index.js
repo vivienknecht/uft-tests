@@ -40281,6 +40281,7 @@ const path = __nccwpck_require__(6928);
 const octaneClient_1 = __nccwpck_require__(1171);
 const utils_1 = __nccwpck_require__(5268);
 const CreateAutomatedTests_1 = __nccwpck_require__(111);
+const fs_1 = __nccwpck_require__(9896);
 const LOGGER = new logger_1.default("Discovery.ts");
 class Discovery {
     constructor(octaneUrl, sharedSpace, workspace, clientId, clientSecret) {
@@ -40362,12 +40363,19 @@ class Discovery {
             yield this.sendTestEventsToOctane(modifiedTests, repoID);
         });
     }
+    // private async getModifiedFiles(): Promise<string[]> {
+    //     const raw = process.env.MODIFIED_FILES ?? "";
+    //     const gitOutput = Buffer.from(raw, "base64").toString("utf8");
+    //     return gitOutput.split('\0').filter(Boolean);
+    // }
     getModifiedFiles() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            const raw = (_a = process.env.MODIFIED_FILES) !== null && _a !== void 0 ? _a : "";
-            const gitOutput = Buffer.from(raw, "base64").toString("utf8");
-            return gitOutput.split('\0').filter(Boolean);
+            const path = process.env.MODIFIED_FILES_PATH;
+            if (!path) {
+                return [];
+            }
+            const gitOutput = (0, fs_1.readFileSync)(path, "utf8");
+            return gitOutput.split("\0").filter(Boolean);
         });
     }
     sendTestEventsToOctane(modifiedTests, repoRootID) {
