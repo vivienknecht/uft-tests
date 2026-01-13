@@ -1,14 +1,18 @@
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
 on:
   pull_request:
     types: [opened, edited, closed, reopened]
   workflow_run:
-    # List of workflows to integrate with OpenText Core SDP / SDM
     workflows: [CI]
-    # For automated tests, the requested and in_progress types are not required
-    types: [requested, in_progress, completed]
-# Node configuration for allowing HTTPS requests
-env: 
-    NODE_TLS_REJECT_UNAUTHORIZED: 0
+    types: [completed]
+  workflow_dispatch:
+
+env:
+  NODE_TLS_REJECT_UNAUTHORIZED: 0
 
 jobs:
   octane_integration_job:
