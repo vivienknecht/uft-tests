@@ -29,7 +29,7 @@ env:
     ACTIONS_STEP_DEBUG: true  # Enables debug logging
 jobs:
   ft_integration_job:
-    runs-on: [self-hosted, onprem]
+    runs-on: self-hosted
     name: Integration-Job
     steps:
       # - name: Log workflow inputs for Octane
