@@ -40363,11 +40363,6 @@ class Discovery {
             yield this.sendTestEventsToOctane(modifiedTests, repoID);
         });
     }
-    // private async getModifiedFiles(): Promise<string[]> {
-    //     const raw = process.env.MODIFIED_FILES ?? "";
-    //     const gitOutput = Buffer.from(raw, "base64").toString("utf8");
-    //     return gitOutput.split('\0').filter(Boolean);
-    // }
     getModifiedFiles() {
         return __awaiter(this, void 0, void 0, function* () {
             const path = process.env.MODIFIED_FILES_PATH;
@@ -40423,11 +40418,18 @@ class Discovery {
             }
         });
     }
+    isFirstCommit() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return String(process.env.IS_FIRST_COMMIT).toLowerCase() === "true";
+        });
+    }
     getModifiedTests(discoveredTests, discoveredScmResourceFiles) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c;
             const repoID = yield (0, octaneClient_1.getScmRepo)(this.octaneSDKConnection, this.sharedSpace, this.workspace);
             LOGGER.info("The repo ID is: " + repoID);
+            const firstCommit = yield this.isFirstCommit();
+            LOGGER.info("Is first commit: " + firstCommit);
             const existingTestsInRepo = yield (0, octaneClient_1.getExistingTestsInScmRepo)(this.octaneSDKConnection, this.sharedSpace, this.workspace, repoID);
             LOGGER.info("The existing tests in repo are: " + JSON.stringify(existingTestsInRepo));
             const changedTests = [];
@@ -40919,6 +40921,29 @@ const getExistingTestsInScmRepo = (octaneConnection, sharedSpace, workspace, scm
     }
 });
 exports.getExistingTestsInScmRepo = getExistingTestsInScmRepo;
+const getExistingUFTTests = (octaneConnection, sharedSpace, workspace) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const existingUftTests = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"testing_tool_type EQ {id EQ ^list_node.testing_tool_type.uft^}\"&fields=executable,name,package,class_name,description`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        LOGGER.info("The existing UFT tests are: " + JSON.stringify(existingUftTests.data));
+        const automatedTests = [];
+        for (const testData of existingUftTests.data) {
+            const automatedTest = {
+                id: testData.id,
+                name: testData.name,
+                packageName: testData.package,
+                className: testData.class_name,
+                description: testData.description,
+                isExecutable: testData.executable
+            };
+            automatedTests.push(automatedTest);
+        }
+        return automatedTests;
+    }
+    catch (error) {
+        LOGGER.error("Error occurred while getting existing UFT tests from Octane: " + error.message);
+        return [];
+    }
+});
 const sendCreateTestEventToOctane = (octaneConnection, url, name, packageName, className, description, scmRepositoryId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const body = {

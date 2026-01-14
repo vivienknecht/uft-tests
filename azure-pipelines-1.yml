@@ -101,6 +101,7 @@ steps:
       # MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
       # CLIENTSECRET: $(CLIENTSECRE)
       # CLIENTID: $(CLIENTID)
+      IS_FIRST_COMMIT: $(IS_FIRST_COMMIT)
       REPOURL: $(Build.Repository.Uri)
     displayName: Discovery
 
