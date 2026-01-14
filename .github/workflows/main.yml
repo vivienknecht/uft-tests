@@ -41,11 +41,14 @@ jobs:
         uses: opentext/sdp-ft-mbt-github-action-integration@main
         id: gha-ft-integration
         with:
-          octaneUrl: 'https://felix-1.almoctane.com'
+          # octaneUrl: 'https://felix-1.almoctane.com'
+          octaneUrl: 'http://localhost:8080/dev'
           octaneSharedSpace: 1001
-          octaneWorkspace: 1003
-          octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}}
-          octaneClientSecret: ${{secrets.ALM_OCTANE_CLIENT_SECRET}}
+          octaneWorkspace: 1002
+          # octaneClientId: ${{secrets.ALM_OCTANE_CLIENT_ID}}
+          # octaneClientSecret: ${{secrets.ALM_OCTANE_CLIENT_SECRET}}
+          octaneClientId: 'azure-api-key_kvd21vm6499glie73225910oy'
+          octaneClientSecret: '@-pV0TAtzP47=my(e5nhafO'
           githubToken: ${{secrets.GITHUB_TOKEN}}
           minSyncInterval: 2
           logLevel: 2       
