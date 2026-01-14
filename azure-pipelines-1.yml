@@ -55,52 +55,14 @@ steps:
       downloadPath: "$(Pipeline.Workspace)\\last-successful"
     continueOnError: true
 
-  # - task: DetectChangedFiles@1
-  #   inputs:
-  #     Workspace: '$(Pipeline.Workspace)'
-  #     CurrentCommit: '$(Build.SourceVersion)'
-  #     LastSuccessfulArtifact: 'last-successful'
-
   - powershell: |
       ./eng/detect-changed-files.ps1
     displayName: Detect changed files since last successful run
-
-  # - powershell: |
-  #     $artifactPath = "$(Pipeline.Workspace)/last-successful/last_successful_commit.txt"
-
-  #     if (Test-Path $artifactPath) {
-  #       $last = Get-Content $artifactPath
-  #       Write-Host "Found last successful commit: $last"
-  #     }
-  #     #Necessary for first run or when no artifacts can be found
-  #     else {
-  #       $last = "$(Build.SourceVersion)^"
-  #       Write-Host "No previous successful run found. Using fallback commit: $last"
-  #     }
-  #     Write-Host "##vso[task.setvariable variable=LAST_SUCCESSFUL_COMMIT]$last"
-  #   displayName: "Resolve last successful commit"
-
-  # - task: PowerShell@2
-  #   name: GetFiles
-  #   inputs:
-  #     targetType: inline
-  #     script: |
-  #       git fetch --all
-  #       Write-Host "Diff from $Env:LAST_SUCCESSFUL_COMMIT to HEAD"
-  #       $files = git diff --name-status -M -z $Env:LAST_SUCCESSFUL_COMMIT HEAD | Out-String
-  #       if (-not $files) { $files = "" }
-  #       $encoded = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($files))
-  #       Write-Host "Modified files: $files"
-  #       Write-Host "##vso[task.setvariable variable=MODIFIED_FILES]$encoded"
-  #   displayName: "Get changed files since last successful run"
 
   - powershell: |
       node dist/index.js --action="discoverTests" --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
     env:
       MODIFIED_FILES_PATH: $(Pipeline.Workspace)/modified_files.bin
-      # MODIFIED_FILES: $(GetFiles.MODIFIED_FILES)
-      # CLIENTSECRET: $(CLIENTSECRE)
-      # CLIENTID: $(CLIENTID)
       IS_FIRST_COMMIT: $(IS_FIRST_COMMIT)
       REPOURL: $(Build.Repository.Uri)
     displayName: Discovery
