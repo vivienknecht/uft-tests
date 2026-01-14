@@ -40897,7 +40897,7 @@ const getScmRepo = (octaneConnection, sharedSpace, workspace) => __awaiter(void 
 exports.getScmRepo = getScmRepo;
 const getExistingTestsInScmRepo = (octaneConnection, sharedSpace, workspace, scmRepositoryId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const existingTests = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"scm_repository EQ {id EQ ^${scmRepositoryId}^}\"&fields=executable,name,package,class_name,description`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        const existingTests = yield octaneConnection.executeCustomRequest(`/api/shared_spaces/${sharedSpace}/workspaces/${workspace}/tests/?query=\"testing_tool_type EQ {id EQ ^list_node.testing_tool_type.uft^}\"&query=\"scm_repository EQ {id EQ ^${scmRepositoryId}^}\"&fields=executable,name,package,class_name,description`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
         LOGGER.info("The existing tests in scm repository are: " + JSON.stringify(existingTests.data[0]));
         const automatedTests = [];
         for (const testData of existingTests.data) {
