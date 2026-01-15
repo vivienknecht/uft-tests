@@ -25,6 +25,10 @@ Write-Host "Diffing $lastCommit -> HEAD"
 
 $files = git diff --name-status -M -z $lastCommit HEAD
 
+if ($null -eq $files) {
+    $files = ""
+}
+
 $path = "$env:PIPELINE_WORKSPACE/modified_files.bin"
 [System.IO.File]::WriteAllBytes($path, [Text.Encoding]::UTF8.GetBytes($files))
 
