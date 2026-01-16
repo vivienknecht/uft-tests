@@ -40913,7 +40913,7 @@ const getExistingTestsInScmRepo = (octaneConnection, octaneApi, scmRepositoryId)
         return automatedTests;
     }
     catch (error) {
-        LOGGER.error("Error occurred while getting existing tests in scm repository from Octane: " + error.message);
+        LOGGER.error("Error occurred while getting existing tests in scm repository from Octane: " + error.description);
         return [];
     }
 });
