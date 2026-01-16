@@ -37,7 +37,7 @@ steps:
       GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
 
   - powershell: |
-      node dist/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
+      node dist/index.js --action="convertTests" --isFullScan=false --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
     displayName: TestConversion
 
   - checkout: self
