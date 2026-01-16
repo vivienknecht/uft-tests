@@ -41158,6 +41158,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
                 tl.setResult(tl.TaskResult.Failed, "You have to specify all Octane connection parameters and the path to the repository to discover UFT tests from. ");
                 return;
             }
+            LOGGER.info("FUll scan is set to: " + isFullScan);
             yield discoverTests(path, isFullScan, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
         }
     }
