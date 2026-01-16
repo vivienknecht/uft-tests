@@ -40413,6 +40413,7 @@ class Discovery {
             var _a, _b, _c;
             const repoID = yield (0, octaneClient_1.getScmRepo)(this.octaneSDKConnection, this.octaneApi);
             let existingTests;
+            LOGGER.info("Is full scan: " + this.isFullScan);
             if (this.isFullScan) {
                 existingTests = yield (0, octaneClient_1.getExistingUFTTests)(this.octaneSDKConnection, this.octaneApi);
             }
@@ -41208,6 +41209,7 @@ const loadArguments = () => {
     })
         .option("isFullScan", {
         type: "boolean",
+        demandOption: true,
         describe: "Specify whether full scan or sync is required"
     })
         .option("path", {
