@@ -41154,8 +41154,8 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             convertTests();
         }
         else if (actionType === "discoverTests") {
-            if (!path && !octaneUrl && !sharedSpace && !workspace && !clientId && !clientSecret) {
-                tl.setResult(tl.TaskResult.Failed, "You have to specify all Octane connection parameters and the path to the repository to discover UFT tests from. ");
+            if (!path && !isFullScan && !octaneUrl && !sharedSpace && !workspace && !clientId && !clientSecret) {
+                tl.setResult(tl.TaskResult.Failed, "You have to specify all Octane connection parameters, the path to the repository to discover UFT tests from and whether full scan or sync is required.");
                 return;
             }
             LOGGER.info("FUll scan is set to: " + isFullScan);
@@ -41210,7 +41210,6 @@ const loadArguments = () => {
     })
         .option("isFullScan", {
         type: "boolean",
-        demandOption: true,
         describe: "Specify whether full scan or sync is required"
     })
         .option("path", {
