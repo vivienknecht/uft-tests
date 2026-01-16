@@ -41210,6 +41210,7 @@ const loadArguments = () => {
     })
         .option("isFullScan", {
         type: "boolean",
+        demandOption: false,
         describe: "Specify whether full scan or sync is required"
     })
         .option("path", {
