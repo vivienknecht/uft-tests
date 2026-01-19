@@ -40212,7 +40212,6 @@ const createAutomatedTestsFromGUI = (pathToTest, testType) => __awaiter(void 0, 
     description = (0, utils_1.getDescriptionForGUITest)(document);
     description = (0, utils_1.convertToHtml)(description);
     test.description = description || "";
-    LOGGER.info("The test is: " + JSON.stringify(test));
     return test;
 });
 exports.createAutomatedTestsFromGUI = createAutomatedTestsFromGUI;
@@ -40222,7 +40221,6 @@ const createAutomatedTestFromAPI = (pathToTest, testType) => __awaiter(void 0, v
     let description = (0, utils_1.getDescriptionForAPITest)(documentForApiTest);
     description = (0, utils_1.convertToHtml)(description);
     test.description = description || "";
-    LOGGER.info("The api test is: " + JSON.stringify(test));
     return test;
 });
 exports.createAutomatedTestFromAPI = createAutomatedTestFromAPI;
@@ -40244,7 +40242,6 @@ const getClassName = (pathToTest) => {
     className = path.relative(ROOT_TESTS_DIR, pathToTest);
     const parts = className.split(path.sep);
     className = parts.join("/");
-    LOGGER.info("The class name is: " + className);
     return className;
 };
 const getPackageName = (className) => {
@@ -40252,7 +40249,6 @@ const getPackageName = (className) => {
     const parts = className.split("/");
     parts.pop();
     packageName = parts.join("/");
-    LOGGER.info("The package name is: " + packageName);
     return packageName;
 };
 
@@ -40367,21 +40363,28 @@ class Discovery {
     }
     sendTestEventsToOctane(modifiedTests, repoRootID) {
         return __awaiter(this, void 0, void 0, function* () {
-            for (const test of modifiedTests) {
-                LOGGER.debug("the change type of test " + test.name + " is: " + test.changeType);
-                if (test.changeType === 'deleted') {
-                    if (test.id) {
-                        yield (0, octaneClient_1.makeTestNotExecutableInOctane)(this.octaneSDKConnection, this.octaneApi, test.id);
+            try {
+                for (const test of modifiedTests) {
+                    LOGGER.debug("the change type of test " + test.name + " is: " + test.changeType);
+                    if (test.changeType === 'deleted') {
+                        if (test.id) {
+                            yield (0, octaneClient_1.makeTestNotExecutableInOctane)(this.octaneSDKConnection, this.octaneApi, test.id);
+                        }
+                    }
+                    else if (test.changeType === 'modified') {
+                        if (test.id) {
+                            yield (0, octaneClient_1.sendUpdateTestEventToOctane)(this.octaneSDKConnection, this.octaneApi, test.id, test.name, test.packageName, test.description, test.className, test.isExecutable);
+                        }
+                    }
+                    else if (test.changeType === 'added') {
+                        yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.octaneApi, test.name, test.packageName, test.className, test.description, repoRootID);
                     }
                 }
-                else if (test.changeType === 'modified') {
-                    if (test.id) {
-                        yield (0, octaneClient_1.sendUpdateTestEventToOctane)(this.octaneSDKConnection, this.octaneApi, test.id, test.name, test.packageName, test.description, test.className, test.isExecutable);
-                    }
-                }
-                else if (test.changeType === 'added') {
-                    yield (0, octaneClient_1.sendCreateTestEventToOctane)(this.octaneSDKConnection, this.octaneApi, test.name, test.packageName, test.className, test.description, repoRootID);
-                }
+            }
+            catch (e) {
+                const errorMessage = e instanceof Error ? e.message : String(e);
+                LOGGER.error("Failed to send test events to Octane. " + errorMessage);
+                throw new Error("Failed to send test events to Octane. " + errorMessage);
             }
         });
     }
@@ -40869,9 +40872,7 @@ const LOGGER = new logger_1.default("octaneClient.ts");
 const getTestRunnerId = (octaneConnection, octaneApi) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const pipelineName = process.env.BUILD_DEFINITIONNAME;
-        LOGGER.info("The pipeline name is: " + pipelineName);
         const testRunner = yield octaneConnection.executeCustomRequest(`${octaneApi}/executors?query=\"ci_job EQ {name EQ ^${pipelineName}*^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-        LOGGER.info("The test runners are: " + JSON.stringify(testRunner));
         return testRunner.data[0].id;
     }
     catch (error) {
@@ -40895,7 +40896,7 @@ const getScmRepo = (octaneConnection, octaneApi) => __awaiter(void 0, void 0, vo
 exports.getScmRepo = getScmRepo;
 const getExistingTestsInScmRepo = (octaneConnection, octaneApi, scmRepositoryId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const existingTests = yield octaneConnection.executeCustomRequest(`${octaneApi}/tests/?query=\"scm_repository EQ {id EQ ^${scmRepositoryId}^}\"&query=\"testing_tool_type EQ {id EQ ^list_node.testing_tool_type.uft^}\"fields=executable,name,package,class_name,description`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        const existingTests = yield octaneConnection.executeCustomRequest(`${octaneApi}/tests/?query=\"scm_repository EQ {id EQ ^${scmRepositoryId}^}\"&query=\"testing_tool_type EQ {id EQ ^list_node.testing_tool_type.uft^}\"&fields=executable,name,package,class_name,description`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
         LOGGER.info("The repo of the existing tests in scm repository is: " + scmRepositoryId);
         LOGGER.info("The existing tests in scm repository are: " + JSON.stringify(existingTests.data[0]));
         const automatedTests = [];
@@ -40913,7 +40914,7 @@ const getExistingTestsInScmRepo = (octaneConnection, octaneApi, scmRepositoryId)
         return automatedTests;
     }
     catch (error) {
-        LOGGER.error("Error occurred while getting existing tests in scm repository from Octane: " + error.description);
+        LOGGER.error("Error occurred while getting existing tests in scm repository from Octane: " + error.message);
         return [];
     }
 });
@@ -40971,7 +40972,7 @@ const sendCreateTestEventToOctane = (octaneConnection, octaneApi, name, packageN
         yield octaneConnection.executeCustomRequest(`${octaneApi}/tests`, alm_octane_js_rest_sdk_1.Octane.operationTypes.create, body);
     }
     catch (error) {
-        LOGGER.error("Error occurred while sending create test event to Octane: " + typeof error === 'string' ? error : error.message);
+        LOGGER.error("Error occurred while sending create test event to Octane: " + error.message);
     }
 });
 exports.sendCreateTestEventToOctane = sendCreateTestEventToOctane;
