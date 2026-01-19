@@ -40495,6 +40495,11 @@ class Discovery {
                             name: path.basename(deletedFile),
                             relativePath: deletedFile
                         };
+                        const filteredRemovedDataTables = yield this.removeFalsePositiveDataTablesAtUpdate(discoveredTests, [deletedDataTable]);
+                        if (filteredRemovedDataTables.length === 0) {
+                            LOGGER.debug("The removed data table is a false positive. " + deletedDataTable.name);
+                            continue;
+                        }
                         removedDataTables.push(deletedDataTable);
                     }
                     continue;
