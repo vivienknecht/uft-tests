@@ -40852,6 +40852,7 @@ const getTestRunnerId = (octaneConnection, octaneApi) => __awaiter(void 0, void 
     try {
         const pipelineName = process.env.BUILD_DEFINITIONNAME;
         const testRunner = yield octaneConnection.executeCustomRequest(`${octaneApi}/executors?query=\"ci_job EQ {name EQ ^${pipelineName}*^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
+        LOGGER.info("nso;fm");
         return testRunner.data[0].id;
     }
     catch (error) {
