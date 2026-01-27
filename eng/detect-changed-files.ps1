@@ -13,7 +13,6 @@ if (Test-Path $commitFile) {
 }
 else {
     $lastCommit = "$currentCommit^"
-    # Write-Host "##vso[task.setvariable variable=IS_FIRST_COMMIT]true"
     Write-Host "No previous successful run found. Using fallback commit: $lastCommit"
 }
 
