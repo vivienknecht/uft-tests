@@ -32,13 +32,13 @@ steps:
   - task: octane-test-runner-start-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "6001"
+      WorkspaceList: "8004"
       Framework: "uft"
       GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
 
-  # - powershell: |
-  #     node dist/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
-  #   displayName: TestConversion
+  - powershell: |
+      node dist/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
+    displayName: TestConversion
 
   - checkout: self
     fetchDepth: 0
@@ -60,10 +60,9 @@ steps:
     displayName: Detect changed files since last successful run
 
   - powershell: |
-      node dist/index.js --action="discoverTests" --isFullScan=false --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
+      node dist/index.js --action="discoverTests" --isFullScan=true --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
     env:
       MODIFIED_FILES_PATH: $(Pipeline.Workspace)/modified_files.bin
-      IS_FIRST_COMMIT: $(IS_FIRST_COMMIT)
       REPOURL: $(Build.Repository.Uri)
     displayName: Discovery
 
@@ -75,31 +74,31 @@ steps:
     artifact: last-successful
     displayName: "Publish last successful commit SHA"
 
-  # - powershell: |
-  #     Write-Host "Current Directory:"
-  #     Get-Location
-  #     echo "Building..."
-  #     mkdir build
-  #     $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
-  #     # $content = @"
-  #     # $(testsToRunConverted)
-  #     # "@
-  #     # Set-Content -Path "./build/testsToRun.mtbx" -Value $content -Encoding UTF8
-  #     Set-Content -Path "./build/testsToRun.mtbx" -Value $env:testsToRunConverted
-  #     Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
-  #     Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
-  #     Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\build\\testsToRun.mtbx"
-  #     Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
-  #     Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
-  #     Get-Content -Path ./build/Props.txt
+  - powershell: |
+      Write-Host "Current Directory:"
+      Get-Location
+      echo "Building..."
+      mkdir build
+      $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
+      # $content = @"
+      # $(testsToRunConverted)
+      # "@
+      # Set-Content -Path "./build/testsToRun.mtbx" -Value $content -Encoding UTF8
+      Set-Content -Path "./build/testsToRun.mtbx" -Value $env:testsToRunConverted -Encoding UTF8
+      Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
+      Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
+      Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\build\\testsToRun.mtbx"
+      Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
+      Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
+      Get-Content -Path ./build/Props.txt
 
-  # - powershell: |
-  #     echo "Testing..."
-  #     echo $PWD
-  #     Test-Path "./build/Props.txt" -PathType leaf
-  #     Get-Content -Path ./build/Props.txt
-  #     Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
-  #     echo "Please check the [$PWD\build\Results.xml] file."
+  - powershell: |
+      echo "Testing..."
+      echo $PWD
+      Test-Path "./build/Props.txt" -PathType leaf
+      Get-Content -Path ./build/Props.txt
+      Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
+      echo "Please check the [$PWD\build\Results.xml] file."
 
   # - powershell: |
   #     echo "Testing..."
@@ -112,7 +111,7 @@ steps:
   - task: octane-end-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "6001"
+      WorkspaceList: "8004"
       Framework: "uft"
     env:
       UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
