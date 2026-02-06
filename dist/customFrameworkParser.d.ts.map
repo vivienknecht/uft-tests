@@ -1,1 +1,1 @@
-{"version":3,"file":"","sourceRoot":"","sources":["file:///C:/dev/sdp-sdm-tests-to-run-conversion/src/customFrameworkParser.ts"],"names":[],"mappings":"AA6BA,OAAO,eAAe,MAAM,uBAAuB,CAAC;AAGpD;;;;;;;GAOG;AACH,QAAA,MAAM,oBAAoB,iBAAkB,MAAM,KAAG,eAmBpD,CAAC;AAkEF,eAAe,oBAAoB,CAAC"}
+{"version":3,"file":"customFrameworkParser.d.ts","sourceRoot":"","sources":["../src/customFrameworkParser.ts"],"names":[],"mappings":"AA6BA,OAAO,eAAe,MAAM,uBAAuB,CAAC;AAGpD;;;;;;;GAOG;AACH,QAAA,MAAM,oBAAoB,iBAAkB,MAAM,KAAG,eAmBpD,CAAC;AAkEF,eAAe,oBAAoB,CAAC"}

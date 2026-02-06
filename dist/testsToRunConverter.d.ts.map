@@ -1,1 +1,1 @@
-{"version":3,"file":"","sourceRoot":"","sources":["file:///C:/dev/sdp-sdm-tests-to-run-conversion/src/testsToRunConverter.ts"],"names":[],"mappings":"AAiCA,OAAO,IAAI,MAAM,YAAY,CAAC;AAY9B,QAAA,MAAM,iBAAiB,eAAgB,IAAI,EAAE,aAAa,MAAM,iBAAiB,MAAM,oBAAoB,MAAM,KAAG,MA0BnH,CAAC;AA2PF,eAAe,iBAAiB,CAAC"}
+{"version":3,"file":"testsToRunConverter.d.ts","sourceRoot":"","sources":["../src/testsToRunConverter.ts"],"names":[],"mappings":"AAiCA,OAAO,IAAI,MAAM,YAAY,CAAC;AAY9B,QAAA,MAAM,iBAAiB,eAAgB,IAAI,EAAE,aAAa,MAAM,iBAAiB,MAAM,oBAAoB,MAAM,KAAG,MA0BnH,CAAC;AA2PF,eAAe,iBAAiB,CAAC"}
