@@ -29,14 +29,13 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const xml_js_1 = require("xml-js");
-const config_1 = require("./config/config");
 const customFrameworkParser_1 = require("./customFrameworkParser");
 const logger_1 = require("./utils/logger");
 const LOGGER = new logger_1.default("testsToRunConverter.ts");
 const CUSTOM_FRAMEWORK_PACKAGE_PLACEHOLDER = "$package";
 const CUSTOM_FRAMEWORK_CLASS_PLACEHOLDER = "$class";
 const CUSTOM_FRAMEWORK_TEST_PLACEHOLDER = "$testName";
-const convertTestsToRun = (testsToRun, framework, rootDirectory) => {
+const convertTestsToRun = (testsToRun, framework, rootDirectory, customFramework) => {
     if (!framework) {
         throw Error("Could not get framework from config.");
     }
@@ -52,7 +51,10 @@ const convertTestsToRun = (testsToRun, framework, rootDirectory) => {
         case "uft" /* Framework.UFT */:
             return convertUftTestsToRun(testsToRun, rootDirectory);
         case "custom" /* Framework.Custom */:
-            return convertCustomTestsToRun(testsToRun);
+            if (!customFramework) {
+                throw new Error("Missing 'customFramework' argument for converting custom framework.");
+            }
+            return convertCustomTestsToRun(testsToRun, customFramework);
         default:
             throw Error(`Unsupported framework: '${framework}'. See the list of available parameters at https://github.com/MicroFocus/sdp-sdm-tests-to-run-conversion?tab=readme-ov-file#412-parameters.`);
     }
@@ -111,7 +113,7 @@ const convertUftTestsToRun = (testsToRun, rootDirectory) => {
         if (testToRun.parameters) {
             Object.entries(testToRun.parameters).forEach(([key, value]) => {
                 if (key === "dataTable") {
-                    value = value.replace("/", "\\");
+                    value = value.replace(/\//g, "\\");
                     externalDataTable = {
                         _attributes: {
                             path: rootDirectory + "\\" + value,
@@ -132,7 +134,7 @@ const convertUftTestsToRun = (testsToRun, rootDirectory) => {
         const convertedTests = {
             _attributes: {
                 name: testToRun.testName,
-                path: rootDirectory + "\\" + testToRun.className.replace("/", "\\")
+                path: rootDirectory + "\\" + testToRun.className.replace(/\//g, "\\")
             },
             parameter: parameters,
         };
@@ -149,9 +151,9 @@ const convertUftTestsToRun = (testsToRun, rootDirectory) => {
     LOGGER.debug(`Successfully converted the tests to run: ${convertedTestsToRun}`);
     return convertedTestsToRun;
 };
-const convertCustomTestsToRun = (testsToRun) => {
+const convertCustomTestsToRun = (testsToRun, customFramework) => {
     LOGGER.info(`Converting testsToRun to a custom format...`);
-    const customFramework = (0, config_1.getConfig)().customFramework;
+    // const customFramework = getConfig().customFramework;
     if (!customFramework) {
         throw new Error(`Missing 'customFramework' argument for converting custom framework.`);
     }

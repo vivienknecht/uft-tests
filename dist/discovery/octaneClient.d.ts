@@ -11,5 +11,5 @@ declare const createScmResourceFile: (octaneConnection: any, octaneApi: string, 
 declare const updateScmResourceFile: (octaneConnection: any, octaneApi: string, scmResourceFileId: string, name: string, relativePath: string) => Promise<void>;
 declare const deleteScmResourceFile: (octaneConnection: any, octaneApi: string, scmResourceFileId: string) => Promise<void>;
 declare const getScmResourceFilesFromOctane: (octaneConnection: any, octaneApi: string, repoId: string) => Promise<ScmResourceFile[]>;
-export { getTestRunnerId, getScmRepo, getExistingTestsInScmRepo, getExistingUFTTests, sendCreateTestEventToOctane, sendUpdateTestEventToOctane, makeTestNotExecutableInOctane, createScmResourceFile, updateScmResourceFile, deleteScmResourceFile, getScmResourceFilesFromOctane };
+export { getTestRunnerId, getScmRepo, getExistingTestsInScmRepo, getExistingUFTTests, sendCreateTestEventToOctane, sendUpdateTestEventToOctane, makeTestNotExecutableInOctane, createScmResourceFile, updateScmResourceFile, deleteScmResourceFile, getScmResourceFilesFromOctane, };
 //# sourceMappingURL=octaneClient.d.ts.map

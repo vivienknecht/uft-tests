@@ -50,18 +50,18 @@ class ScanRepo {
                     this.tests.push(foundApiTests);
                 }
                 else {
-                    for (const item of items) {
+                    const subDirPromises = items.map((item) => __awaiter(this, void 0, void 0, function* () {
                         const itemPath = path.join(pathToRepo, item);
-                        LOGGER.info("Scanning item: " + itemPath);
                         const stats = yield fs.promises.lstat(itemPath);
                         if (stats.isDirectory() || stats.isSymbolicLink()) {
                             if (stats.isSymbolicLink()) {
                                 LOGGER.warn(`${itemPath} is a symlink and symlinks are not supported and will be ignored.`);
-                                continue;
+                                return;
                             }
                             yield this.scanRepo(itemPath);
                         }
-                    }
+                    }));
+                    yield Promise.all(subDirPromises);
                 }
             }
             catch (e) {
@@ -99,9 +99,11 @@ class ScanRepo {
     createScmResourceFile(dataTableNames, pathToDataTable) {
         return __awaiter(this, void 0, void 0, function* () {
             const dataTables = [];
-            let relativePath = path.relative(this.workDir, pathToDataTable).replace(/\\/g, '/');
+            let relativePath = path
+                .relative(this.workDir, pathToDataTable)
+                .replace(/\\/g, "/");
             if (relativePath) {
-                relativePath = relativePath + '/';
+                relativePath = relativePath + "/";
             }
             for (const dataTableName of dataTableNames) {
                 const dataTable = {

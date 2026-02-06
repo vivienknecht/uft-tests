@@ -16,15 +16,15 @@ declare const checkIfFileExists: (pathToTest: string, fileName: string) => Promi
  */
 declare const convertToXml: (tspFile: string) => Promise<string | null>;
 declare const customDOMParser: () => DOMParser;
-declare const getDescriptionForGUITest: (doc: Document | null) => (string | null);
-declare const convertToHtml: (description: string | null) => (string | null);
+declare const getDescriptionForGUITest: (doc: Document | null) => string | null;
+declare const convertToHtml: (description: string | null) => string | null;
 declare const getAPITestDoc: (pathToTest: string) => Promise<Document | null>;
-declare const getDescriptionForAPITest: (doc: Document | null) => (string | null);
+declare const getDescriptionForAPITest: (doc: Document | null) => string | null;
 declare const getTestNameAtSync: (pathToTest: string) => string;
 declare const getClassNameAtSync: (pathToTest: string) => string;
 declare const getPackageNameAtSync: (className: string) => string;
 declare const removeFalsePositiveDataTables: (tests: AutomatedTest[], scmResourceFiles: ScmResourceFile[]) => Promise<ScmResourceFile[]>;
 declare const removeFalsePositiveDataTablesAtUpdate: (tests: AutomatedTest[], scmResourceFiles: ScmResourceFile[]) => Promise<ScmResourceFile[]>;
 declare const verifyPath: (pathToRepo: string) => Promise<boolean>;
-export { getGUITestDoc, getDescriptionForGUITest, convertToHtml, checkIfFileExists, convertToXml, customDOMParser, getAPITestDoc, getDescriptionForAPITest, getTestNameAtSync, getClassNameAtSync, getPackageNameAtSync, removeFalsePositiveDataTables, removeFalsePositiveDataTablesAtUpdate, verifyPath };
+export { getGUITestDoc, getDescriptionForGUITest, convertToHtml, checkIfFileExists, convertToXml, customDOMParser, getAPITestDoc, getDescriptionForAPITest, getTestNameAtSync, getClassNameAtSync, getPackageNameAtSync, removeFalsePositiveDataTables, removeFalsePositiveDataTablesAtUpdate, verifyPath, };
 //# sourceMappingURL=utils.d.ts.map

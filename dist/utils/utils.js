@@ -17,10 +17,10 @@ const logger_1 = require("./logger");
 const CFB = require("cfb");
 const xmldom_1 = require("@xmldom/xmldom");
 const LOGGER = new logger_1.default("utils.ts");
-const UFT_GUI_TEST_FILE = 'Test.tsp';
+const UFT_GUI_TEST_FILE = "Test.tsp";
 const COMPONENT_INFO = "ComponentInfo";
 const TEXT_XML = "text/xml";
-const ACTIONS_XML = 'actions.xml';
+const ACTIONS_XML = "actions.xml";
 const getGUITestDoc = (pathToTest) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const tspTestFile = yield checkIfFileExists(pathToTest, UFT_GUI_TEST_FILE);
@@ -73,7 +73,7 @@ exports.checkIfFileExists = checkIfFileExists;
 const convertToXml = (tspFile) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const data = yield fs.readFile(tspFile);
-        const cfb = CFB.read(data, { type: 'buffer' });
+        const cfb = CFB.read(data, { type: "buffer" });
         const stream = CFB.find(cfb, COMPONENT_INFO);
         if (!stream) {
             LOGGER.error("ComponentInfo stream not found in the TSP file.");
@@ -99,7 +99,7 @@ const convertToXml = (tspFile) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.convertToXml = convertToXml;
 const bufferToUnicode16LE = (buffer) => {
-    let result = '';
+    let result = "";
     for (let i = 0; i < buffer.length; i += 2) {
         const codeUnit = buffer.readUInt16LE(i);
         if (codeUnit === 0)
@@ -111,7 +111,7 @@ const bufferToUnicode16LE = (buffer) => {
 const customDOMParser = () => {
     return new xmldom_1.DOMParser({
         errorHandler: (level, msg) => {
-            if (level === 'error') {
+            if (level === "error") {
                 LOGGER.error("XML Parsing Error: " + msg);
             }
             else if (level === "fatalError") {
@@ -119,7 +119,7 @@ const customDOMParser = () => {
                 throw new Error("Fatal XML Parsing Error: " + msg);
             }
             return null;
-        }
+        },
     });
 };
 exports.customDOMParser = customDOMParser;
@@ -130,7 +130,8 @@ const getDescriptionForGUITest = (doc) => {
         return null;
     }
     let description;
-    description = ((_a = doc.getElementsByTagName("Description").item(0)) === null || _a === void 0 ? void 0 : _a.textContent) || "";
+    description =
+        ((_a = doc.getElementsByTagName("Description").item(0)) === null || _a === void 0 ? void 0 : _a.textContent) || "";
     return description.trim();
 };
 exports.getDescriptionForGUITest = getDescriptionForGUITest;
@@ -139,7 +140,7 @@ const convertToHtml = (description) => {
         return description;
     const paragraphs = description
         .split("\n")
-        .map(line => `<p>${line}</p>`)
+        .map((line) => `<p>${line}</p>`)
         .join("");
     return `<html><body>${paragraphs}</body></html>`;
 };
@@ -151,7 +152,7 @@ const getAPITestDoc = (pathToTest) => __awaiter(void 0, void 0, void 0, function
             LOGGER.warn("There is no actions.xml file in the API test folder.");
             return null;
         }
-        const xmlContent = yield fs.readFile(actionsXmlFile, 'utf8');
+        const xmlContent = yield fs.readFile(actionsXmlFile, "utf8");
         const parser = customDOMParser();
         const xml = xmlContent.replace(/^\uFEFF/, "");
         const doc = parser.parseFromString(xml, TEXT_XML);
@@ -202,12 +203,12 @@ const getClassNameAtSync = (pathToTest) => {
 };
 exports.getClassNameAtSync = getClassNameAtSync;
 const getPackageNameAtSync = (className) => {
-    return path.dirname(className) === '.' ? '' : path.dirname(className);
+    return path.dirname(className) === "." ? "" : path.dirname(className);
 };
 exports.getPackageNameAtSync = getPackageNameAtSync;
 const removeFalsePositiveDataTables = (tests, scmResourceFiles) => __awaiter(void 0, void 0, void 0, function* () {
-    const classNames = new Set(tests.map(t => t.className));
-    scmResourceFiles = scmResourceFiles.filter(file => {
+    const classNames = new Set(tests.map((t) => t.className));
+    scmResourceFiles = scmResourceFiles.filter((file) => {
         const relativeDir = path.dirname(file.relativePath);
         return !classNames.has(relativeDir);
     });
@@ -216,13 +217,13 @@ const removeFalsePositiveDataTables = (tests, scmResourceFiles) => __awaiter(voi
 });
 exports.removeFalsePositiveDataTables = removeFalsePositiveDataTables;
 const removeFalsePositiveDataTablesAtUpdate = (tests, scmResourceFiles) => __awaiter(void 0, void 0, void 0, function* () {
-    const classNames = new Set(tests.map(t => t.className));
-    scmResourceFiles = scmResourceFiles.filter(file => {
+    const classNames = new Set(tests.map((t) => t.className));
+    scmResourceFiles = scmResourceFiles.filter((file) => {
         const relativeDir = path.dirname(file.relativePath);
         if (classNames.has(relativeDir)) {
             return false;
         }
-        const startsWithClasName = [...classNames].some(className => relativeDir.startsWith(className));
+        const startsWithClasName = [...classNames].some((className) => relativeDir.startsWith(className));
         return !startsWithClasName;
     });
     LOGGER.debug("The filtered data tables are: " + JSON.stringify(scmResourceFiles));
@@ -240,24 +241,24 @@ const verifyPath = (pathToRepo) => __awaiter(void 0, void 0, void 0, function* (
     const resolvedPath = path.resolve(pathToRepo);
     const allowedRoot = path.resolve(process.env.BUILD_SOURCESDIRECTORY);
     if (!resolvedPath.startsWith(allowedRoot)) {
-        throw new Error('Path escapes the repository root');
+        throw new Error("Path escapes the repository root");
     }
     let stats;
     try {
         stats = fs1.statSync(resolvedPath);
     }
     catch (err) {
-        throw new Error('The provided path does not exist');
+        throw new Error("The provided path does not exist");
     }
     if (!stats.isDirectory()) {
-        throw new Error('The provided path is not a directory');
+        throw new Error("The provided path is not a directory");
     }
     const realPath = fs1.realpathSync(resolvedPath);
     if (!realPath.startsWith(allowedRoot)) {
-        throw new Error('Path escapes the repository root via symlink');
+        throw new Error("Path escapes the repository root via symlink");
     }
     if (realPath === path.parse(realPath).root) {
-        throw new Error('The provided path is the root directory, which is not allowed');
+        throw new Error("The provided path is the root directory, which is not allowed");
     }
     return true;
 });

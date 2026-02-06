@@ -89,17 +89,6 @@ const discoverTests = (path, isFullScan, octaneUrl, sharedSpace, workspace, clie
     const discovery = new Discovery_1.default(isFullScan, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
     yield discovery.startDiscovery(path);
 });
-// const convertTests = () => {
-//     const parsedTestsToRun = parseTestsToRun(args.testsToRun);
-//     if (parseTestsToRun.length === 0) {
-//         LOGGER.error("No tests to run have been found.");
-//         return;
-//     }
-//
-//     const convertedTests = convertTestsToRun(parsedTestsToRun);
-//     tl.setVariable("testsToRunConverted", convertedTests)
-//     console.log("The converted tests ", convertedTests);
-// }
 const loadArguments = () => {
     args = (0, yargs_1.default)((0, helpers_1.hideBin)(process.argv))
         .option("framework", {
