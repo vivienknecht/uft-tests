@@ -32,7 +32,7 @@ steps:
   - task: octane-test-runner-start-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "8004"
+      WorkspaceList: "1002"
       Framework: "uft"
       GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
 
@@ -60,7 +60,7 @@ steps:
     displayName: Detect changed files since last successful run
 
   - powershell: |
-      node dist/index.js --action="discoverTests" --isFullScan=true --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
+      node dist/task/index.js --action="discoverTests" --isFullScan=true --path="$Env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
     env:
       MODIFIED_FILES_PATH: $(Pipeline.Workspace)/modified_files.bin
       REPOURL: $(Build.Repository.Uri)
@@ -80,10 +80,6 @@ steps:
       echo "Building..."
       mkdir build
       $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
-      # $content = @"
-      # $(testsToRunConverted)
-      # "@
-      # Set-Content -Path "./build/testsToRun.mtbx" -Value $content -Encoding UTF8
       Set-Content -Path "./build/testsToRun.mtbx" -Value $env:testsToRunConverted -Encoding UTF8
       Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
       Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
@@ -111,7 +107,7 @@ steps:
   - task: octane-end-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "8004"
+      WorkspaceList: "1002"
       Framework: "uft"
     env:
       UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
