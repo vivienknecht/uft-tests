@@ -36,9 +36,9 @@ steps:
       Framework: "uft"
       GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
 
-  - powershell: |
-      node dist/cli/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
-    displayName: TestConversion
+  # - powershell: |
+  #     node dist/cli/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
+  #   displayName: TestConversion
 
   - checkout: self
     fetchDepth: 0
