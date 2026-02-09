@@ -36,12 +36,12 @@ steps:
       Framework: "uft"
       GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
 
-  # - powershell: |
-  #     node dist/cli/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
-  #   displayName: TestConversion
-
   - checkout: self
     fetchDepth: 0
+
+  - powershell: |
+      node dist/cli/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
+    displayName: TestConversion
 
   - task: DownloadPipelineArtifact@2
     displayName: "Download last successful commit SHA"
