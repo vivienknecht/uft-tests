@@ -36,6 +36,8 @@ steps:
       Framework: "uft"
       GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
 
+  - script: echo ${env:TESTSTORUN}
+
   - checkout: self
     fetchDepth: 0
 
