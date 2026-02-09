@@ -107,6 +107,7 @@ const convertCucumberBDDTestsToRun = (testsToRun) => {
     return convertedTestsToRun;
 };
 const convertUftTestsToRun = (testsToRun, rootDirectory) => {
+    LOGGER.info(`Converting testsToRun to UFT One format...`);
     const uftTestsToRun = testsToRun.map((testToRun) => {
         let parameters = [];
         let externalDataTable;
@@ -153,7 +154,6 @@ const convertUftTestsToRun = (testsToRun, rootDirectory) => {
 };
 const convertCustomTestsToRun = (testsToRun, customFramework) => {
     LOGGER.info(`Converting testsToRun to a custom format...`);
-    // const customFramework = getConfig().customFramework;
     if (!customFramework) {
         throw new Error(`Missing 'customFramework' argument for converting custom framework.`);
     }

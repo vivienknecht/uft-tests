@@ -41135,15 +41135,12 @@ const testsToRunConverter_1 = __nccwpck_require__(1644);
 const logger_1 = __nccwpck_require__(7893);
 const LOGGER = new logger_1.default("index.ts");
 const convertTests = (testsToRun, framework, rootDirectory, customFramework) => {
-    LOGGER.warn("USING CONVERT TESTS NEW009");
     const parsedTestsToRun = (0, testsToRunParser_1.default)(testsToRun);
     if (testsToRunParser_1.default.length === 0) {
         LOGGER.error("No tests to run have been found.");
         return;
     }
-    const convertedTests = (0, testsToRunConverter_1.default)(parsedTestsToRun, framework, rootDirectory, customFramework);
-    console.log("The converted tests ", convertedTests);
-    return convertedTests;
+    return (0, testsToRunConverter_1.default)(parsedTestsToRun, framework, rootDirectory, customFramework);
 };
 exports.convertTests = convertTests;
 
@@ -41426,6 +41423,7 @@ const convertCucumberBDDTestsToRun = (testsToRun) => {
     return convertedTestsToRun;
 };
 const convertUftTestsToRun = (testsToRun, rootDirectory) => {
+    LOGGER.info(`Converting testsToRun to UFT One format...`);
     const uftTestsToRun = testsToRun.map((testToRun) => {
         let parameters = [];
         let externalDataTable;
@@ -41472,7 +41470,6 @@ const convertUftTestsToRun = (testsToRun, rootDirectory) => {
 };
 const convertCustomTestsToRun = (testsToRun, customFramework) => {
     LOGGER.info(`Converting testsToRun to a custom format...`);
-    // const customFramework = getConfig().customFramework;
     if (!customFramework) {
         throw new Error(`Missing 'customFramework' argument for converting custom framework.`);
     }
