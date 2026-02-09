@@ -9,4 +9,3 @@ import CustomFramework from "./dto/CustomFramework";
  */
 declare const parseCustomFramework: (configString: string) => CustomFramework;
 export default parseCustomFramework;
-//# sourceMappingURL=customFrameworkParser.d.ts.map

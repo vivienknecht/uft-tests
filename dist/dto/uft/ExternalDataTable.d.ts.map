@@ -1,1 +1,1 @@
-{"version":3,"file":"ExternalDataTable.d.ts","sourceRoot":"","sources":["../../../src/dto/uft/ExternalDataTable.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,OAAO,WAAW,iBAAiB;IACxC,WAAW,EAAE;QACX,IAAI,EAAE,MAAM,CAAC;KACd,CAAC;CACH"}
+{"version":3,"file":"ExternalDataTable.d.ts","sourceRoot":"","sources":["file:///C:/dev/sdp-sdm-tests-to-run-conversion/src/dto/uft/ExternalDataTable.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,OAAO,WAAW,iBAAiB;IACxC,WAAW,EAAE;QACX,IAAI,EAAE,MAAM,CAAC;KACd,CAAC;CACH"}
