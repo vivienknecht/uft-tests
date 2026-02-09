@@ -6,10 +6,10 @@
 trigger:
   - main
 
-parameters:
-  - name: unitTestResultsGlobPattern
-    type: string
-    default: "build/Results.xml"
+# parameters:
+#   - name: unitTestResultsGlobPattern
+#     type: string
+#     default: "build/Results.xml"
 
 pool: Default
 
@@ -112,4 +112,4 @@ steps:
       WorkspaceList: "1002"
       Framework: "uft"
     env:
-      UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
+      UNIT_TEST_RESULTS_GLOB_PATTERN: $(UNITTESTRESULTSGLOBPATTERN)
