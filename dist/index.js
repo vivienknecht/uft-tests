@@ -41135,7 +41135,7 @@ const testsToRunConverter_1 = __nccwpck_require__(1644);
 const logger_1 = __nccwpck_require__(7893);
 const LOGGER = new logger_1.default("index.ts");
 const convertTests = (testsToRun, framework, rootDirectory, customFramework) => {
-    LOGGER.warn("USING CONVERT TESTS NEW3");
+    LOGGER.warn("USING CONVERT TESTS NEW0");
     const parsedTestsToRun = (0, testsToRunParser_1.default)(testsToRun);
     if (testsToRunParser_1.default.length === 0) {
         LOGGER.error("No tests to run have been found.");
