@@ -43,7 +43,7 @@ const helpers_1 = require("yargs/helpers");
 const logger_1 = require("./utils/logger");
 const config_1 = require("./config/config");
 const Discovery_1 = require("./discovery/Discovery");
-const tl = require("azure-pipelines-task-lib");
+const utils_1 = require("./utils/utils");
 const index_1 = require("./index");
 const LOGGER = new logger_1.default("main.ts");
 let args;
@@ -59,19 +59,20 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const clientId = args.clientId;
     const clientSecret = args.clientSecret;
     if (!actionType) {
-        tl.setResult(tl.TaskResult.Failed, "You have to specify an action to execute: convertTests or discoverTests.");
+        throw new Error("Action type is required. Please specify whether you want to convert tests or discover tests.");
     }
     if (actionType === "convertTests") {
         const framework = (0, config_1.getConfig)().framework;
         const rootDirectory = process.env.BUILD_SOURCESDIRECTORY || "";
-        const convertedTests = (0, index_1.convertTests)(args.testsToRun, framework, rootDirectory);
-        if (convertedTests) {
-            tl.setVariable("testsToRunConverted", convertedTests);
-        }
+        (0, index_1.convertTests)(args.testsToRun, framework, rootDirectory);
+        //return convertedTests;
+        // if (convertedTests) {
+        //     tl.setVariable("testsToRunConverted", convertedTests);
+        // }
     }
     else if (actionType === "discoverTests") {
         LOGGER.info("The path is: " + path);
-        //  await verifyPath(path);
+        yield (0, utils_1.verifyPath)(path);
         if (!path ||
             !isFullScan ||
             !octaneUrl ||
