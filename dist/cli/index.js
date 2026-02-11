@@ -41197,53 +41197,44 @@ const logger_1 = __nccwpck_require__(7893);
 const config_1 = __nccwpck_require__(1122);
 const Discovery_1 = __nccwpck_require__(6672);
 const tl = __nccwpck_require__(358);
-const utils_1 = __nccwpck_require__(5268);
 const index_1 = __nccwpck_require__(9407);
 const LOGGER = new logger_1.default("main.ts");
 let args;
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        loadArguments();
-        (0, config_1.initConfig)(args);
-        const actionType = args.action;
-        const isFullScan = args.isFullScan;
-        const path = args.path;
-        const octaneUrl = args.octaneUrl;
-        const sharedSpace = args.sharedSpace;
-        const workspace = args.workspace;
-        const clientId = args.clientId;
-        const clientSecret = args.clientSecret;
-        if (!actionType) {
-            tl.setResult(tl.TaskResult.Failed, "You have to specify an action to execute: convertTests or discoverTests.");
-        }
-        if (actionType === "convertTests") {
-            const framework = (0, config_1.getConfig)().framework;
-            const rootDirectory = process.env.BUILD_SOURCESDIRECTORY || "";
-            const convertedTests = (0, index_1.convertTests)(args.testsToRun, framework, rootDirectory);
-            if (convertedTests) {
-                tl.setVariable("testsToRunConverted", convertedTests);
-            }
-        }
-        else if (actionType === "discoverTests") {
-            LOGGER.info("The path is: " + path);
-            yield (0, utils_1.verifyPath)(path);
-            if (!path ||
-                !isFullScan ||
-                !octaneUrl ||
-                !sharedSpace ||
-                !workspace ||
-                !clientId ||
-                !clientSecret) {
-                tl.setResult(tl.TaskResult.Failed, "You have to specify all Octane connection parameters, the path to the repository to discover UFT tests from and whether full scan or sync is required.");
-                return;
-            }
-            yield discoverTests(path, isFullScan, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
+    loadArguments();
+    (0, config_1.initConfig)(args);
+    const actionType = args.action;
+    const isFullScan = args.isFullScan;
+    const path = args.path;
+    const octaneUrl = args.octaneUrl;
+    const sharedSpace = args.sharedSpace;
+    const workspace = args.workspace;
+    const clientId = args.clientId;
+    const clientSecret = args.clientSecret;
+    if (!actionType) {
+        tl.setResult(tl.TaskResult.Failed, "You have to specify an action to execute: convertTests or discoverTests.");
+    }
+    if (actionType === "convertTests") {
+        const framework = (0, config_1.getConfig)().framework;
+        const rootDirectory = process.env.BUILD_SOURCESDIRECTORY || "";
+        const convertedTests = (0, index_1.convertTests)(args.testsToRun, framework, rootDirectory);
+        if (convertedTests) {
+            tl.setVariable("testsToRunConverted", convertedTests);
         }
     }
-    catch (error) {
-        //tl.setResult(tl.TaskResult.Failed, (error as Error).message);
-        LOGGER.error(error.message);
-        throw new Error(error.message);
+    else if (actionType === "discoverTests") {
+        LOGGER.info("The path is: " + path);
+        //  await verifyPath(path);
+        if (!path ||
+            !isFullScan ||
+            !octaneUrl ||
+            !sharedSpace ||
+            !workspace ||
+            !clientId ||
+            !clientSecret) {
+            throw new Error("You have to specify all Octane connection parameters, the path to the repository to discover UFT tests from and whether full scan or sync is required.");
+        }
+        yield discoverTests(path, isFullScan, octaneUrl, sharedSpace, workspace, clientId, clientSecret);
     }
 });
 const discoverTests = (path, isFullScan, octaneUrl, sharedSpace, workspace, clientId, clientSecret) => __awaiter(void 0, void 0, void 0, function* () {
