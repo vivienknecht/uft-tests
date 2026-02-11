@@ -43,7 +43,13 @@ steps:
 
   - powershell: |
       node dist/cli/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
+       $result = $result.Trim()
+       Write-Host "Converted value: $result"
+       Write-Host "##vso[task.setvariable variable=testsToRunConverted]$result"
     displayName: TestConversion
+
+  - powershell: |
+      Write-Host "Using converted value: $(testsToRunConverted)"
 
   - task: DownloadPipelineArtifact@2
     displayName: "Download last successful commit SHA"
@@ -62,13 +68,11 @@ steps:
     displayName: Detect changed files since last successful run
 
   - powershell: |
-      testsToRunConverted = node dist/cli/index.js --action="discoverTests" --isFullScan=true --path="$env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
+      node dist/cli/index.js --action="discoverTests" --isFullScan=true --path="$env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
     env:
       MODIFIED_FILES_PATH: $(Pipeline.Workspace)/modified_files.bin
       REPOURL: $(Build.Repository.Uri)
     displayName: Discovery
-
-  - script: echo $(testsToRunConverted)
 
   - powershell: |
       echo $(Build.SourceVersion) > last_successful_commit.txt
