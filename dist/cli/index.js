@@ -32088,7 +32088,7 @@ class Logger {
      * @param message Message to log
      */
     emit(logLevelPrefix, message) {
-        console.log(`[${logLevelPrefix}][${this.module}] ${message}`);
+        console.error(`[${logLevelPrefix}][${this.module}] ${message}`);
     }
 }
 exports["default"] = Logger;
