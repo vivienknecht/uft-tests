@@ -64,8 +64,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     if (actionType === "convertTests") {
         const framework = (0, config_1.getConfig)().framework;
         const rootDirectory = process.env.BUILD_SOURCESDIRECTORY || "";
-        (0, index_1.convertTests)(args.testsToRun, framework, rootDirectory);
-        //return convertedTests;
+        return (0, index_1.convertTests)(args.testsToRun, framework, rootDirectory);
         // if (convertedTests) {
         //     tl.setVariable("testsToRunConverted", convertedTests);
         // }
