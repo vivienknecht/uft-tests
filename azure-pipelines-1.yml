@@ -62,7 +62,7 @@ steps:
     displayName: Detect changed files since last successful run
 
   - powershell: |
-      node dist/cli/index.js --action="discoverTests" --path="$env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
+      node dist/cli/index.js --action="discoverTests"  --octaneUrl="$(octaneUrl)" --sharedSpace="$(sharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)" --logLevel=1
     env:
       MODIFIED_FILES_PATH: $(Pipeline.Workspace)/modified_files.bin
       REPOURL: $(Build.Repository.Uri)
