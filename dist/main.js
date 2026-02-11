@@ -74,7 +74,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         LOGGER.info("The path is: " + path);
         yield (0, utils_1.verifyPath)(path);
         if (!path ||
-            !isFullScan ||
+            (isFullScan === undefined) ||
             !octaneUrl ||
             !sharedSpace ||
             !workspace ||
