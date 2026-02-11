@@ -74,7 +74,13 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         else if (actionType === "discoverTests") {
             LOGGER.info("The path is: " + path);
             yield (0, utils_1.verifyPath)(path);
-            if (!path && !isFullScan && !octaneUrl && !sharedSpace && !workspace && !clientId && !clientSecret) {
+            if (!path ||
+                !isFullScan ||
+                !octaneUrl ||
+                !sharedSpace ||
+                !workspace ||
+                !clientId ||
+                !clientSecret) {
                 tl.setResult(tl.TaskResult.Failed, "You have to specify all Octane connection parameters, the path to the repository to discover UFT tests from and whether full scan or sync is required.");
                 return;
             }
@@ -82,7 +88,9 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         }
     }
     catch (error) {
-        tl.setResult(tl.TaskResult.Failed, error.message);
+        //tl.setResult(tl.TaskResult.Failed, (error as Error).message);
+        LOGGER.error(error.message);
+        throw new Error(error.message);
     }
 });
 const discoverTests = (path, isFullScan, octaneUrl, sharedSpace, workspace, clientId, clientSecret) => __awaiter(void 0, void 0, void 0, function* () {
@@ -120,11 +128,11 @@ const loadArguments = () => {
         .option("isFullScan", {
         type: "boolean",
         demandOption: false,
-        describe: "Specify whether full scan or sync is required"
+        describe: "Specify whether full scan or sync is required",
     })
         .option("path", {
         type: "string",
-        default: "Specify the path to the repository to discover UFT tests from"
+        default: "Specify the path to the repository to discover UFT tests from",
     })
         .option("octaneUrl", {
         type: "string",

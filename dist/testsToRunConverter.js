@@ -118,7 +118,7 @@ const convertUftTestsToRun = (testsToRun, rootDirectory) => {
                     externalDataTable = {
                         _attributes: {
                             path: rootDirectory + "\\" + value,
-                        }
+                        },
                     };
                 }
                 else {
@@ -135,7 +135,7 @@ const convertUftTestsToRun = (testsToRun, rootDirectory) => {
         const convertedTests = {
             _attributes: {
                 name: testToRun.testName,
-                path: rootDirectory + "\\" + testToRun.className.replace(/\//g, "\\")
+                path: rootDirectory + "\\" + testToRun.className.replace(/\//g, "\\"),
             },
             parameter: parameters,
         };
