@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createAutomatedTestFromAPI = exports.createAutomatedTestsFromGUI = void 0;
 const path = require("node:path");
 const utils_1 = require("../utils/utils");
-const ROOT_TESTS_DIR = process.env.BUILD_SOURCESDIRECTORY || "";
+const ROOT_TESTS_DIR = process.env.BUILD_SOURCESDIRECTORY || process.env.GITHUB_WORKSPACE || process.env.CI_PROJECT_DIR || "";
 const createAutomatedTestsFromGUI = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
     const test = yield createTest(pathToTest, testType);
     const document = yield (0, utils_1.getGUITestDoc)(pathToTest);

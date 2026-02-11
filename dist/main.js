@@ -63,7 +63,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     }
     if (actionType === "convertTests") {
         const framework = (0, config_1.getConfig)().framework;
-        const rootDirectory = process.env.BUILD_SOURCESDIRECTORY || "";
+        const rootDirectory = process.env.BUILD_SOURCESDIRECTORY || process.env.GITHUB_WORKSPACE || process.env.CI_PROJECT_DIR || "";
         const convertedTests = (0, index_1.convertTests)(args.testsToRun, framework, rootDirectory);
         if (convertedTests) {
             console.log(convertedTests);

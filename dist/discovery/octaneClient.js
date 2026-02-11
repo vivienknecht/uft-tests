@@ -19,8 +19,9 @@ const escapeSpecialChars = (input) => {
 const getTestRunnerId = (octaneConnection, octaneApi) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let pipelineName;
-        if (process.env.BUILD_DEFINITIONNAME) {
-            pipelineName = escapeSpecialChars(process.env.BUILD_DEFINITIONNAME);
+        const pipeline = process.env.BUILD_DEFINITIONNAME || process.env.GITHUB_WORKFLOW || process.env.CI_PIPELINE_NAME;
+        if (pipeline) {
+            pipelineName = escapeSpecialChars(pipeline);
         }
         LOGGER.debug("The pipeline name is: " + pipelineName);
         const testRunner = yield octaneConnection.executeCustomRequest(`${octaneApi}/executors?query=\"ci_job EQ {name EQ ^${pipelineName}*^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);

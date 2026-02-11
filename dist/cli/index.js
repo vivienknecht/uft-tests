@@ -30667,7 +30667,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createAutomatedTestFromAPI = exports.createAutomatedTestsFromGUI = void 0;
 const path = __nccwpck_require__(6760);
 const utils_1 = __nccwpck_require__(5268);
-const ROOT_TESTS_DIR = process.env.BUILD_SOURCESDIRECTORY || "";
+const ROOT_TESTS_DIR = process.env.BUILD_SOURCESDIRECTORY || process.env.GITHUB_WORKSPACE || process.env.CI_PROJECT_DIR || "";
 const createAutomatedTestsFromGUI = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
     const test = yield createTest(pathToTest, testType);
     const document = yield (0, utils_1.getGUITestDoc)(pathToTest);
@@ -31120,8 +31120,9 @@ const escapeSpecialChars = (input) => {
 const getTestRunnerId = (octaneConnection, octaneApi) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let pipelineName;
-        if (process.env.BUILD_DEFINITIONNAME) {
-            pipelineName = escapeSpecialChars(process.env.BUILD_DEFINITIONNAME);
+        const pipeline = process.env.BUILD_DEFINITIONNAME || process.env.GITHUB_WORKFLOW || process.env.CI_PIPELINE_NAME;
+        if (pipeline) {
+            pipelineName = escapeSpecialChars(pipeline);
         }
         LOGGER.debug("The pipeline name is: " + pipelineName);
         const testRunner = yield octaneConnection.executeCustomRequest(`${octaneApi}/executors?query=\"ci_job EQ {name EQ ^${pipelineName}*^}\"`, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
@@ -31448,7 +31449,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     }
     if (actionType === "convertTests") {
         const framework = (0, config_1.getConfig)().framework;
-        const rootDirectory = process.env.BUILD_SOURCESDIRECTORY || "";
+        const rootDirectory = process.env.BUILD_SOURCESDIRECTORY || process.env.GITHUB_WORKSPACE || process.env.CI_PROJECT_DIR || "";
         const convertedTests = (0, index_1.convertTests)(args.testsToRun, framework, rootDirectory);
         if (convertedTests) {
             console.log(convertedTests);
@@ -31871,7 +31872,7 @@ const TSP_FILE_EXTENSION = ".tsp";
 const ST_FILE_EXTENSION = ".st";
 const determineFileAndChangeType = (modifiedFiles, discoveredTests, existingTests) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
-    const rootFolder = process.env.BUILD_SOURCESDIRECTORY || "";
+    const rootFolder = process.env.BUILD_SOURCESDIRECTORY || process.env.GITHUB_WORKSPACE || process.env.CI_PROJECT_DIR || "";
     const modifiedTestsMap = [];
     const testsToDelete = [];
     const addedTests = [];

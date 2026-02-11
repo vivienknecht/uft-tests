@@ -22,7 +22,7 @@ const TSP_FILE_EXTENSION = ".tsp";
 const ST_FILE_EXTENSION = ".st";
 const determineFileAndChangeType = (modifiedFiles, discoveredTests, existingTests) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
-    const rootFolder = process.env.BUILD_SOURCESDIRECTORY || "";
+    const rootFolder = process.env.BUILD_SOURCESDIRECTORY || process.env.GITHUB_WORKSPACE || process.env.CI_PROJECT_DIR || "";
     const modifiedTestsMap = [];
     const testsToDelete = [];
     const addedTests = [];
