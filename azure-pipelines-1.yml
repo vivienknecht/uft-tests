@@ -43,9 +43,9 @@ steps:
 
   - powershell: |
       $result = node dist/cli/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
-      #  $result = $result.Trim()
-       Write-Host "Converted value: $result"
-       Write-Host "##vso[task.setvariable variable=testsToRunConverted]$result"
+      $result = $result.Trim()
+      Write-Host "Converted value: $result"
+      Write-Host "##vso[task.setvariable variable=testsToRunConverted]$result"
     displayName: TestConversion
 
   - powershell: |
