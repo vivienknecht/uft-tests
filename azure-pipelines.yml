@@ -80,7 +80,7 @@ steps:
   - task: octane-end-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "102"
+      WorkspaceList: "1002"
       Framework: "uft"
     condition: always()
     env:
