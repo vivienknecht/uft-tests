@@ -63,7 +63,10 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     }
     if (actionType === "convertTests") {
         const framework = (0, config_1.getConfig)().framework;
-        const rootDirectory = process.env.BUILD_SOURCESDIRECTORY || process.env.GITHUB_WORKSPACE || process.env.CI_PROJECT_DIR || "";
+        const rootDirectory = process.env.BUILD_SOURCESDIRECTORY ||
+            process.env.GITHUB_WORKSPACE ||
+            process.env.CI_PROJECT_DIR ||
+            "";
         const convertedTests = (0, index_1.convertTests)(args.testsToRun, framework, rootDirectory);
         if (convertedTests) {
             console.log(convertedTests);
@@ -71,10 +74,10 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         return convertedTests;
     }
     else if (actionType === "discoverTests") {
-        LOGGER.info("The path is: " + path);
+        LOGGER.info("The path issssss: " + path);
         yield (0, utils_1.verifyPath)(path);
         if (!path ||
-            (isFullScan === undefined) ||
+            isFullScan === undefined ||
             !octaneUrl ||
             !sharedSpace ||
             !workspace ||

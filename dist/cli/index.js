@@ -1,5 +1,4 @@
-#!/usr/bin/env node
-/******/ (() => { // webpackBootstrap
+#!/usr/bin/env node/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 3967:
@@ -6769,6 +6768,196 @@ exports.Agent = Agent;
 
 /***/ }),
 
+/***/ 21:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = ({onlyFirst = false} = {}) => {
+	const pattern = [
+		'[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
+		'(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))'
+	].join('|');
+
+	return new RegExp(pattern, onlyFirst ? undefined : 'g');
+};
+
+
+/***/ }),
+
+/***/ 4412:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+/* module decorator */ module = __nccwpck_require__.nmd(module);
+
+
+const wrapAnsi16 = (fn, offset) => (...args) => {
+	const code = fn(...args);
+	return `\u001B[${code + offset}m`;
+};
+
+const wrapAnsi256 = (fn, offset) => (...args) => {
+	const code = fn(...args);
+	return `\u001B[${38 + offset};5;${code}m`;
+};
+
+const wrapAnsi16m = (fn, offset) => (...args) => {
+	const rgb = fn(...args);
+	return `\u001B[${38 + offset};2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
+};
+
+const ansi2ansi = n => n;
+const rgb2rgb = (r, g, b) => [r, g, b];
+
+const setLazyProperty = (object, property, get) => {
+	Object.defineProperty(object, property, {
+		get: () => {
+			const value = get();
+
+			Object.defineProperty(object, property, {
+				value,
+				enumerable: true,
+				configurable: true
+			});
+
+			return value;
+		},
+		enumerable: true,
+		configurable: true
+	});
+};
+
+/** @type {typeof import('color-convert')} */
+let colorConvert;
+const makeDynamicStyles = (wrap, targetSpace, identity, isBackground) => {
+	if (colorConvert === undefined) {
+		colorConvert = __nccwpck_require__(4185);
+	}
+
+	const offset = isBackground ? 10 : 0;
+	const styles = {};
+
+	for (const [sourceSpace, suite] of Object.entries(colorConvert)) {
+		const name = sourceSpace === 'ansi16' ? 'ansi' : sourceSpace;
+		if (sourceSpace === targetSpace) {
+			styles[name] = wrap(identity, offset);
+		} else if (typeof suite === 'object') {
+			styles[name] = wrap(suite[targetSpace], offset);
+		}
+	}
+
+	return styles;
+};
+
+function assembleStyles() {
+	const codes = new Map();
+	const styles = {
+		modifier: {
+			reset: [0, 0],
+			// 21 isn't widely supported and 22 does the same thing
+			bold: [1, 22],
+			dim: [2, 22],
+			italic: [3, 23],
+			underline: [4, 24],
+			inverse: [7, 27],
+			hidden: [8, 28],
+			strikethrough: [9, 29]
+		},
+		color: {
+			black: [30, 39],
+			red: [31, 39],
+			green: [32, 39],
+			yellow: [33, 39],
+			blue: [34, 39],
+			magenta: [35, 39],
+			cyan: [36, 39],
+			white: [37, 39],
+
+			// Bright color
+			blackBright: [90, 39],
+			redBright: [91, 39],
+			greenBright: [92, 39],
+			yellowBright: [93, 39],
+			blueBright: [94, 39],
+			magentaBright: [95, 39],
+			cyanBright: [96, 39],
+			whiteBright: [97, 39]
+		},
+		bgColor: {
+			bgBlack: [40, 49],
+			bgRed: [41, 49],
+			bgGreen: [42, 49],
+			bgYellow: [43, 49],
+			bgBlue: [44, 49],
+			bgMagenta: [45, 49],
+			bgCyan: [46, 49],
+			bgWhite: [47, 49],
+
+			// Bright color
+			bgBlackBright: [100, 49],
+			bgRedBright: [101, 49],
+			bgGreenBright: [102, 49],
+			bgYellowBright: [103, 49],
+			bgBlueBright: [104, 49],
+			bgMagentaBright: [105, 49],
+			bgCyanBright: [106, 49],
+			bgWhiteBright: [107, 49]
+		}
+	};
+
+	// Alias bright black as gray (and grey)
+	styles.color.gray = styles.color.blackBright;
+	styles.bgColor.bgGray = styles.bgColor.bgBlackBright;
+	styles.color.grey = styles.color.blackBright;
+	styles.bgColor.bgGrey = styles.bgColor.bgBlackBright;
+
+	for (const [groupName, group] of Object.entries(styles)) {
+		for (const [styleName, style] of Object.entries(group)) {
+			styles[styleName] = {
+				open: `\u001B[${style[0]}m`,
+				close: `\u001B[${style[1]}m`
+			};
+
+			group[styleName] = styles[styleName];
+
+			codes.set(style[0], style[1]);
+		}
+
+		Object.defineProperty(styles, groupName, {
+			value: group,
+			enumerable: false
+		});
+	}
+
+	Object.defineProperty(styles, 'codes', {
+		value: codes,
+		enumerable: false
+	});
+
+	styles.color.close = '\u001B[39m';
+	styles.bgColor.close = '\u001B[49m';
+
+	setLazyProperty(styles.color, 'ansi', () => makeDynamicStyles(wrapAnsi16, 'ansi16', ansi2ansi, false));
+	setLazyProperty(styles.color, 'ansi256', () => makeDynamicStyles(wrapAnsi256, 'ansi256', ansi2ansi, false));
+	setLazyProperty(styles.color, 'ansi16m', () => makeDynamicStyles(wrapAnsi16m, 'rgb', rgb2rgb, false));
+	setLazyProperty(styles.bgColor, 'ansi', () => makeDynamicStyles(wrapAnsi16, 'ansi16', ansi2ansi, true));
+	setLazyProperty(styles.bgColor, 'ansi256', () => makeDynamicStyles(wrapAnsi256, 'ansi256', ansi2ansi, true));
+	setLazyProperty(styles.bgColor, 'ansi16m', () => makeDynamicStyles(wrapAnsi16m, 'rgb', rgb2rgb, true));
+
+	return styles;
+}
+
+// Make the export immutable
+Object.defineProperty(module, 'exports', {
+	enumerable: true,
+	get: assembleStyles
+});
+
+
+/***/ }),
+
 /***/ 4777:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -9678,196 +9867,6 @@ if( true && typeof DO_NOT_EXPORT_CFB === 'undefined') { module.exports = CFB; }
 
 /***/ }),
 
-/***/ 2749:
-/***/ ((module) => {
-
-"use strict";
-
-
-module.exports = ({onlyFirst = false} = {}) => {
-	const pattern = [
-		'[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
-		'(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))'
-	].join('|');
-
-	return new RegExp(pattern, onlyFirst ? undefined : 'g');
-};
-
-
-/***/ }),
-
-/***/ 4436:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-/* module decorator */ module = __nccwpck_require__.nmd(module);
-
-
-const wrapAnsi16 = (fn, offset) => (...args) => {
-	const code = fn(...args);
-	return `\u001B[${code + offset}m`;
-};
-
-const wrapAnsi256 = (fn, offset) => (...args) => {
-	const code = fn(...args);
-	return `\u001B[${38 + offset};5;${code}m`;
-};
-
-const wrapAnsi16m = (fn, offset) => (...args) => {
-	const rgb = fn(...args);
-	return `\u001B[${38 + offset};2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
-};
-
-const ansi2ansi = n => n;
-const rgb2rgb = (r, g, b) => [r, g, b];
-
-const setLazyProperty = (object, property, get) => {
-	Object.defineProperty(object, property, {
-		get: () => {
-			const value = get();
-
-			Object.defineProperty(object, property, {
-				value,
-				enumerable: true,
-				configurable: true
-			});
-
-			return value;
-		},
-		enumerable: true,
-		configurable: true
-	});
-};
-
-/** @type {typeof import('color-convert')} */
-let colorConvert;
-const makeDynamicStyles = (wrap, targetSpace, identity, isBackground) => {
-	if (colorConvert === undefined) {
-		colorConvert = __nccwpck_require__(4185);
-	}
-
-	const offset = isBackground ? 10 : 0;
-	const styles = {};
-
-	for (const [sourceSpace, suite] of Object.entries(colorConvert)) {
-		const name = sourceSpace === 'ansi16' ? 'ansi' : sourceSpace;
-		if (sourceSpace === targetSpace) {
-			styles[name] = wrap(identity, offset);
-		} else if (typeof suite === 'object') {
-			styles[name] = wrap(suite[targetSpace], offset);
-		}
-	}
-
-	return styles;
-};
-
-function assembleStyles() {
-	const codes = new Map();
-	const styles = {
-		modifier: {
-			reset: [0, 0],
-			// 21 isn't widely supported and 22 does the same thing
-			bold: [1, 22],
-			dim: [2, 22],
-			italic: [3, 23],
-			underline: [4, 24],
-			inverse: [7, 27],
-			hidden: [8, 28],
-			strikethrough: [9, 29]
-		},
-		color: {
-			black: [30, 39],
-			red: [31, 39],
-			green: [32, 39],
-			yellow: [33, 39],
-			blue: [34, 39],
-			magenta: [35, 39],
-			cyan: [36, 39],
-			white: [37, 39],
-
-			// Bright color
-			blackBright: [90, 39],
-			redBright: [91, 39],
-			greenBright: [92, 39],
-			yellowBright: [93, 39],
-			blueBright: [94, 39],
-			magentaBright: [95, 39],
-			cyanBright: [96, 39],
-			whiteBright: [97, 39]
-		},
-		bgColor: {
-			bgBlack: [40, 49],
-			bgRed: [41, 49],
-			bgGreen: [42, 49],
-			bgYellow: [43, 49],
-			bgBlue: [44, 49],
-			bgMagenta: [45, 49],
-			bgCyan: [46, 49],
-			bgWhite: [47, 49],
-
-			// Bright color
-			bgBlackBright: [100, 49],
-			bgRedBright: [101, 49],
-			bgGreenBright: [102, 49],
-			bgYellowBright: [103, 49],
-			bgBlueBright: [104, 49],
-			bgMagentaBright: [105, 49],
-			bgCyanBright: [106, 49],
-			bgWhiteBright: [107, 49]
-		}
-	};
-
-	// Alias bright black as gray (and grey)
-	styles.color.gray = styles.color.blackBright;
-	styles.bgColor.bgGray = styles.bgColor.bgBlackBright;
-	styles.color.grey = styles.color.blackBright;
-	styles.bgColor.bgGrey = styles.bgColor.bgBlackBright;
-
-	for (const [groupName, group] of Object.entries(styles)) {
-		for (const [styleName, style] of Object.entries(group)) {
-			styles[styleName] = {
-				open: `\u001B[${style[0]}m`,
-				close: `\u001B[${style[1]}m`
-			};
-
-			group[styleName] = styles[styleName];
-
-			codes.set(style[0], style[1]);
-		}
-
-		Object.defineProperty(styles, groupName, {
-			value: group,
-			enumerable: false
-		});
-	}
-
-	Object.defineProperty(styles, 'codes', {
-		value: codes,
-		enumerable: false
-	});
-
-	styles.color.close = '\u001B[39m';
-	styles.bgColor.close = '\u001B[49m';
-
-	setLazyProperty(styles.color, 'ansi', () => makeDynamicStyles(wrapAnsi16, 'ansi16', ansi2ansi, false));
-	setLazyProperty(styles.color, 'ansi256', () => makeDynamicStyles(wrapAnsi256, 'ansi256', ansi2ansi, false));
-	setLazyProperty(styles.color, 'ansi16m', () => makeDynamicStyles(wrapAnsi16m, 'rgb', rgb2rgb, false));
-	setLazyProperty(styles.bgColor, 'ansi', () => makeDynamicStyles(wrapAnsi16, 'ansi16', ansi2ansi, true));
-	setLazyProperty(styles.bgColor, 'ansi256', () => makeDynamicStyles(wrapAnsi256, 'ansi256', ansi2ansi, true));
-	setLazyProperty(styles.bgColor, 'ansi16m', () => makeDynamicStyles(wrapAnsi16m, 'rgb', rgb2rgb, true));
-
-	return styles;
-}
-
-// Make the export immutable
-Object.defineProperty(module, 'exports', {
-	enumerable: true,
-	get: assembleStyles
-});
-
-
-/***/ }),
-
 /***/ 6976:
 /***/ ((module) => {
 
@@ -9945,7 +9944,7 @@ module.exports["default"] = isFullwidthCodePoint;
 
 "use strict";
 
-const stripAnsi = __nccwpck_require__(942);
+const stripAnsi = __nccwpck_require__(3958);
 const isFullwidthCodePoint = __nccwpck_require__(351);
 const emojiRegex = __nccwpck_require__(6976);
 
@@ -9995,26 +9994,14 @@ module.exports["default"] = stringWidth;
 
 /***/ }),
 
-/***/ 942:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const ansiRegex = __nccwpck_require__(2749);
-
-module.exports = string => typeof string === 'string' ? string.replace(ansiRegex(), '') : string;
-
-
-/***/ }),
-
 /***/ 8796:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 const stringWidth = __nccwpck_require__(5412);
-const stripAnsi = __nccwpck_require__(942);
-const ansiStyles = __nccwpck_require__(4436);
+const stripAnsi = __nccwpck_require__(3958);
+const ansiStyles = __nccwpck_require__(4412);
 
 const ESCAPES = new Set([
 	'\u001B',
@@ -12015,6 +12002,7 @@ function useColors() {
 
 	// Is webkit? http://stackoverflow.com/a/16459606/376773
 	// document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
+	// eslint-disable-next-line no-return-assign
 	return (typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance) ||
 		// Is firebug? http://stackoverflow.com/a/398120/376773
 		(typeof window !== 'undefined' && window.console && (window.console.firebug || (window.console.exception && window.console.table))) ||
@@ -12104,7 +12092,7 @@ function save(namespaces) {
 function load() {
 	let r;
 	try {
-		r = exports.storage.getItem('debug');
+		r = exports.storage.getItem('debug') || exports.storage.getItem('DEBUG') ;
 	} catch (error) {
 		// Swallow
 		// XXX (@Qix-) should we be logging these?
@@ -12330,24 +12318,62 @@ function setup(env) {
 		createDebug.names = [];
 		createDebug.skips = [];
 
-		let i;
-		const split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
-		const len = split.length;
+		const split = (typeof namespaces === 'string' ? namespaces : '')
+			.trim()
+			.replace(/\s+/g, ',')
+			.split(',')
+			.filter(Boolean);
 
-		for (i = 0; i < len; i++) {
-			if (!split[i]) {
-				// ignore empty strings
-				continue;
-			}
-
-			namespaces = split[i].replace(/\*/g, '.*?');
-
-			if (namespaces[0] === '-') {
-				createDebug.skips.push(new RegExp('^' + namespaces.slice(1) + '$'));
+		for (const ns of split) {
+			if (ns[0] === '-') {
+				createDebug.skips.push(ns.slice(1));
 			} else {
-				createDebug.names.push(new RegExp('^' + namespaces + '$'));
+				createDebug.names.push(ns);
 			}
 		}
+	}
+
+	/**
+	 * Checks if the given string matches a namespace template, honoring
+	 * asterisks as wildcards.
+	 *
+	 * @param {String} search
+	 * @param {String} template
+	 * @return {Boolean}
+	 */
+	function matchesTemplate(search, template) {
+		let searchIndex = 0;
+		let templateIndex = 0;
+		let starIndex = -1;
+		let matchIndex = 0;
+
+		while (searchIndex < search.length) {
+			if (templateIndex < template.length && (template[templateIndex] === search[searchIndex] || template[templateIndex] === '*')) {
+				// Match character or proceed with wildcard
+				if (template[templateIndex] === '*') {
+					starIndex = templateIndex;
+					matchIndex = searchIndex;
+					templateIndex++; // Skip the '*'
+				} else {
+					searchIndex++;
+					templateIndex++;
+				}
+			} else if (starIndex !== -1) { // eslint-disable-line no-negated-condition
+				// Backtrack to the last '*' and try to match more characters
+				templateIndex = starIndex + 1;
+				matchIndex++;
+				searchIndex = matchIndex;
+			} else {
+				return false; // No match
+			}
+		}
+
+		// Handle trailing '*' in template
+		while (templateIndex < template.length && template[templateIndex] === '*') {
+			templateIndex++;
+		}
+
+		return templateIndex === template.length;
 	}
 
 	/**
@@ -12358,8 +12384,8 @@ function setup(env) {
 	*/
 	function disable() {
 		const namespaces = [
-			...createDebug.names.map(toNamespace),
-			...createDebug.skips.map(toNamespace).map(namespace => '-' + namespace)
+			...createDebug.names,
+			...createDebug.skips.map(namespace => '-' + namespace)
 		].join(',');
 		createDebug.enable('');
 		return namespaces;
@@ -12373,39 +12399,19 @@ function setup(env) {
 	* @api public
 	*/
 	function enabled(name) {
-		if (name[name.length - 1] === '*') {
-			return true;
-		}
-
-		let i;
-		let len;
-
-		for (i = 0, len = createDebug.skips.length; i < len; i++) {
-			if (createDebug.skips[i].test(name)) {
+		for (const skip of createDebug.skips) {
+			if (matchesTemplate(name, skip)) {
 				return false;
 			}
 		}
 
-		for (i = 0, len = createDebug.names.length; i < len; i++) {
-			if (createDebug.names[i].test(name)) {
+		for (const ns of createDebug.names) {
+			if (matchesTemplate(name, ns)) {
 				return true;
 			}
 		}
 
 		return false;
-	}
-
-	/**
-	* Convert regexp to namespace
-	*
-	* @param {RegExp} regxep
-	* @return {String} namespace
-	* @api private
-	*/
-	function toNamespace(regexp) {
-		return regexp.toString()
-			.substring(2, regexp.toString().length - 2)
-			.replace(/\.\*\?$/, '*');
 	}
 
 	/**
@@ -14250,7 +14256,7 @@ FormData.prototype.submit = function (params, cb) {
         request.removeListener('error', callback);
         request.removeListener('response', onResponse);
 
-        return cb.call(this, error, responce); // eslint-disable-line no-invalid-this
+        return cb.call(this, error, responce);
       };
 
       onResponse = callback.bind(this, null);
@@ -14274,7 +14280,7 @@ FormData.prototype._error = function (err) {
 FormData.prototype.toString = function () {
   return '[object FormData]';
 };
-setToStringTag(FormData, 'FormData');
+setToStringTag(FormData.prototype, 'FormData');
 
 // Public API
 module.exports = FormData;
@@ -23184,8 +23190,11 @@ function rfdcCircles (opts) {
 /***/ 2560:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-;(function (sax) { // wrapper for non-node envs
-  sax.parser = function (strict, opt) { return new SAXParser(strict, opt) }
+;(function (sax) {
+  // wrapper for non-node envs
+  sax.parser = function (strict, opt) {
+    return new SAXParser(strict, opt)
+  }
   sax.SAXParser = SAXParser
   sax.SAXStream = SAXStream
   sax.createStream = createStream
@@ -23202,9 +23211,18 @@ function rfdcCircles (opts) {
   sax.MAX_BUFFER_LENGTH = 64 * 1024
 
   var buffers = [
-    'comment', 'sgmlDecl', 'textNode', 'tagName', 'doctype',
-    'procInstName', 'procInstBody', 'entity', 'attribName',
-    'attribValue', 'cdata', 'script'
+    'comment',
+    'sgmlDecl',
+    'textNode',
+    'tagName',
+    'doctype',
+    'procInstName',
+    'procInstBody',
+    'entity',
+    'attribName',
+    'attribValue',
+    'cdata',
+    'script',
   ]
 
   sax.EVENTS = [
@@ -23225,10 +23243,10 @@ function rfdcCircles (opts) {
     'ready',
     'script',
     'opennamespace',
-    'closenamespace'
+    'closenamespace',
   ]
 
-  function SAXParser (strict, opt) {
+  function SAXParser(strict, opt) {
     if (!(this instanceof SAXParser)) {
       return new SAXParser(strict, opt)
     }
@@ -23247,7 +23265,10 @@ function rfdcCircles (opts) {
     parser.noscript = !!(strict || parser.opt.noscript)
     parser.state = S.BEGIN
     parser.strictEntities = parser.opt.strictEntities
-    parser.ENTITIES = parser.strictEntities ? Object.create(sax.XML_ENTITIES) : Object.create(sax.ENTITIES)
+    parser.ENTITIES =
+      parser.strictEntities ?
+        Object.create(sax.XML_ENTITIES)
+      : Object.create(sax.ENTITIES)
     parser.attribList = []
 
     // namespaces form a prototype chain.
@@ -23260,7 +23281,7 @@ function rfdcCircles (opts) {
     // disallow unquoted attribute values if not otherwise configured
     // and strict mode is true
     if (parser.opt.unquotedAttributeValues === undefined) {
-      parser.opt.unquotedAttributeValues = !strict;
+      parser.opt.unquotedAttributeValues = !strict
     }
 
     // mostly just for error reporting
@@ -23273,7 +23294,7 @@ function rfdcCircles (opts) {
 
   if (!Object.create) {
     Object.create = function (o) {
-      function F () {}
+      function F() {}
       F.prototype = o
       var newf = new F()
       return newf
@@ -23288,7 +23309,7 @@ function rfdcCircles (opts) {
     }
   }
 
-  function checkBufferLength (parser) {
+  function checkBufferLength(parser) {
     var maxAllowed = Math.max(sax.MAX_BUFFER_LENGTH, 10)
     var maxActual = 0
     for (var i = 0, l = buffers.length; i < l; i++) {
@@ -23324,13 +23345,13 @@ function rfdcCircles (opts) {
     parser.bufferCheckPosition = m + parser.position
   }
 
-  function clearBuffers (parser) {
+  function clearBuffers(parser) {
     for (var i = 0, l = buffers.length; i < l; i++) {
       parser[buffers[i]] = ''
     }
   }
 
-  function flushBuffers (parser) {
+  function flushBuffers(parser) {
     closeText(parser)
     if (parser.cdata !== '') {
       emitNode(parser, 'oncdata', parser.cdata)
@@ -23343,11 +23364,20 @@ function rfdcCircles (opts) {
   }
 
   SAXParser.prototype = {
-    end: function () { end(this) },
+    end: function () {
+      end(this)
+    },
     write: write,
-    resume: function () { this.error = null; return this },
-    close: function () { return this.write(null) },
-    flush: function () { flushBuffers(this) }
+    resume: function () {
+      this.error = null
+      return this
+    },
+    close: function () {
+      return this.write(null)
+    },
+    flush: function () {
+      flushBuffers(this)
+    },
   }
 
   var Stream
@@ -23362,11 +23392,11 @@ function rfdcCircles (opts) {
     return ev !== 'error' && ev !== 'end'
   })
 
-  function createStream (strict, opt) {
+  function createStream(strict, opt) {
     return new SAXStream(strict, opt)
   }
 
-  function SAXStream (strict, opt) {
+  function SAXStream(strict, opt) {
     if (!(this instanceof SAXStream)) {
       return new SAXStream(strict, opt)
     }
@@ -23407,26 +23437,27 @@ function rfdcCircles (opts) {
           me.on(ev, h)
         },
         enumerable: true,
-        configurable: false
+        configurable: false,
       })
     })
   }
 
   SAXStream.prototype = Object.create(Stream.prototype, {
     constructor: {
-      value: SAXStream
-    }
+      value: SAXStream,
+    },
   })
 
   SAXStream.prototype.write = function (data) {
-    if (typeof Buffer === 'function' &&
+    if (
+      typeof Buffer === 'function' &&
       typeof Buffer.isBuffer === 'function' &&
-      Buffer.isBuffer(data)) {
+      Buffer.isBuffer(data)
+    ) {
       if (!this._decoder) {
-        var SD = (__nccwpck_require__(3193).StringDecoder)
-        this._decoder = new SD('utf8')
+        this._decoder = new TextDecoder('utf8')
       }
-      data = this._decoder.write(data)
+      data = this._decoder.decode(data, { stream: true })
     }
 
     this._parser.write(data.toString())
@@ -23438,6 +23469,14 @@ function rfdcCircles (opts) {
     if (chunk && chunk.length) {
       this.write(chunk)
     }
+    // Flush any remaining decoded data from the TextDecoder
+    if (this._decoder) {
+      var remaining = this._decoder.decode()
+      if (remaining) {
+        this._parser.write(remaining)
+        this.emit('data', remaining)
+      }
+    }
     this._parser.end()
     return true
   }
@@ -23446,7 +23485,10 @@ function rfdcCircles (opts) {
     var me = this
     if (!me._parser['on' + ev] && streamWraps.indexOf(ev) !== -1) {
       me._parser['on' + ev] = function () {
-        var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null, arguments)
+        var args =
+          arguments.length === 1 ?
+            [arguments[0]]
+          : Array.apply(null, arguments)
         args.splice(0, 0, ev)
         me.emit.apply(me, args)
       }
@@ -23469,30 +23511,34 @@ function rfdcCircles (opts) {
   // without a significant breaking change to either this  parser, or the
   // JavaScript language.  Implementation of an emoji-capable xml parser
   // is left as an exercise for the reader.
-  var nameStart = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
+  var nameStart =
+    /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
 
-  var nameBody = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
+  var nameBody =
+    /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
 
-  var entityStart = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
-  var entityBody = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
+  var entityStart =
+    /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
+  var entityBody =
+    /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
 
-  function isWhitespace (c) {
+  function isWhitespace(c) {
     return c === ' ' || c === '\n' || c === '\r' || c === '\t'
   }
 
-  function isQuote (c) {
-    return c === '"' || c === '\''
+  function isQuote(c) {
+    return c === '"' || c === "'"
   }
 
-  function isAttribEnd (c) {
+  function isAttribEnd(c) {
     return c === '>' || isWhitespace(c)
   }
 
-  function isMatch (regex, c) {
+  function isMatch(regex, c) {
     return regex.test(c)
   }
 
-  function notMatch (regex, c) {
+  function notMatch(regex, c) {
     return !isMatch(regex, c)
   }
 
@@ -23533,271 +23579,271 @@ function rfdcCircles (opts) {
     CLOSE_TAG: S++, // </a
     CLOSE_TAG_SAW_WHITE: S++, // </a   >
     SCRIPT: S++, // <script> ...
-    SCRIPT_ENDING: S++ // <script> ... <
+    SCRIPT_ENDING: S++, // <script> ... <
   }
 
   sax.XML_ENTITIES = {
-    'amp': '&',
-    'gt': '>',
-    'lt': '<',
-    'quot': '"',
-    'apos': "'"
+    amp: '&',
+    gt: '>',
+    lt: '<',
+    quot: '"',
+    apos: "'",
   }
 
   sax.ENTITIES = {
-    'amp': '&',
-    'gt': '>',
-    'lt': '<',
-    'quot': '"',
-    'apos': "'",
-    'AElig': 198,
-    'Aacute': 193,
-    'Acirc': 194,
-    'Agrave': 192,
-    'Aring': 197,
-    'Atilde': 195,
-    'Auml': 196,
-    'Ccedil': 199,
-    'ETH': 208,
-    'Eacute': 201,
-    'Ecirc': 202,
-    'Egrave': 200,
-    'Euml': 203,
-    'Iacute': 205,
-    'Icirc': 206,
-    'Igrave': 204,
-    'Iuml': 207,
-    'Ntilde': 209,
-    'Oacute': 211,
-    'Ocirc': 212,
-    'Ograve': 210,
-    'Oslash': 216,
-    'Otilde': 213,
-    'Ouml': 214,
-    'THORN': 222,
-    'Uacute': 218,
-    'Ucirc': 219,
-    'Ugrave': 217,
-    'Uuml': 220,
-    'Yacute': 221,
-    'aacute': 225,
-    'acirc': 226,
-    'aelig': 230,
-    'agrave': 224,
-    'aring': 229,
-    'atilde': 227,
-    'auml': 228,
-    'ccedil': 231,
-    'eacute': 233,
-    'ecirc': 234,
-    'egrave': 232,
-    'eth': 240,
-    'euml': 235,
-    'iacute': 237,
-    'icirc': 238,
-    'igrave': 236,
-    'iuml': 239,
-    'ntilde': 241,
-    'oacute': 243,
-    'ocirc': 244,
-    'ograve': 242,
-    'oslash': 248,
-    'otilde': 245,
-    'ouml': 246,
-    'szlig': 223,
-    'thorn': 254,
-    'uacute': 250,
-    'ucirc': 251,
-    'ugrave': 249,
-    'uuml': 252,
-    'yacute': 253,
-    'yuml': 255,
-    'copy': 169,
-    'reg': 174,
-    'nbsp': 160,
-    'iexcl': 161,
-    'cent': 162,
-    'pound': 163,
-    'curren': 164,
-    'yen': 165,
-    'brvbar': 166,
-    'sect': 167,
-    'uml': 168,
-    'ordf': 170,
-    'laquo': 171,
-    'not': 172,
-    'shy': 173,
-    'macr': 175,
-    'deg': 176,
-    'plusmn': 177,
-    'sup1': 185,
-    'sup2': 178,
-    'sup3': 179,
-    'acute': 180,
-    'micro': 181,
-    'para': 182,
-    'middot': 183,
-    'cedil': 184,
-    'ordm': 186,
-    'raquo': 187,
-    'frac14': 188,
-    'frac12': 189,
-    'frac34': 190,
-    'iquest': 191,
-    'times': 215,
-    'divide': 247,
-    'OElig': 338,
-    'oelig': 339,
-    'Scaron': 352,
-    'scaron': 353,
-    'Yuml': 376,
-    'fnof': 402,
-    'circ': 710,
-    'tilde': 732,
-    'Alpha': 913,
-    'Beta': 914,
-    'Gamma': 915,
-    'Delta': 916,
-    'Epsilon': 917,
-    'Zeta': 918,
-    'Eta': 919,
-    'Theta': 920,
-    'Iota': 921,
-    'Kappa': 922,
-    'Lambda': 923,
-    'Mu': 924,
-    'Nu': 925,
-    'Xi': 926,
-    'Omicron': 927,
-    'Pi': 928,
-    'Rho': 929,
-    'Sigma': 931,
-    'Tau': 932,
-    'Upsilon': 933,
-    'Phi': 934,
-    'Chi': 935,
-    'Psi': 936,
-    'Omega': 937,
-    'alpha': 945,
-    'beta': 946,
-    'gamma': 947,
-    'delta': 948,
-    'epsilon': 949,
-    'zeta': 950,
-    'eta': 951,
-    'theta': 952,
-    'iota': 953,
-    'kappa': 954,
-    'lambda': 955,
-    'mu': 956,
-    'nu': 957,
-    'xi': 958,
-    'omicron': 959,
-    'pi': 960,
-    'rho': 961,
-    'sigmaf': 962,
-    'sigma': 963,
-    'tau': 964,
-    'upsilon': 965,
-    'phi': 966,
-    'chi': 967,
-    'psi': 968,
-    'omega': 969,
-    'thetasym': 977,
-    'upsih': 978,
-    'piv': 982,
-    'ensp': 8194,
-    'emsp': 8195,
-    'thinsp': 8201,
-    'zwnj': 8204,
-    'zwj': 8205,
-    'lrm': 8206,
-    'rlm': 8207,
-    'ndash': 8211,
-    'mdash': 8212,
-    'lsquo': 8216,
-    'rsquo': 8217,
-    'sbquo': 8218,
-    'ldquo': 8220,
-    'rdquo': 8221,
-    'bdquo': 8222,
-    'dagger': 8224,
-    'Dagger': 8225,
-    'bull': 8226,
-    'hellip': 8230,
-    'permil': 8240,
-    'prime': 8242,
-    'Prime': 8243,
-    'lsaquo': 8249,
-    'rsaquo': 8250,
-    'oline': 8254,
-    'frasl': 8260,
-    'euro': 8364,
-    'image': 8465,
-    'weierp': 8472,
-    'real': 8476,
-    'trade': 8482,
-    'alefsym': 8501,
-    'larr': 8592,
-    'uarr': 8593,
-    'rarr': 8594,
-    'darr': 8595,
-    'harr': 8596,
-    'crarr': 8629,
-    'lArr': 8656,
-    'uArr': 8657,
-    'rArr': 8658,
-    'dArr': 8659,
-    'hArr': 8660,
-    'forall': 8704,
-    'part': 8706,
-    'exist': 8707,
-    'empty': 8709,
-    'nabla': 8711,
-    'isin': 8712,
-    'notin': 8713,
-    'ni': 8715,
-    'prod': 8719,
-    'sum': 8721,
-    'minus': 8722,
-    'lowast': 8727,
-    'radic': 8730,
-    'prop': 8733,
-    'infin': 8734,
-    'ang': 8736,
-    'and': 8743,
-    'or': 8744,
-    'cap': 8745,
-    'cup': 8746,
-    'int': 8747,
-    'there4': 8756,
-    'sim': 8764,
-    'cong': 8773,
-    'asymp': 8776,
-    'ne': 8800,
-    'equiv': 8801,
-    'le': 8804,
-    'ge': 8805,
-    'sub': 8834,
-    'sup': 8835,
-    'nsub': 8836,
-    'sube': 8838,
-    'supe': 8839,
-    'oplus': 8853,
-    'otimes': 8855,
-    'perp': 8869,
-    'sdot': 8901,
-    'lceil': 8968,
-    'rceil': 8969,
-    'lfloor': 8970,
-    'rfloor': 8971,
-    'lang': 9001,
-    'rang': 9002,
-    'loz': 9674,
-    'spades': 9824,
-    'clubs': 9827,
-    'hearts': 9829,
-    'diams': 9830
+    amp: '&',
+    gt: '>',
+    lt: '<',
+    quot: '"',
+    apos: "'",
+    AElig: 198,
+    Aacute: 193,
+    Acirc: 194,
+    Agrave: 192,
+    Aring: 197,
+    Atilde: 195,
+    Auml: 196,
+    Ccedil: 199,
+    ETH: 208,
+    Eacute: 201,
+    Ecirc: 202,
+    Egrave: 200,
+    Euml: 203,
+    Iacute: 205,
+    Icirc: 206,
+    Igrave: 204,
+    Iuml: 207,
+    Ntilde: 209,
+    Oacute: 211,
+    Ocirc: 212,
+    Ograve: 210,
+    Oslash: 216,
+    Otilde: 213,
+    Ouml: 214,
+    THORN: 222,
+    Uacute: 218,
+    Ucirc: 219,
+    Ugrave: 217,
+    Uuml: 220,
+    Yacute: 221,
+    aacute: 225,
+    acirc: 226,
+    aelig: 230,
+    agrave: 224,
+    aring: 229,
+    atilde: 227,
+    auml: 228,
+    ccedil: 231,
+    eacute: 233,
+    ecirc: 234,
+    egrave: 232,
+    eth: 240,
+    euml: 235,
+    iacute: 237,
+    icirc: 238,
+    igrave: 236,
+    iuml: 239,
+    ntilde: 241,
+    oacute: 243,
+    ocirc: 244,
+    ograve: 242,
+    oslash: 248,
+    otilde: 245,
+    ouml: 246,
+    szlig: 223,
+    thorn: 254,
+    uacute: 250,
+    ucirc: 251,
+    ugrave: 249,
+    uuml: 252,
+    yacute: 253,
+    yuml: 255,
+    copy: 169,
+    reg: 174,
+    nbsp: 160,
+    iexcl: 161,
+    cent: 162,
+    pound: 163,
+    curren: 164,
+    yen: 165,
+    brvbar: 166,
+    sect: 167,
+    uml: 168,
+    ordf: 170,
+    laquo: 171,
+    not: 172,
+    shy: 173,
+    macr: 175,
+    deg: 176,
+    plusmn: 177,
+    sup1: 185,
+    sup2: 178,
+    sup3: 179,
+    acute: 180,
+    micro: 181,
+    para: 182,
+    middot: 183,
+    cedil: 184,
+    ordm: 186,
+    raquo: 187,
+    frac14: 188,
+    frac12: 189,
+    frac34: 190,
+    iquest: 191,
+    times: 215,
+    divide: 247,
+    OElig: 338,
+    oelig: 339,
+    Scaron: 352,
+    scaron: 353,
+    Yuml: 376,
+    fnof: 402,
+    circ: 710,
+    tilde: 732,
+    Alpha: 913,
+    Beta: 914,
+    Gamma: 915,
+    Delta: 916,
+    Epsilon: 917,
+    Zeta: 918,
+    Eta: 919,
+    Theta: 920,
+    Iota: 921,
+    Kappa: 922,
+    Lambda: 923,
+    Mu: 924,
+    Nu: 925,
+    Xi: 926,
+    Omicron: 927,
+    Pi: 928,
+    Rho: 929,
+    Sigma: 931,
+    Tau: 932,
+    Upsilon: 933,
+    Phi: 934,
+    Chi: 935,
+    Psi: 936,
+    Omega: 937,
+    alpha: 945,
+    beta: 946,
+    gamma: 947,
+    delta: 948,
+    epsilon: 949,
+    zeta: 950,
+    eta: 951,
+    theta: 952,
+    iota: 953,
+    kappa: 954,
+    lambda: 955,
+    mu: 956,
+    nu: 957,
+    xi: 958,
+    omicron: 959,
+    pi: 960,
+    rho: 961,
+    sigmaf: 962,
+    sigma: 963,
+    tau: 964,
+    upsilon: 965,
+    phi: 966,
+    chi: 967,
+    psi: 968,
+    omega: 969,
+    thetasym: 977,
+    upsih: 978,
+    piv: 982,
+    ensp: 8194,
+    emsp: 8195,
+    thinsp: 8201,
+    zwnj: 8204,
+    zwj: 8205,
+    lrm: 8206,
+    rlm: 8207,
+    ndash: 8211,
+    mdash: 8212,
+    lsquo: 8216,
+    rsquo: 8217,
+    sbquo: 8218,
+    ldquo: 8220,
+    rdquo: 8221,
+    bdquo: 8222,
+    dagger: 8224,
+    Dagger: 8225,
+    bull: 8226,
+    hellip: 8230,
+    permil: 8240,
+    prime: 8242,
+    Prime: 8243,
+    lsaquo: 8249,
+    rsaquo: 8250,
+    oline: 8254,
+    frasl: 8260,
+    euro: 8364,
+    image: 8465,
+    weierp: 8472,
+    real: 8476,
+    trade: 8482,
+    alefsym: 8501,
+    larr: 8592,
+    uarr: 8593,
+    rarr: 8594,
+    darr: 8595,
+    harr: 8596,
+    crarr: 8629,
+    lArr: 8656,
+    uArr: 8657,
+    rArr: 8658,
+    dArr: 8659,
+    hArr: 8660,
+    forall: 8704,
+    part: 8706,
+    exist: 8707,
+    empty: 8709,
+    nabla: 8711,
+    isin: 8712,
+    notin: 8713,
+    ni: 8715,
+    prod: 8719,
+    sum: 8721,
+    minus: 8722,
+    lowast: 8727,
+    radic: 8730,
+    prop: 8733,
+    infin: 8734,
+    ang: 8736,
+    and: 8743,
+    or: 8744,
+    cap: 8745,
+    cup: 8746,
+    int: 8747,
+    there4: 8756,
+    sim: 8764,
+    cong: 8773,
+    asymp: 8776,
+    ne: 8800,
+    equiv: 8801,
+    le: 8804,
+    ge: 8805,
+    sub: 8834,
+    sup: 8835,
+    nsub: 8836,
+    sube: 8838,
+    supe: 8839,
+    oplus: 8853,
+    otimes: 8855,
+    perp: 8869,
+    sdot: 8901,
+    lceil: 8968,
+    rceil: 8969,
+    lfloor: 8970,
+    rfloor: 8971,
+    lang: 9001,
+    rang: 9002,
+    loz: 9674,
+    spades: 9824,
+    clubs: 9827,
+    hearts: 9829,
+    diams: 9830,
   }
 
   Object.keys(sax.ENTITIES).forEach(function (key) {
@@ -23813,33 +23859,37 @@ function rfdcCircles (opts) {
   // shorthand
   S = sax.STATE
 
-  function emit (parser, event, data) {
+  function emit(parser, event, data) {
     parser[event] && parser[event](data)
   }
 
-  function emitNode (parser, nodeType, data) {
+  function emitNode(parser, nodeType, data) {
     if (parser.textNode) closeText(parser)
     emit(parser, nodeType, data)
   }
 
-  function closeText (parser) {
+  function closeText(parser) {
     parser.textNode = textopts(parser.opt, parser.textNode)
     if (parser.textNode) emit(parser, 'ontext', parser.textNode)
     parser.textNode = ''
   }
 
-  function textopts (opt, text) {
+  function textopts(opt, text) {
     if (opt.trim) text = text.trim()
     if (opt.normalize) text = text.replace(/\s+/g, ' ')
     return text
   }
 
-  function error (parser, er) {
+  function error(parser, er) {
     closeText(parser)
     if (parser.trackPosition) {
-      er += '\nLine: ' + parser.line +
-        '\nColumn: ' + parser.column +
-        '\nChar: ' + parser.c
+      er +=
+        '\nLine: ' +
+        parser.line +
+        '\nColumn: ' +
+        parser.column +
+        '\nChar: ' +
+        parser.c
     }
     er = new Error(er)
     parser.error = er
@@ -23847,11 +23897,14 @@ function rfdcCircles (opts) {
     return parser
   }
 
-  function end (parser) {
-    if (parser.sawRoot && !parser.closedRoot) strictFail(parser, 'Unclosed root tag')
-    if ((parser.state !== S.BEGIN) &&
-      (parser.state !== S.BEGIN_WHITESPACE) &&
-      (parser.state !== S.TEXT)) {
+  function end(parser) {
+    if (parser.sawRoot && !parser.closedRoot)
+      strictFail(parser, 'Unclosed root tag')
+    if (
+      parser.state !== S.BEGIN &&
+      parser.state !== S.BEGIN_WHITESPACE &&
+      parser.state !== S.TEXT
+    ) {
       error(parser, 'Unexpected end')
     }
     closeText(parser)
@@ -23862,7 +23915,7 @@ function rfdcCircles (opts) {
     return parser
   }
 
-  function strictFail (parser, message) {
+  function strictFail(parser, message) {
     if (typeof parser !== 'object' || !(parser instanceof SAXParser)) {
       throw new Error('bad call to strictFail')
     }
@@ -23871,10 +23924,10 @@ function rfdcCircles (opts) {
     }
   }
 
-  function newTag (parser) {
+  function newTag(parser) {
     if (!parser.strict) parser.tagName = parser.tagName[parser.looseCase]()
     var parent = parser.tags[parser.tags.length - 1] || parser
-    var tag = parser.tag = { name: parser.tagName, attributes: {} }
+    var tag = (parser.tag = { name: parser.tagName, attributes: {} })
 
     // will be overridden if tag contails an xmlns="foo" or xmlns:foo="bar"
     if (parser.opt.xmlns) {
@@ -23884,9 +23937,9 @@ function rfdcCircles (opts) {
     emitNode(parser, 'onopentagstart', tag)
   }
 
-  function qname (name, attribute) {
+  function qname(name, attribute) {
     var i = name.indexOf(':')
-    var qualName = i < 0 ? [ '', name ] : name.split(':')
+    var qualName = i < 0 ? ['', name] : name.split(':')
     var prefix = qualName[0]
     var local = qualName[1]
 
@@ -23899,13 +23952,15 @@ function rfdcCircles (opts) {
     return { prefix: prefix, local: local }
   }
 
-  function attrib (parser) {
+  function attrib(parser) {
     if (!parser.strict) {
       parser.attribName = parser.attribName[parser.looseCase]()
     }
 
-    if (parser.attribList.indexOf(parser.attribName) !== -1 ||
-      parser.tag.attributes.hasOwnProperty(parser.attribName)) {
+    if (
+      parser.attribList.indexOf(parser.attribName) !== -1 ||
+      parser.tag.attributes.hasOwnProperty(parser.attribName)
+    ) {
       parser.attribName = parser.attribValue = ''
       return
     }
@@ -23918,13 +23973,26 @@ function rfdcCircles (opts) {
       if (prefix === 'xmlns') {
         // namespace binding attribute. push the binding into scope
         if (local === 'xml' && parser.attribValue !== XML_NAMESPACE) {
-          strictFail(parser,
-            'xml: prefix must be bound to ' + XML_NAMESPACE + '\n' +
-            'Actual: ' + parser.attribValue)
-        } else if (local === 'xmlns' && parser.attribValue !== XMLNS_NAMESPACE) {
-          strictFail(parser,
-            'xmlns: prefix must be bound to ' + XMLNS_NAMESPACE + '\n' +
-            'Actual: ' + parser.attribValue)
+          strictFail(
+            parser,
+            'xml: prefix must be bound to ' +
+              XML_NAMESPACE +
+              '\n' +
+              'Actual: ' +
+              parser.attribValue
+          )
+        } else if (
+          local === 'xmlns' &&
+          parser.attribValue !== XMLNS_NAMESPACE
+        ) {
+          strictFail(
+            parser,
+            'xmlns: prefix must be bound to ' +
+              XMLNS_NAMESPACE +
+              '\n' +
+              'Actual: ' +
+              parser.attribValue
+          )
         } else {
           var tag = parser.tag
           var parent = parser.tags[parser.tags.length - 1] || parser
@@ -23944,14 +24012,14 @@ function rfdcCircles (opts) {
       parser.tag.attributes[parser.attribName] = parser.attribValue
       emitNode(parser, 'onattribute', {
         name: parser.attribName,
-        value: parser.attribValue
+        value: parser.attribValue,
       })
     }
 
     parser.attribName = parser.attribValue = ''
   }
 
-  function openTag (parser, selfClosing) {
+  function openTag(parser, selfClosing) {
     if (parser.opt.xmlns) {
       // emit namespace binding events
       var tag = parser.tag
@@ -23963,8 +24031,10 @@ function rfdcCircles (opts) {
       tag.uri = tag.ns[qn.prefix] || ''
 
       if (tag.prefix && !tag.uri) {
-        strictFail(parser, 'Unbound namespace prefix: ' +
-          JSON.stringify(parser.tagName))
+        strictFail(
+          parser,
+          'Unbound namespace prefix: ' + JSON.stringify(parser.tagName)
+        )
         tag.uri = qn.prefix
       }
 
@@ -23973,7 +24043,7 @@ function rfdcCircles (opts) {
         Object.keys(tag.ns).forEach(function (p) {
           emitNode(parser, 'onopennamespace', {
             prefix: p,
-            uri: tag.ns[p]
+            uri: tag.ns[p],
           })
         })
       }
@@ -23988,20 +24058,22 @@ function rfdcCircles (opts) {
         var qualName = qname(name, true)
         var prefix = qualName.prefix
         var local = qualName.local
-        var uri = prefix === '' ? '' : (tag.ns[prefix] || '')
+        var uri = prefix === '' ? '' : tag.ns[prefix] || ''
         var a = {
           name: name,
           value: value,
           prefix: prefix,
           local: local,
-          uri: uri
+          uri: uri,
         }
 
         // if there's any attributes with an undefined namespace,
         // then fail on them now.
         if (prefix && prefix !== 'xmlns' && !uri) {
-          strictFail(parser, 'Unbound namespace prefix: ' +
-            JSON.stringify(prefix))
+          strictFail(
+            parser,
+            'Unbound namespace prefix: ' + JSON.stringify(prefix)
+          )
           a.uri = prefix
         }
         parser.tag.attributes[name] = a
@@ -24030,7 +24102,7 @@ function rfdcCircles (opts) {
     parser.attribList.length = 0
   }
 
-  function closeTag (parser) {
+  function closeTag(parser) {
     if (!parser.tagName) {
       strictFail(parser, 'Weird empty close tag.')
       parser.textNode += '</>'
@@ -24077,7 +24149,7 @@ function rfdcCircles (opts) {
     parser.tagName = tagName
     var s = parser.tags.length
     while (s-- > t) {
-      var tag = parser.tag = parser.tags.pop()
+      var tag = (parser.tag = parser.tags.pop())
       parser.tagName = parser.tag.name
       emitNode(parser, 'onclosetag', parser.tagName)
 
@@ -24101,7 +24173,7 @@ function rfdcCircles (opts) {
     parser.state = S.TEXT
   }
 
-  function parseEntity (parser) {
+  function parseEntity(parser) {
     var entity = parser.entity
     var entityLC = entity.toLowerCase()
     var num
@@ -24126,7 +24198,12 @@ function rfdcCircles (opts) {
       }
     }
     entity = entity.replace(/^0+/, '')
-    if (isNaN(num) || numStr.toLowerCase() !== entity) {
+    if (
+      isNaN(num) ||
+      numStr.toLowerCase() !== entity ||
+      num < 0 ||
+      num > 0x10ffff
+    ) {
       strictFail(parser, 'Invalid character entity')
       return '&' + parser.entity + ';'
     }
@@ -24134,7 +24211,7 @@ function rfdcCircles (opts) {
     return String.fromCodePoint(num)
   }
 
-  function beginWhiteSpace (parser, c) {
+  function beginWhiteSpace(parser, c) {
     if (c === '<') {
       parser.state = S.OPEN_WAKA
       parser.startTagPosition = parser.position
@@ -24147,7 +24224,7 @@ function rfdcCircles (opts) {
     }
   }
 
-  function charAt (chunk, i) {
+  function charAt(chunk, i) {
     var result = ''
     if (i < chunk.length) {
       result = chunk.charAt(i)
@@ -24155,14 +24232,16 @@ function rfdcCircles (opts) {
     return result
   }
 
-  function write (chunk) {
+  function write(chunk) {
     var parser = this
     if (this.error) {
       throw this.error
     }
     if (parser.closed) {
-      return error(parser,
-        'Cannot write after close. Assign an onready handler.')
+      return error(
+        parser,
+        'Cannot write after close. Assign an onready handler.'
+      )
     }
     if (chunk === null) {
       return end(parser)
@@ -24220,11 +24299,17 @@ function rfdcCircles (opts) {
             }
             parser.textNode += chunk.substring(starti, i - 1)
           }
-          if (c === '<' && !(parser.sawRoot && parser.closedRoot && !parser.strict)) {
+          if (
+            c === '<' &&
+            !(parser.sawRoot && parser.closedRoot && !parser.strict)
+          ) {
             parser.state = S.OPEN_WAKA
             parser.startTagPosition = parser.position
           } else {
-            if (!isWhitespace(c) && (!parser.sawRoot || parser.closedRoot)) {
+            if (
+              !isWhitespace(c) &&
+              (!parser.sawRoot || parser.closedRoot)
+            ) {
               strictFail(parser, 'Text data outside of root node.')
             }
             if (c === '&') {
@@ -24286,10 +24371,14 @@ function rfdcCircles (opts) {
             parser.state = S.COMMENT
             parser.comment = ''
             parser.sgmlDecl = ''
-            continue;
+            continue
           }
 
-          if (parser.doctype && parser.doctype !== true && parser.sgmlDecl) {
+          if (
+            parser.doctype &&
+            parser.doctype !== true &&
+            parser.sgmlDecl
+          ) {
             parser.state = S.DOCTYPE_DTD
             parser.doctype += '<!' + parser.sgmlDecl + c
             parser.sgmlDecl = ''
@@ -24301,8 +24390,10 @@ function rfdcCircles (opts) {
           } else if ((parser.sgmlDecl + c).toUpperCase() === DOCTYPE) {
             parser.state = S.DOCTYPE
             if (parser.doctype || parser.sawRoot) {
-              strictFail(parser,
-                'Inappropriately located doctype declaration')
+              strictFail(
+                parser,
+                'Inappropriately located doctype declaration'
+              )
             }
             parser.doctype = ''
             parser.sgmlDecl = ''
@@ -24411,10 +24502,22 @@ function rfdcCircles (opts) {
           continue
 
         case S.CDATA:
+          var starti = i - 1
+          while (c && c !== ']') {
+            c = charAt(chunk, i++)
+            if (c && parser.trackPosition) {
+              parser.position++
+              if (c === '\n') {
+                parser.line++
+                parser.column = 0
+              } else {
+                parser.column++
+              }
+            }
+          }
+          parser.cdata += chunk.substring(starti, i - 1)
           if (c === ']') {
             parser.state = S.CDATA_ENDING
-          } else {
-            parser.cdata += c
           }
           continue
 
@@ -24467,7 +24570,7 @@ function rfdcCircles (opts) {
           if (c === '>') {
             emitNode(parser, 'onprocessinginstruction', {
               name: parser.procInstName,
-              body: parser.procInstBody
+              body: parser.procInstBody,
             })
             parser.procInstName = parser.procInstBody = ''
             parser.state = S.TEXT
@@ -24500,7 +24603,10 @@ function rfdcCircles (opts) {
             openTag(parser, true)
             closeTag(parser)
           } else {
-            strictFail(parser, 'Forward-slash in opening tag not followed by >')
+            strictFail(
+              parser,
+              'Forward-slash in opening tag not followed by >'
+            )
             parser.state = S.ATTRIB
           }
           continue
@@ -24550,7 +24656,7 @@ function rfdcCircles (opts) {
             parser.attribValue = ''
             emitNode(parser, 'onattribute', {
               name: parser.attribName,
-              value: ''
+              value: '',
             })
             parser.attribName = ''
             if (c === '>') {
@@ -24647,7 +24753,7 @@ function rfdcCircles (opts) {
           } else if (isMatch(nameBody, c)) {
             parser.tagName += c
           } else if (parser.script) {
-            parser.script += '</' + parser.tagName
+            parser.script += '</' + parser.tagName + c
             parser.tagName = ''
             parser.state = S.SCRIPT
           } else {
@@ -24693,7 +24799,10 @@ function rfdcCircles (opts) {
 
           if (c === ';') {
             var parsedEntity = parseEntity(parser)
-            if (parser.opt.unparsedEntities && !Object.values(sax.XML_ENTITIES).includes(parsedEntity)) {
+            if (
+              parser.opt.unparsedEntities &&
+              !Object.values(sax.XML_ENTITIES).includes(parsedEntity)
+            ) {
               parser.entity = ''
               parser.state = returnState
               parser.write(parsedEntity)
@@ -24702,7 +24811,9 @@ function rfdcCircles (opts) {
               parser.entity = ''
               parser.state = returnState
             }
-          } else if (isMatch(parser.entity.length ? entityBody : entityStart, c)) {
+          } else if (
+            isMatch(parser.entity.length ? entityBody : entityStart, c)
+          ) {
             parser.entity += c
           } else {
             strictFail(parser, 'Invalid character in entity name')
@@ -24728,7 +24839,7 @@ function rfdcCircles (opts) {
   /*! http://mths.be/fromcodepoint v0.1.0 by @mathias */
   /* istanbul ignore next */
   if (!String.fromCodePoint) {
-    (function () {
+    ;(function () {
       var stringFromCharCode = String.fromCharCode
       var floor = Math.floor
       var fromCodePoint = function () {
@@ -24747,18 +24858,20 @@ function rfdcCircles (opts) {
           if (
             !isFinite(codePoint) || // `NaN`, `+Infinity`, or `-Infinity`
             codePoint < 0 || // not a valid Unicode code point
-            codePoint > 0x10FFFF || // not a valid Unicode code point
+            codePoint > 0x10ffff || // not a valid Unicode code point
             floor(codePoint) !== codePoint // not an integer
           ) {
             throw RangeError('Invalid code point: ' + codePoint)
           }
-          if (codePoint <= 0xFFFF) { // BMP code point
+          if (codePoint <= 0xffff) {
+            // BMP code point
             codeUnits.push(codePoint)
-          } else { // Astral code point; split in surrogate halves
+          } else {
+            // Astral code point; split in surrogate halves
             // http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
             codePoint -= 0x10000
-            highSurrogate = (codePoint >> 10) + 0xD800
-            lowSurrogate = (codePoint % 0x400) + 0xDC00
+            highSurrogate = (codePoint >> 10) + 0xd800
+            lowSurrogate = (codePoint % 0x400) + 0xdc00
             codeUnits.push(highSurrogate, lowSurrogate)
           }
           if (index + 1 === length || codeUnits.length > MAX_SIZE) {
@@ -24773,14 +24886,14 @@ function rfdcCircles (opts) {
         Object.defineProperty(String, 'fromCodePoint', {
           value: fromCodePoint,
           configurable: true,
-          writable: true
+          writable: true,
         })
       } else {
         String.fromCodePoint = fromCodePoint
       }
-    }())
+    })()
   }
-})( false ? 0 : exports)
+})( false ? (0) : exports)
 
 
 /***/ }),
@@ -25493,6 +25606,18 @@ module.exports = moveAndMaybeCompressFile;
 
 // allows us to inject a mock date in tests
 module.exports = () => new Date();
+
+
+/***/ }),
+
+/***/ 3958:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const ansiRegex = __nccwpck_require__(21);
+
+module.exports = string => typeof string === 'string' ? string.replace(ansiRegex(), '') : string;
 
 
 /***/ }),
@@ -30100,24 +30225,6 @@ module.exports = function(xml, userOptions) {
 
 /***/ }),
 
-/***/ 8223:
-/***/ ((module) => {
-
-"use strict";
-
-
-module.exports = ({onlyFirst = false} = {}) => {
-	const pattern = [
-		'[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
-		'(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))'
-	].join('|');
-
-	return new RegExp(pattern, onlyFirst ? undefined : 'g');
-};
-
-
-/***/ }),
-
 /***/ 6486:
 /***/ ((module) => {
 
@@ -30195,7 +30302,7 @@ module.exports["default"] = isFullwidthCodePoint;
 
 "use strict";
 
-const stripAnsi = __nccwpck_require__(3584);
+const stripAnsi = __nccwpck_require__(3958);
 const isFullwidthCodePoint = __nccwpck_require__(3537);
 const emojiRegex = __nccwpck_require__(6486);
 
@@ -30241,18 +30348,6 @@ const stringWidth = string => {
 module.exports = stringWidth;
 // TODO: remove this in the next major version
 module.exports["default"] = stringWidth;
-
-
-/***/ }),
-
-/***/ 3584:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const ansiRegex = __nccwpck_require__(8223);
-
-module.exports = string => typeof string === 'string' ? string.replace(ansiRegex(), '') : string;
 
 
 /***/ }),
@@ -30667,7 +30762,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createAutomatedTestFromAPI = exports.createAutomatedTestsFromGUI = void 0;
 const path = __nccwpck_require__(6760);
 const utils_1 = __nccwpck_require__(5268);
-const ROOT_TESTS_DIR = process.env.BUILD_SOURCESDIRECTORY || process.env.GITHUB_WORKSPACE || process.env.CI_PROJECT_DIR || "";
+const ROOT_TESTS_DIR = process.env.BUILD_SOURCESDIRECTORY ||
+    process.env.GITHUB_WORKSPACE ||
+    process.env.CI_PROJECT_DIR ||
+    "";
 const createAutomatedTestsFromGUI = (pathToTest, testType) => __awaiter(void 0, void 0, void 0, function* () {
     const test = yield createTest(pathToTest, testType);
     const document = yield (0, utils_1.getGUITestDoc)(pathToTest);
@@ -31120,7 +31218,9 @@ const escapeSpecialChars = (input) => {
 const getTestRunnerId = (octaneConnection, octaneApi) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let pipelineName;
-        const pipeline = process.env.BUILD_DEFINITIONNAME || process.env.GITHUB_WORKFLOW || process.env.CI_PIPELINE_NAME;
+        const pipeline = process.env.BUILD_DEFINITIONNAME ||
+            process.env.GITHUB_WORKFLOW ||
+            process.env.CI_PIPELINE_NAME;
         if (pipeline) {
             pipelineName = escapeSpecialChars(pipeline);
         }
@@ -31449,7 +31549,10 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     }
     if (actionType === "convertTests") {
         const framework = (0, config_1.getConfig)().framework;
-        const rootDirectory = process.env.BUILD_SOURCESDIRECTORY || process.env.GITHUB_WORKSPACE || process.env.CI_PROJECT_DIR || "";
+        const rootDirectory = process.env.BUILD_SOURCESDIRECTORY ||
+            process.env.GITHUB_WORKSPACE ||
+            process.env.CI_PROJECT_DIR ||
+            "";
         const convertedTests = (0, index_1.convertTests)(args.testsToRun, framework, rootDirectory);
         if (convertedTests) {
             console.log(convertedTests);
@@ -31457,10 +31560,10 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         return convertedTests;
     }
     else if (actionType === "discoverTests") {
-        LOGGER.info("The path is: " + path);
+        LOGGER.info("The path issssss: " + path);
         yield (0, utils_1.verifyPath)(path);
         if (!path ||
-            (isFullScan === undefined) ||
+            isFullScan === undefined ||
             !octaneUrl ||
             !sharedSpace ||
             !workspace ||
@@ -31872,7 +31975,10 @@ const TSP_FILE_EXTENSION = ".tsp";
 const ST_FILE_EXTENSION = ".st";
 const determineFileAndChangeType = (modifiedFiles, discoveredTests, existingTests) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
-    const rootFolder = process.env.BUILD_SOURCESDIRECTORY || process.env.GITHUB_WORKSPACE || process.env.CI_PROJECT_DIR || "";
+    const rootFolder = process.env.BUILD_SOURCESDIRECTORY ||
+        process.env.GITHUB_WORKSPACE ||
+        process.env.CI_PROJECT_DIR ||
+        "";
     const modifiedTestsMap = [];
     const testsToDelete = [];
     const addedTests = [];
@@ -32550,14 +32656,6 @@ module.exports = require("path");
 
 "use strict";
 module.exports = require("stream");
-
-/***/ }),
-
-/***/ 3193:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("string_decoder");
 
 /***/ }),
 
@@ -37841,7 +37939,7 @@ function cliui(opts, _mixin) {
 
 // Bootstrap cliui with CommonJS dependencies:
 const stringWidth = __nccwpck_require__(5412);
-const stripAnsi = __nccwpck_require__(942);
+const stripAnsi = __nccwpck_require__(3958);
 const wrap = __nccwpck_require__(8796);
 function ui(opts) {
     return cliui(opts, {
