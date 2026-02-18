@@ -12,9 +12,7 @@ parameters:
     default: 'build/Results.xml'
     # default: "Results.xml"
 
-# pool: Default
-pool:
-  vmImage: 'windows-latest'
+pool: Default
 
 steps:
   - task: NodeTool@0
