@@ -14,7 +14,7 @@ const alm_octane_js_rest_sdk_1 = require("@microfocus/alm-octane-js-rest-sdk");
 const logger_1 = require("../utils/logger");
 const LOGGER = new logger_1.default("octaneClient.ts");
 const escapeSpecialChars = (input) => {
-    return input.replace(/[+\-!(){}[\]^"~*?:\\/]/g, "\\$&");
+    return input.replace(/[+!(){}[\]^"~*?:\\/]/g, "\\$&");
 };
 const getTestRunnerId = (octaneConnection, octaneApi) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -44,10 +44,6 @@ const getScmRepo = (octaneConnection, octaneApi) => __awaiter(void 0, void 0, vo
         const query = `${octaneApi}/scm_repositories/?query=${encoded}`;
         LOGGER.info("The query to get scm repository is: " + query);
         const scmRepos = yield octaneConnection.executeCustomRequest(query, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-        //   const scmRepos = await octaneConnection.executeCustomRequest(
-        //     `${octaneApi}/scm_repositories`,
-        //     Octane.operationTypes.get,
-        //   );
         LOGGER.info("The scmRespos are: " + JSON.stringify(scmRepos));
         return scmRepos.data[0].id;
     }
