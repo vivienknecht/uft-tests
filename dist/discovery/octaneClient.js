@@ -39,12 +39,11 @@ exports.getTestRunnerId = getTestRunnerId;
 const getScmRepo = (octaneConnection, octaneApi) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const repoUrl = process.env.REPOURL || "";
-        LOGGER.info("The repo url is: " + repoUrl);
+        LOGGER.debug("The repo url is: " + repoUrl);
         const encoded = encodeURIComponent(`"repository EQ {url EQ ^${repoUrl}^}"`);
         const query = `${octaneApi}/scm_repositories/?query=${encoded}`;
-        LOGGER.info("The query to get scm repository is: " + query);
         const scmRepos = yield octaneConnection.executeCustomRequest(query, alm_octane_js_rest_sdk_1.Octane.operationTypes.get);
-        LOGGER.info("The scmRespos are: " + JSON.stringify(scmRepos));
+        LOGGER.debug("The SCM repository is:: " + JSON.stringify(scmRepos));
         return scmRepos.data[0].id;
     }
     catch (error) {
