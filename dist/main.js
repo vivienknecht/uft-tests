@@ -74,7 +74,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         return convertedTests;
     }
     else if (actionType === "discoverTests") {
-        LOGGER.info("The path issssss: " + path);
+        LOGGER.info("The path is: " + path);
         yield (0, utils_1.verifyPath)(path);
         if (!path ||
             isFullScan === undefined ||
