@@ -10,18 +10,18 @@ parameters:
   - name: unitTestResultsGlobPattern
     type: string
     default: 'build/Results.xml'
-  # - name: executionId
-  #   type: string
-  #   default: ''
-  # - name: suiteId
-  #   type: string
-  #   default: ''
-  # - name: suiteRunId
-  #   type: string
-  #   default: ''
-  # - name: testsToRun
-  #   type: string
-  #   default: ''
+  - name: executionId
+    type: string
+    default: ''
+  - name: suiteId
+    type: string
+    default: ''
+  - name: suiteRunId
+    type: string
+    default: ''
+  - name: testsToRun
+    type: string
+    default: ''
     
 pool: Default
 
