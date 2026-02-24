@@ -34,16 +34,16 @@ steps:
   - task: octane-start-task-private@1
     inputs:
       OctaneServiceConnection: 'octaneConnectionForDiscovery'
-      WorkspaceList: '2001'
+      WorkspaceList: '1002'
       CreatePipelineCheckbox: true
     condition: always()
 
-  # - task: octane-test-runner-start-task-private@1
-  #   inputs:
-  #     OctaneServiceConnection: 'octaneConnectionForDiscovery'
-  #     WorkspaceList: '2001'
-  #     Framework: 'uft'
-  #     GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
+  - task: octane-test-runner-start-task-private@1
+    inputs:
+      OctaneServiceConnection: 'octaneConnectionForDiscovery'
+      WorkspaceList: '1002'
+      Framework: 'uft'
+      GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
 
   # - powershell: |
   #     node dist/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
@@ -91,7 +91,7 @@ steps:
   - task: octane-end-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "2001"
+      WorkspaceList: "1002"
       Framework: "uft"
     condition: always()
     env:
