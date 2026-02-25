@@ -10,49 +10,16 @@ parameters:
   - name: unitTestResultsGlobPattern
     type: string
     default: 'build/Results.xml'
-  - name: executionId
-    type: string
-    default: ''
-  - name: suiteId
-    type: string
-    default: ''
-  - name: suiteRunId
-    type: string
-    default: ''
-  - name: testsToRun
-    type: string
-    default: ''
     
 pool: Default
 
 steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: "22.x"
-    displayName: "Use Node.js"
-
   - task: octane-start-task-private@1
     inputs:
       OctaneServiceConnection: 'octaneConnectionForDiscovery'
-      WorkspaceList: '1002'
+      WorkspaceList: '3001'
       CreatePipelineCheckbox: true
     condition: always()
-
-  - task: octane-test-runner-start-task-private@1
-    inputs:
-      OctaneServiceConnection: 'octaneConnectionForDiscovery'
-      WorkspaceList: '1002'
-      Framework: 'uft'
-      GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
-
-  # - powershell: |
-  #     node dist/index.js --action="convertTests" --framework="uft" --testsToRun=${env:TESTSTORUN} --logLevel=1
-  #   displayName: TestConversion
-
-  # - powershell: |
-  #     Write-Host "===== DEBUG: Pipeline Variable testsToRunConverted ====="
-  #     $testsToRunConverted = $env:testsToRunConverted
-  #     Write-Host $testsToRunConverted
 
   - powershell: |
       Write-Host "Current Directory:"
@@ -63,8 +30,7 @@ steps:
       Set-Content -Path "./build/testsToRun.mtbx" -Value $env:testsToRunConverted
       Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
       Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
-      Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\build\\testsToRun.mtbx"
-      #Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\browsers\\APITest1"
+      Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\browsers"
       Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
       Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
       Get-Content -Path ./build/Props.txt
@@ -79,19 +45,10 @@ steps:
       echo "Please check the [$PWD\build\Results.xml] file."
     displayName: Testing
 
-  # - powershell: |
-  #     echo "Testing..."
-  #     echo $PWD
-  #     Test-Path "./Props.txt" -PathType leaf
-  #     Get-Content -Path ./Props.txt
-  #     Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\Props.txt`"" -Wait
-  #     echo "Please check the [$PWD\Results.xml] file."
-  #   displayName: Testing
-
   - task: octane-end-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "1002"
+      WorkspaceList: "3001"
       Framework: "uft"
     condition: always()
     env:
