@@ -21,6 +21,13 @@ steps:
       CreatePipelineCheckbox: true
     condition: always()
 
+  - task: octane-test-runner-start-task-private@1
+    inputs:
+      OctaneServiceConnection: 'octaneConnectionForDiscovery'
+      WorkspaceList: '3001'
+      Framework: 'uft'
+      GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
+
   - powershell: |
       Write-Host "Current Directory:"
       Get-Location
