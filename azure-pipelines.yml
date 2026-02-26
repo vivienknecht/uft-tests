@@ -14,12 +14,12 @@ parameters:
 pool: Default
 
 steps:
-  # - task: octane-start-task-private@1
-  #   inputs:
-  #     OctaneServiceConnection: 'octaneConnectionForDiscovery'
-  #     WorkspaceList: '4003'
-  #     CreatePipelineCheckbox: true
-  #   condition: always()
+  - task: octane-start-task-private@1
+    inputs:
+      OctaneServiceConnection: 'octaneConnectionForDiscovery'
+      WorkspaceList: '4004'
+      CreatePipelineCheckbox: true
+    condition: always()
 
   - task: octane-test-runner-start-task-private@1
     inputs:
