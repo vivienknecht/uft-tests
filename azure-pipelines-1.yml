@@ -19,15 +19,15 @@ steps:
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
 
-  - task: octane-start-task-private@1
-    inputs:
-      OctaneServiceConnection: 'octaneConnectionForDiscovery'
-      WorkspaceList: '3002'
-      CreatePipelineCheckbox: true
+  # - task: octane-start-task-private@1
+  #   inputs:
+  #     OctaneServiceConnection: 'octaneConnectionForDiscovery'
+  #     WorkspaceList: '5008'
+  #     CreatePipelineCheckbox: true
   - task: octane-test-runner-start-task-private@1
     inputs:
       OctaneServiceConnection: 'octaneConnectionForDiscovery'
-      WorkspaceList: '3002'
+      WorkspaceList: '5008'
       Framework: 'uft'
       GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
 
@@ -93,7 +93,7 @@ steps:
   - task: octane-end-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "3002"
+      WorkspaceList: "5008"
       Framework: "uft"
     condition: always()
     env:
