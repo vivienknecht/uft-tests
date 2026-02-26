@@ -17,7 +17,7 @@ steps:
   - task: octane-test-runner-start-task-private@1
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "3002"
+      WorkspaceList: "2001"
       Framework: "uft"
       GitRepositoryURL: $(Build.Repository.Uri)
 
