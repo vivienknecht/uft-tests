@@ -19,9 +19,7 @@ steps:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
       WorkspaceList: "4001"
       Framework: "uft"
-      GitRepositoryURL: $(Build.Repository.Uri)
-
-  - script: echo ${env:TESTSTORUN}
+      GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
 
   - checkout: self
     fetchDepth: 0
