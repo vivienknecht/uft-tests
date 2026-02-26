@@ -14,6 +14,11 @@ steps:
     inputs:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
 
+  - task: octane-start-task-private@1
+    inputs:
+      OctaneServiceConnection: 'octaneConnectionForDiscovery'
+      WorkspaceList: '4001'
+      CreatePipelineCheckbox: true
   - task: octane-test-runner-start-task-private@1
     inputs:
       OctaneServiceConnection: 'octaneConnectionForDiscovery'
