@@ -16,10 +16,10 @@ steps:
 
   - task: octane-test-runner-start-task-private@1
     inputs:
-      OctaneServiceConnection: "octaneConnectionForDiscovery"
-      WorkspaceList: "4001"
-      Framework: "uft"
-      GitRepositoryURL: "https://github.com/vivienknecht/uft-tests"
+      OctaneServiceConnection: 'octaneConnectionForDiscovery'
+      WorkspaceList: '4001'
+      Framework: 'uft'
+      GitRepositoryURL: 'https://github.com/vivienknecht/uft-tests'
 
   - checkout: self
     fetchDepth: 0
